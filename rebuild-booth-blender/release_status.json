@@ -1,26 +1,25 @@
 {
   "skill_name": "rebuild-booth-blender",
-  "version": "2.0.0-rc1",
+  "version": "2.1.0-rc1",
   "local_package_created": true,
   "hosted_skill_updated": false,
   "original_hosted_skill_source_read": false,
   "baseline": "Accessible conversation script/spec/reference + user-approved redesign requirements",
   "python_tests": {
-    "tests_run": 47,
-    "passed": 46,
+    "tests_run": 64,
+    "passed": 64,
     "failures": [],
     "errors": [],
-    "skipped": [
-      [
-        "test_build_reopen_native_file (test_skill.NativeBlenderTests.test_build_reopen_native_file)",
-        "Native Blender unavailable; API execution is not verified by Python tests"
-      ]
-    ],
-    "python": "3.13.5",
+    "skipped": [],
+    "python": "3.12.3",
     "all_executed_tests_passed": true,
-    "scope": "Unit tests, real legacy-input rejection and synthetic camera/geometry tests. Not a completed Legacy case image reconstruction."
+    "scope": "Geometry/schema/camera/artifact tests and native Blender integration executed on this runtime; 64 passed, none skipped. This does not certify source-image fidelity."
   },
-  "native_blender_integration": "skipped_runtime_unavailable",
-  "legacy_case_end_to_end_visual_match": "not_verified",
-  "builder_sha256": "2054226db92e76b0a9ba7fe6829eabd38110c309d4ba85099d62a6b4114f615e"
+  "native_blender_integration": "passed_blender_5.2.2_lts",
+  "legacy_case_end_to_end_visual_match": "review_required",
+  "builder_sha256": "62d45843d6b2f3f06232c4df84a9886b503068bc416ec60a7bd99d6e222590cb",
+  "local_skill_source_read": true,
+  "customer_presentation": "Three local test cases have baseline, optimized and built-in AI image comparisons; final native scene reopen succeeds. Individual visual limitations remain recorded in ignored test/runs/.",
+  "source_assets_and_derived_scenes": "Not committed; test/ ignored",
+  "bom_status": "component identities and dimension basis retained; single-image inferred dimensions and hidden connections need confirmation before a measured BOM"
 }

@@ -43,6 +43,49 @@ def finite_vector(value,n):
             all(not isinstance(x,bool) and isinstance(x,(float,int)) and math.isfinite(x) for x in value))
 
 
+def material_rgba(params):
+    """Shader inputs are linear; explicitly sampled display RGB can be sRGB."""
+    color=list(params['color'])
+    if params.get('color_space','linear')=='srgb':
+        color[:3]=[v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in color[:3]]
+    return color
+
+
+def render_rig(bounds, aspect, reference_camera):
+    """Dimension-independent inspection framing and physically scaled area lights.
+
+    Bounds are the actual transformed booth geometry, including the floor. The
+    camera fits a bounding sphere against the narrower field of view, preserving
+    clearance even for a tall or unusually deep stand. Wattage scales with area.
+    """
+    low,high=bounds
+    if not finite_vector(low,3) or not finite_vector(high,3) or any(b<a for a,b in zip(low,high)):
+        raise ValueError('bounds must be ordered finite XYZ vectors')
+    if isinstance(aspect,bool) or not isinstance(aspect,(float,int)) or not math.isfinite(aspect) or aspect<=0:
+        raise ValueError('image aspect must be positive')
+    spans=[b-a for a,b in zip(low,high)];extent=max(spans)
+    if extent<=0:raise ValueError('cannot frame empty geometry')
+    centre=[(a+b)/2 for a,b in zip(low,high)]
+    radius=math.sqrt(sum(v*v for v in spans))/2
+    direction=[reference_camera['position'][i]-reference_camera['target'][i] for i in range(3)]
+    # Opposite horizontal side gives useful evidence beyond the matched source.
+    horizontal=math.hypot(direction[0],direction[1])
+    if horizontal<1e-9:direction=[-1,-1,.8]
+    else:direction=[-direction[0]/horizontal,direction[1]/horizontal,max(.55,abs(direction[2])/horizontal)]
+    length=math.sqrt(sum(v*v for v in direction));direction=[v/length for v in direction]
+    lens,sensor=40,36
+    half_fov=math.atan(sensor/(2*lens)*min(1,1/aspect))
+    distance=radius/math.sin(half_fov)*1.12
+    inspection={'projection':'perspective','position':[centre[i]+distance*direction[i] for i in range(3)],
+                'target':centre,'lens_mm':lens,'sensor_width_mm':sensor,'principal_point':[.5,.5]}
+    lights=[]
+    for name,offset,energy,size in (
+            ('Key',[.35,-.8,1.0],34,.8),('Fill',[-.8,-.2,.65],22,.65),('Rim',[.2,.75,1.0],25,.65)):
+        lights.append({'name':name,'position':[centre[i]+offset[i]*extent for i in range(3)],
+                       'target':centre,'energy':energy*extent*extent,'size':size*extent})
+    return {'bounds':[list(low),list(high)],'centre':centre,'extent':extent,'inspection_camera':inspection,'lights':lights}
+
+
 def code_hash():
     root=Path(__file__).resolve().parent
     return digest({p.name:file_sha(p) for p in sorted(root.glob('*.py'))})

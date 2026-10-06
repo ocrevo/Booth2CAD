@@ -12,7 +12,8 @@
 
 当前只支持一个矩形 floor/carpet 对象，尺寸须与 footprint 一致。非矩形展位边界要扩展几何与 schema，不能悄悄近似为矩形并声称完成。
 不支持的几何原型会报错；请新增确定性 builder、对应 params schema 和拓扑/回归测试后使用。
-复杂产品建议通过独立资产扩展；本版本没有资产导入器、自动 UV 或孔阵生成器。
+box 支持 bevel_radius 和 bevel_mode=all/vertical（默认 all）；vertical 仅圆化四条竖边，上下端保持平切。swept_strip 的 control_points 使用 3n+1 个局部 [x,z] 点，每段 Bezier 的确定性偏移生成连续封闭条带，depth 沿 Y。无新增资产导入器、自动 UV 或孔阵生成器。
+material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入 shader。client_render.png 是中性背景客户图，reference_render.png 仍是透明验收图，不应拿客户图背景做 silhouette。第二视角和灯光从实际变换后几何的包围盒产生。
 
 `requirements` 是最低结构义务，例如 `top_ring.kind=rounded_ring`。它只能检验已写入的义务是否实现，不能证明写入的义务本身识别正确。
 `evidence.status=observed/inferred` 分离观察与补全。`uncertainties` 中 open 且 critical 的事项阻止最终交付，不阻止低成本候选测试。

@@ -6,14 +6,14 @@ import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import bpy
-from common import read_json,write_json,digest,code_hash,file_sha
+from common import read_json,write_json,digest,code_hash,file_sha,material_rgba
 from geometry import mesh_for
 
 
 def main():
     argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
     p=argparse.ArgumentParser();p.add_argument('--spec',required=True);p.add_argument('--blend',required=True);p.add_argument('--report',required=True)
-    a=p.parse_args();spec=read_json(a.spec);errors=[]
+    a=p.parse_args(argv);spec=read_json(a.spec);errors=[]
     if not bpy.app.background:raise RuntimeError('Verification requires a separate background process')
     bpy.ops.wm.open_mainfile(filepath=str(Path(a.blend).resolve()),use_scripts=False)
     scene=bpy.context.scene
@@ -36,6 +36,20 @@ def main():
             if any(abs(obj.rotation_euler[i]-math.radians(c['rotation_deg'][i]))>1e-5 for i in range(3)):errors.append('rotation_mismatch:'+ident)
             if any(abs(v-1)>1e-6 for v in obj.scale):errors.append('unplanned_scale:'+ident)
             if obj.modifiers:errors.append('unreviewed_modifiers:'+ident)
+            if len(obj.data.materials)!=1 or not obj.data.materials[0].use_nodes:
+                errors.append('material_missing:'+ident)
+            else:
+                mat=obj.data.materials[0];shaders=[n for n in mat.node_tree.nodes if n.type=='BSDF_PRINCIPLED']
+                if len(shaders)!=1:errors.append('material_shader_mismatch:'+ident)
+                else:
+                    shader=shaders[0];params=c['material'];color=material_rgba(params)
+                    for input_name,expected_value in (
+                            ('Base Color',color),('Alpha',color[3]),('Roughness',params.get('roughness',.5)),
+                            ('Metallic',params.get('metallic',0)),('Emission Color',color),('Emission Strength',params.get('emission',0))):
+                        value=shader.inputs[input_name].default_value
+                        if isinstance(expected_value,list):matches=all(abs(a-b)<1e-5 for a,b in zip(value,expected_value))
+                        else:matches=abs(value-expected_value)<1e-5
+                        if not matches:errors.append('material_parameter_mismatch:'+ident+':'+input_name)
             if c['kind']=='text':
                 if obj.type!='FONT' or obj.data.body!=c['params']['body']:errors.append('text_mismatch:'+ident)
             elif obj.type!='MESH':errors.append('mesh_type_mismatch:'+ident)

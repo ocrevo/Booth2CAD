@@ -7,13 +7,14 @@ from common import finite_vector,file_sha,read_json,write_json
 from geometry import mesh_for,positive
 
 PARAM_KEYS={
- 'box':({'size'},{'size'}),
+ 'box':({'size'},{'size','bevel_radius','bevel_mode','segments_per_corner'}),
  'cylinder':({'radius','height'},{'radius','height','segments'}),
  'rounded_ring':({'outer_size','inner_size','outer_radius','inner_radius','height'},
                  {'outer_size','inner_size','outer_radius','inner_radius','height','segments_per_corner'}),
  'rounded_portal':({'width','height','depth','side_width','beam_height','outer_radius','inner_radius'},
                    {'width','height','depth','side_width','beam_height','outer_radius','inner_radius','segments_per_corner'}),
  'text':({'body','size'},{'body','size','extrude'}),
+ 'swept_strip':({'control_points','width','depth'},{'control_points','width','depth','segments_per_curve'}),
 }
 
 
@@ -88,7 +89,8 @@ def validate(spec, source_root=None):
                 else: mesh_for(c)
             except (KeyError,TypeError,ValueError,OverflowError) as ex: error('INVALID_GEOMETRY',path,str(ex))
             mat=c.get('material',{})
-            if set(mat)-{'color','roughness','metallic','emission'}: error('UNKNOWN_MATERIAL',path,'Unsupported material field')
+            if set(mat)-{'color','color_space','roughness','metallic','emission'}: error('UNKNOWN_MATERIAL',path,'Unsupported material field')
+            if mat.get('color_space','linear') not in ('linear','srgb'): error('MATERIAL_COLOR_SPACE',path,'Use linear or srgb')
             if not finite_vector(mat.get('color'),4) or not all(0<=x<=1 for x in mat['color']): error('MATERIAL_COLOR',path,'RGBA values in [0,1] required')
             for key in ('roughness','metallic'):
                 value=mat.get(key,0.5 if key=='roughness' else 0.0)

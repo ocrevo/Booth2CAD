@@ -155,6 +155,7 @@
               "cylinder",
               "rounded_ring",
               "rounded_portal",
+              "swept_strip",
               "text"
             ]
           },
@@ -217,6 +218,10 @@
           "material": {
             "type": "object",
             "properties": {
+              "color_space": {
+                "enum": ["linear", "srgb"],
+                "default": "linear"
+              },
               "color": {
                 "type": "array",
                 "items": {
@@ -284,6 +289,19 @@
                       },
                       "minItems": 3,
                       "maxItems": 3
+                    },
+                    "bevel_radius": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "bevel_mode": {
+                      "enum": ["all", "vertical"],
+                      "default": "all"
+                    },
+                    "segments_per_corner": {
+                      "type": "integer",
+                      "minimum": 4,
+                      "maximum": 128
                     }
                   },
                   "required": [
@@ -456,6 +474,39 @@
             "if": {
               "properties": {
                 "kind": {
+                  "const": "swept_strip"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "params": {
+                  "type": "object",
+                  "properties": {
+                    "control_points": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "minItems": 2,
+                        "maxItems": 2
+                      },
+                      "minItems": 4
+                    },
+                    "width": {"type": "number", "exclusiveMinimum": 0},
+                    "depth": {"type": "number", "exclusiveMinimum": 0},
+                    "segments_per_curve": {"type": "integer", "minimum": 4, "maximum": 128}
+                  },
+                  "required": ["control_points", "width", "depth"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
                   "const": "text"
                 }
               }
@@ -584,6 +635,7 @@
               "cylinder",
               "rounded_ring",
               "rounded_portal",
+              "swept_strip",
               "text"
             ]
           },

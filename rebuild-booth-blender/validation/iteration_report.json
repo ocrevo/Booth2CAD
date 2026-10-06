@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-06",
+  "version": "2.1.0-rc1",
+  "blender": "5.2.2 LTS",
+  "tests": {
+    "tests_run": 64,
+    "passed": 64,
+    "failures": [],
+    "errors": [],
+    "skipped": [],
+    "python": "3.12.3",
+    "all_executed_tests_passed": true,
+    "scope": "Geometry/schema/camera/artifact tests and native Blender integration executed on this runtime; 64 passed, none skipped. This does not certify source-image fidelity."
+  },
+  "improvements": [
+    "clean booth-only scope",
+    "true box all/vertical bevel",
+    "continuous Bezier strip",
+    "sRGB conversion",
+    "bounds-based inspection and lighting",
+    "native verifier argv/material checks",
+    "true PNG source export",
+    "separate client exposure",
+    "two-route comparison report with hashes"
+  ],
+  "visual_status": "review_required",
+  "source_masks": "not fabricated; no IoU reported",
+  "remaining": [
+    "single-image geometry and framing residuals",
+    "unmeasured dimensions",
+    "occluded structure",
+    "orange secondary-view joint shading defect"
+  ],
+  "artifact_location": "Local ignored test/runs/; no customer reference or scene copied into production skill."
+}
