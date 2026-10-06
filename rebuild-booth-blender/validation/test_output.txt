@@ -1,44 +1,44 @@
-python : test_missing_render_route_does_not_create_success_report 
+python : test_missing_render_route_does_not_create_success_report
 (test_benchmark.BenchmarkTests.test_missing_render_route_does_not_create_success_report) ... ok
 At line:2 char:153
 + ... +$env:PATH; python rebuild-booth-blender/tests/run_tests.py *> test/r ...
 +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (test_missing_re..._report) ... ok:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
-test_previous_outputs_are_not_new_inputs (test_benchmark.BenchmarkTests.test_previous_outputs_are_not_new_inputs) ... 
+
+test_previous_outputs_are_not_new_inputs (test_benchmark.BenchmarkTests.test_previous_outputs_are_not_new_inputs) ...
 ok
-test_report_binds_bytes_and_records_different_ai_size 
+test_report_binds_bytes_and_records_different_ai_size
 (test_benchmark.BenchmarkTests.test_report_binds_bytes_and_records_different_ai_size) ... ok
-test_single_image_does_not_read_other_sources 
+test_single_image_does_not_read_other_sources
 (test_benchmark.BenchmarkTests.test_single_image_does_not_read_other_sources) ... ok
-test_native_bevel_strip_material_and_client_render 
+test_native_bevel_strip_material_and_client_render
 (test_reusable_geometry.NativeReusableGeometryTests.test_native_bevel_strip_material_and_client_render) ... ok
-test_bevel_radius_moves_vertices_and_changes_volume 
+test_bevel_radius_moves_vertices_and_changes_volume
 (test_reusable_geometry.ReusableGeometryTests.test_bevel_radius_moves_vertices_and_changes_volume) ... ok
-test_beveled_box_is_closed_with_requested_outer_dimensions 
+test_beveled_box_is_closed_with_requested_outer_dimensions
 (test_reusable_geometry.ReusableGeometryTests.test_beveled_box_is_closed_with_requested_outer_dimensions) ... ok
-test_box_without_bevel_keeps_original_topology 
+test_box_without_bevel_keeps_original_topology
 (test_reusable_geometry.ReusableGeometryTests.test_box_without_bevel_keeps_original_topology) ... ok
-test_explicit_srgb_preserves_alpha_and_defaults_remain_linear 
+test_explicit_srgb_preserves_alpha_and_defaults_remain_linear
 (test_reusable_geometry.ReusableGeometryTests.test_explicit_srgb_preserves_alpha_and_defaults_remain_linear) ... ok
-test_invalid_bevel_and_unused_segmentation_fail 
+test_invalid_bevel_and_unused_segmentation_fail
 (test_reusable_geometry.ReusableGeometryTests.test_invalid_bevel_and_unused_segmentation_fail) ... ok
-test_new_geometry_matches_schema_and_validator 
+test_new_geometry_matches_schema_and_validator
 (test_reusable_geometry.ReusableGeometryTests.test_new_geometry_matches_schema_and_validator) ... ok
-test_rig_fits_tall_stand_in_portrait_and_landscape 
+test_rig_fits_tall_stand_in_portrait_and_landscape
 (test_reusable_geometry.ReusableGeometryTests.test_rig_fits_tall_stand_in_portrait_and_landscape) ... ok
-test_rig_scales_and_translates_with_model 
+test_rig_scales_and_translates_with_model
 (test_reusable_geometry.ReusableGeometryTests.test_rig_scales_and_translates_with_model) ... ok
-test_strip_discontinuous_joint_and_zero_tangent_fail 
+test_strip_discontinuous_joint_and_zero_tangent_fail
 (test_reusable_geometry.ReusableGeometryTests.test_strip_discontinuous_joint_and_zero_tangent_fail) ... ok
-test_strip_width_cannot_fold_around_tight_bend 
+test_strip_width_cannot_fold_around_tight_bend
 (test_reusable_geometry.ReusableGeometryTests.test_strip_width_cannot_fold_around_tight_bend) ... ok
-test_swept_strip_is_solid_and_control_points_drive_curve 
+test_swept_strip_is_solid_and_control_points_drive_curve
 (test_reusable_geometry.ReusableGeometryTests.test_swept_strip_is_solid_and_control_points_drive_curve) ... ok
-test_vertical_bevel_has_flat_endcuts_and_allows_thin_countertop 
+test_vertical_bevel_has_flat_endcuts_and_allows_thin_countertop
 (test_reusable_geometry.ReusableGeometryTests.test_vertical_bevel_has_flat_endcuts_and_allows_thin_countertop) ... ok
-test_camera_fit_recovers_synthetic_projection (test_skill.CompareTests.test_camera_fit_recovers_synthetic_projection) 
+test_camera_fit_recovers_synthetic_projection (test_skill.CompareTests.test_camera_fit_recovers_synthetic_projection)
 ... ok
 test_camera_fit_refuses_unannotated_photo (test_skill.CompareTests.test_camera_fit_refuses_unannotated_photo) ... ok
 test_empty_candidate_is_zero (test_skill.CompareTests.test_empty_candidate_is_zero) ... ok
@@ -46,7 +46,7 @@ test_empty_reference_blocks (test_skill.CompareTests.test_empty_reference_blocks
 test_filled_fascia_hole_is_penalized (test_skill.CompareTests.test_filled_fascia_hole_is_penalized) ... ok
 test_identity_mask_is_one (test_skill.CompareTests.test_identity_mask_is_one) ... ok
 test_missing_anchor_blocks (test_skill.CompareTests.test_missing_anchor_blocks) ... ok
-test_real_legacy_canvas_cannot_be_silently_compared 
+test_real_legacy_canvas_cannot_be_silently_compared
 (test_skill.CompareTests.test_real_legacy_canvas_cannot_be_silently_compared) ... ok
 test_rgb_photo_is_not_auto_thresholded (test_skill.CompareTests.test_rgb_photo_is_not_auto_thresholded) ... ok
 test_unknown_region_can_be_excluded (test_skill.CompareTests.test_unknown_region_can_be_excluded) ... ok
@@ -70,22 +70,22 @@ test_ring_radius_changes_actual_vertices (test_skill.GeometryTests.test_ring_rad
 test_build_reopen_native_file (test_skill.NativeBlenderTests.test_build_reopen_native_file) ... ok
 test_bad_observation_roi_rejected (test_skill.SpecTests.test_bad_observation_roi_rejected) ... ok
 test_candidate_is_valid_but_not_finished (test_skill.SpecTests.test_candidate_is_valid_but_not_finished) ... ok
-test_dimension_patch_invalidates_geometry_and_qa 
+test_dimension_patch_invalidates_geometry_and_qa
 (test_skill.SpecTests.test_dimension_patch_invalidates_geometry_and_qa) ... ok
 test_duplicate_component_rejected (test_skill.SpecTests.test_duplicate_component_rejected) ... ok
 test_excluded_component_cannot_be_built (test_skill.SpecTests.test_excluded_component_cannot_be_built) ... ok
 test_footprint_metadata_must_match_geometry (test_skill.SpecTests.test_footprint_metadata_must_match_geometry) ... ok
 test_formal_schema_accepts_candidate (test_skill.SpecTests.test_formal_schema_accepts_candidate) ... ok
-test_material_patch_keeps_geometry_fingerprint (test_skill.SpecTests.test_material_patch_keeps_geometry_fingerprint) 
+test_material_patch_keeps_geometry_fingerprint (test_skill.SpecTests.test_material_patch_keeps_geometry_fingerprint)
 ... ok
 test_nonfinite_rejected (test_skill.SpecTests.test_nonfinite_rejected) ... ok
 test_patch_cannot_change_ownership (test_skill.SpecTests.test_patch_cannot_change_ownership) ... ok
 test_patch_cannot_create_unused_field (test_skill.SpecTests.test_patch_cannot_create_unused_field) ... ok
-test_planned_component_cannot_silently_disappear 
+test_planned_component_cannot_silently_disappear
 (test_skill.SpecTests.test_planned_component_cannot_silently_disappear) ... ok
 test_real_legacy_spec_is_rejected (test_skill.SpecTests.test_real_legacy_spec_is_rejected) ... ok
 test_source_bytes_must_match (test_skill.SpecTests.test_source_bytes_must_match) ... ok
-test_unknown_camera_field_is_not_silently_ignored 
+test_unknown_camera_field_is_not_silently_ignored
 (test_skill.SpecTests.test_unknown_camera_field_is_not_silently_ignored) ... ok
 test_unknown_ownership_cannot_be_included (test_skill.SpecTests.test_unknown_ownership_cannot_be_included) ... ok
 test_unused_visual_radius_parameter_rejected (test_skill.SpecTests.test_unused_visual_radius_parameter_rejected) ... ok

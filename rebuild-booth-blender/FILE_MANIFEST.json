@@ -232,8 +232,8 @@
     },
     {
       "path": "validation/test_output.txt",
-      "bytes": 8138,
-      "sha256": "f52a5cf7c2638602639d5d8571efaee57fb2c1c0a3da443777e90c2e4323ac20"
+      "bytes": 8114,
+      "sha256": "131bb8ed5ce26325d61aa104077ab7380ee199b135ce216ea6f1bbbea4afe0f1"
     },
     {
       "path": "validation/test_results.json",
