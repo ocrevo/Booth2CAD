@@ -1,0 +1,13 @@
+{
+  "spec_sha256": "REPLACE_WITH_ACTUAL_SHA256",
+  "reviewer": null,
+  "topology": "pending",
+  "ownership": "pending",
+  "layout": "pending",
+  "alternate_view": "pending",
+  "appearance": "pending",
+  "notes": null,
+  "builder_sha256": "REPLACE_WITH_ACTUAL_BUILDER_SHA256",
+  "reference_render_sha256": "REPLACE_WITH_RENDER_HASH",
+  "inspection_render_sha256": "REPLACE_WITH_RENDER_HASH"
+}

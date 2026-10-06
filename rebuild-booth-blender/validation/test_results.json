@@ -1,0 +1,15 @@
+{
+  "tests_run": 47,
+  "passed": 46,
+  "failures": [],
+  "errors": [],
+  "skipped": [
+    [
+      "test_build_reopen_native_file (test_skill.NativeBlenderTests.test_build_reopen_native_file)",
+      "Native Blender unavailable; API execution is not verified by Python tests"
+    ]
+  ],
+  "python": "3.13.5",
+  "all_executed_tests_passed": true,
+  "scope": "Unit tests, real legacy-input rejection and synthetic camera/geometry tests. Not a completed Legacy case image reconstruction."
+}

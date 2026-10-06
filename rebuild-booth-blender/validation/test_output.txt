@@ -1,0 +1,52 @@
+test_camera_fit_recovers_synthetic_projection (test_skill.CompareTests.test_camera_fit_recovers_synthetic_projection) ... ok
+test_camera_fit_refuses_unannotated_photo (test_skill.CompareTests.test_camera_fit_refuses_unannotated_photo) ... ok
+test_empty_candidate_is_zero (test_skill.CompareTests.test_empty_candidate_is_zero) ... ok
+test_empty_reference_blocks (test_skill.CompareTests.test_empty_reference_blocks) ... ok
+test_filled_fascia_hole_is_penalized (test_skill.CompareTests.test_filled_fascia_hole_is_penalized) ... ok
+test_identity_mask_is_one (test_skill.CompareTests.test_identity_mask_is_one) ... ok
+test_missing_anchor_blocks (test_skill.CompareTests.test_missing_anchor_blocks) ... ok
+test_real_legacy_canvas_cannot_be_silently_compared (test_skill.CompareTests.test_real_legacy_canvas_cannot_be_silently_compared) ... ok
+test_rgb_photo_is_not_auto_thresholded (test_skill.CompareTests.test_rgb_photo_is_not_auto_thresholded) ... ok
+test_unknown_region_can_be_excluded (test_skill.CompareTests.test_unknown_region_can_be_excluded) ... ok
+test_cache_checks_actual_output_bytes (test_skill.EvidenceTests.test_cache_checks_actual_output_bytes) ... ok
+test_cache_rejects_incomplete_run (test_skill.EvidenceTests.test_cache_rejects_incomplete_run) ... ok
+test_cache_rejects_path_escape (test_skill.EvidenceTests.test_cache_rejects_path_escape) ... ok
+test_doctor_missing_blender_is_explicit (test_skill.EvidenceTests.test_doctor_missing_blender_is_explicit) ... ok
+test_missing_native_evidence_never_passes (test_skill.EvidenceTests.test_missing_native_evidence_never_passes) ... ok
+test_cylinder_is_capped_not_tube (test_skill.GeometryTests.test_cylinder_is_capped_not_tube) ... ok
+test_euler_transform (test_skill.GeometryTests.test_euler_transform) ... ok
+test_no_unknown_shape_box_fallback (test_skill.GeometryTests.test_no_unknown_shape_box_fallback) ... ok
+test_portal_continuous_watertight (test_skill.GeometryTests.test_portal_continuous_watertight) ... ok
+test_portal_feet_do_not_close_opening (test_skill.GeometryTests.test_portal_feet_do_not_close_opening) ... ok
+test_portal_invalid_side_width (test_skill.GeometryTests.test_portal_invalid_side_width) ... ok
+test_ring_closed_connected_hole (test_skill.GeometryTests.test_ring_closed_connected_hole) ... ok
+test_ring_closed_opening_fails (test_skill.GeometryTests.test_ring_closed_opening_fails) ... ok
+test_ring_dimensions_are_driven (test_skill.GeometryTests.test_ring_dimensions_are_driven) ... ok
+test_ring_inner_corner_intersection_fails (test_skill.GeometryTests.test_ring_inner_corner_intersection_fails) ... ok
+test_ring_invalid_radius_fails (test_skill.GeometryTests.test_ring_invalid_radius_fails) ... ok
+test_ring_radius_changes_actual_vertices (test_skill.GeometryTests.test_ring_radius_changes_actual_vertices) ... ok
+test_build_reopen_native_file (test_skill.NativeBlenderTests.test_build_reopen_native_file) ... skipped 'Native Blender unavailable; API execution is not verified by Python tests'
+test_bad_observation_roi_rejected (test_skill.SpecTests.test_bad_observation_roi_rejected) ... ok
+test_candidate_is_valid_but_not_finished (test_skill.SpecTests.test_candidate_is_valid_but_not_finished) ... ok
+test_dimension_patch_invalidates_geometry_and_qa (test_skill.SpecTests.test_dimension_patch_invalidates_geometry_and_qa) ... ok
+test_duplicate_component_rejected (test_skill.SpecTests.test_duplicate_component_rejected) ... ok
+test_excluded_component_cannot_be_built (test_skill.SpecTests.test_excluded_component_cannot_be_built) ... ok
+test_footprint_metadata_must_match_geometry (test_skill.SpecTests.test_footprint_metadata_must_match_geometry) ... ok
+test_formal_schema_accepts_candidate (test_skill.SpecTests.test_formal_schema_accepts_candidate) ... ok
+test_material_patch_keeps_geometry_fingerprint (test_skill.SpecTests.test_material_patch_keeps_geometry_fingerprint) ... ok
+test_nonfinite_rejected (test_skill.SpecTests.test_nonfinite_rejected) ... ok
+test_patch_cannot_change_ownership (test_skill.SpecTests.test_patch_cannot_change_ownership) ... ok
+test_patch_cannot_create_unused_field (test_skill.SpecTests.test_patch_cannot_create_unused_field) ... ok
+test_planned_component_cannot_silently_disappear (test_skill.SpecTests.test_planned_component_cannot_silently_disappear) ... ok
+test_real_legacy_spec_is_rejected (test_skill.SpecTests.test_real_legacy_spec_is_rejected) ... ok
+test_source_bytes_must_match (test_skill.SpecTests.test_source_bytes_must_match) ... ok
+test_unknown_camera_field_is_not_silently_ignored (test_skill.SpecTests.test_unknown_camera_field_is_not_silently_ignored) ... ok
+test_unknown_ownership_cannot_be_included (test_skill.SpecTests.test_unknown_ownership_cannot_be_included) ... ok
+test_unused_visual_radius_parameter_rejected (test_skill.SpecTests.test_unused_visual_radius_parameter_rejected) ... ok
+test_venue_cannot_be_included (test_skill.SpecTests.test_venue_cannot_be_included) ... ok
+test_wrong_primitive_for_critical_ring (test_skill.SpecTests.test_wrong_primitive_for_critical_ring) ... ok
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.084s
+
+OK (skipped=1)
