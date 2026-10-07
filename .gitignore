@@ -1,4 +1,8 @@
 /test/
+/input/*
+!/input/.gitkeep
+/output/*
+!/output/.gitkeep
 
 # Local Python caches
 __pycache__/

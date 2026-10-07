@@ -1,25 +1,65 @@
 {
   "skill_name": "rebuild-booth-blender",
-  "version": "2.1.0-rc1",
-  "local_package_created": true,
-  "hosted_skill_updated": false,
-  "original_hosted_skill_source_read": false,
-  "baseline": "Accessible conversation script/spec/reference + user-approved redesign requirements",
+  "version": "2.2.0-rc2",
+  "baseline": "Frozen independent AI audits of 2.2.0-rc1 repository source, followed by generic fixes and source-bound native regression.",
   "python_tests": {
-    "tests_run": 64,
-    "passed": 64,
+    "tests_run": 104,
+    "passed": 104,
     "failures": [],
     "errors": [],
     "skipped": [],
-    "python": "3.12.3",
+    "expected_failures": [],
+    "unexpected_successes": [],
     "all_executed_tests_passed": true,
-    "scope": "Geometry/schema/camera/artifact tests and native Blender integration executed on this runtime; 64 passed, none skipped. This does not certify source-image fidelity."
+    "python": "3.12.3",
+    "started_at_utc": "2026-10-07T04:17:57.762766+00:00",
+    "require_native": true,
+    "discovery_pattern": "test_*.py",
+    "output_directory": "<repo>\\output\\_validation\\release_2_2_rc2_final",
+    "artifact_root": "<repo>\\output\\_validation\\release_2_2_rc2_final\\artifacts",
+    "scope": "Regression evidence only; does not certify source-image fidelity.",
+    "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
+    "builder_sha256": "8167bfb17297ceab5962dc6a76a5088ec08ec2d560ca6970b868858b27faf6bb",
+    "regression_inputs_sha256": "2d69e7059d1f19e5476bd3f9b0288fdc2ca0cb8f5f9d760d0107e5b10af39e44",
+    "native_blender": {
+      "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+      "available": true,
+      "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+      "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n",
+      "probe_stderr": "",
+      "returncode": 0
+    },
+    "native_skipped": [],
+    "status": "passed",
+    "executed_at_utc": "2026-10-07T04:18:54.783636+00:00",
+    "builder_sha256_after": "8167bfb17297ceab5962dc6a76a5088ec08ec2d560ca6970b868858b27faf6bb",
+    "regression_inputs_sha256_after": "2d69e7059d1f19e5476bd3f9b0288fdc2ca0cb8f5f9d760d0107e5b10af39e44",
+    "exit_code": 0,
+    "transcript": {
+      "path": "test_transcript.txt",
+      "sha256": "a49f3a0feb732404ca09a12b00aa40964150cfe614df0376aea5c09c8bd34611"
+    }
   },
   "native_blender_integration": "passed_blender_5.2.2_lts",
   "legacy_case_end_to_end_visual_match": "review_required",
-  "builder_sha256": "62d45843d6b2f3f06232c4df84a9886b503068bc416ec60a7bd99d6e222590cb",
+  "builder_sha256": "8167bfb17297ceab5962dc6a76a5088ec08ec2d560ca6970b868858b27faf6bb",
   "local_skill_source_read": true,
-  "customer_presentation": "Three local test cases have baseline, optimized and built-in AI image comparisons; final native scene reopen succeeds. Individual visual limitations remain recorded in ignored test/runs/.",
-  "source_assets_and_derived_scenes": "Not committed; test/ ignored",
-  "bom_status": "component identities and dimension basis retained; single-image inferred dimensions and hidden connections need confirmation before a measured BOM"
+  "customer_presentation": "Per-image Blender scenes, client renders and AI comparisons are local output artifacts; each visual reconstruction retains its own review status and estimated dimensions.",
+  "source_assets_and_derived_scenes": "Not committed; input/, output/ and historical test/ contents are ignored.",
+  "bom_status": "component identities and dimension basis retained; single-image inferred dimensions and hidden connections need confirmation before a measured BOM",
+  "regression_inputs_sha256": "2d69e7059d1f19e5476bd3f9b0288fdc2ca0cb8f5f9d760d0107e5b10af39e44",
+  "test_run_evidence": {
+    "source_test_run": "<repo>\\output\\_validation\\release_2_2_rc2_final",
+    "summary": "validation/test_results.json",
+    "summary_sha256": "96c7a46611e664b0b48e84f376f18d4e35ac368be6b78fc4f07fe8c895839d63",
+    "transcript": "validation/test_transcript.txt",
+    "transcript_sha256": "a49f3a0feb732404ca09a12b00aa40964150cfe614df0376aea5c09c8bd34611"
+  },
+  "repository_skill_source": true,
+  "audit_evidence": "validation/audit_report.json",
+  "project_layout": {
+    "input": "original images",
+    "output": "per-task snapshots/scenes/renders/evidence",
+    "test": "historical compatibility access; old links and frozen native files remain valid"
+  }
 }

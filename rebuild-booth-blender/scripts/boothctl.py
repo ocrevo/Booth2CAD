@@ -77,13 +77,19 @@ def delivery_gate(spec, evidence, root):
         if u.get('critical') and u.get('status')=='open':failures.append('open_critical_uncertainty:'+u['id'])
     metric=evidence.get('metrics',{});q=spec.get('quality',{})
     checks=(('silhouette_iou','silhouette_iou_min',True),('boundary_distance_diag','boundary_distance_max',False),
-            ('landmark_median_diag','landmark_median_max',False),('landmark_p90_diag','landmark_p90_max',False))
+            ('landmark_median_diag','landmark_median_max',False),('landmark_p90_diag','landmark_p90_max',False),
+            ('held_out_landmark_median_diag','landmark_median_max',False),
+            ('held_out_landmark_p90_diag','landmark_p90_max',False))
     for key,threshold,is_min in checks:
         val=metric.get(key);limit=q.get(threshold)
         if not isinstance(val,(float,int)) or isinstance(val,bool) or not 0<=val<=1 or limit is None:
             failures.append('missing_or_invalid_metric:'+key)
         elif (val<limit if is_min else val>limit):failures.append('metric_failed:'+key)
-    if metric.get('held_out_anchor_count',0)<2:failures.append('missing_held_out_anchors')
+    # Fit anchors cannot dilute the independent camera check. Evidence from an
+    # older assessment must be recomputed to include the held-out errors.
+    held_count=metric.get('held_out_anchor_count')
+    if isinstance(held_count,bool) or not isinstance(held_count,int) or held_count<2:
+        failures.append('missing_held_out_anchors')
     for c in spec.get('components',[]):
         if c.get('critical') and c.get('evidence',{}).get('status')=='observed':
             pm=evidence.get('part_metrics',{}).get(c['id'],{})

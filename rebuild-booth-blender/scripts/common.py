@@ -55,8 +55,9 @@ def render_rig(bounds, aspect, reference_camera):
     """Dimension-independent inspection framing and physically scaled area lights.
 
     Bounds are the actual transformed booth geometry, including the floor. The
-    camera fits a bounding sphere against the narrower field of view, preserving
-    clearance even for a tall or unusually deep stand. Wattage scales with area.
+    The inspection azimuth differs from the reference by at least 35 degrees.
+    Distance fits all eight bounds corners in camera space, rather than a sphere
+    that wastes most of a wide image. Wattage scales with area.
     """
     low,high=bounds
     if not finite_vector(low,3) or not finite_vector(high,3) or any(b<a for a,b in zip(low,high)):
@@ -66,16 +67,34 @@ def render_rig(bounds, aspect, reference_camera):
     spans=[b-a for a,b in zip(low,high)];extent=max(spans)
     if extent<=0:raise ValueError('cannot frame empty geometry')
     centre=[(a+b)/2 for a,b in zip(low,high)]
-    radius=math.sqrt(sum(v*v for v in spans))/2
     direction=[reference_camera['position'][i]-reference_camera['target'][i] for i in range(3)]
-    # Opposite horizontal side gives useful evidence beyond the matched source.
     horizontal=math.hypot(direction[0],direction[1])
     if horizontal<1e-9:direction=[-1,-1,.8]
-    else:direction=[-direction[0]/horizontal,direction[1]/horizontal,max(.55,abs(direction[2])/horizontal)]
+    else:
+        x,y=direction[0]/horizontal,direction[1]/horizontal
+        reflected=(-x,y)
+        gap=math.acos(max(-1,min(1,x*reflected[0]+y*reflected[1])))
+        if gap<math.radians(35):
+            cross=x*reflected[1]-y*reflected[0]
+            turn=math.radians(35)*(1 if cross>=0 else -1)
+            reflected=(x*math.cos(turn)-y*math.sin(turn),x*math.sin(turn)+y*math.cos(turn))
+        direction=[*reflected,max(.55,abs(direction[2])/horizontal)]
     length=math.sqrt(sum(v*v for v in direction));direction=[v/length for v in direction]
     lens,sensor=40,36
-    half_fov=math.atan(sensor/(2*lens)*min(1,1/aspect))
-    distance=radius/math.sin(half_fov)*1.12
+    # Blender uses HORIZONTAL sensor fit, including portrait outputs.
+    tan_x=sensor/(2*lens);tan_y=tan_x/aspect
+    horizontal=math.hypot(direction[0],direction[1])
+    right=[-direction[1]/horizontal,direction[0]/horizontal,0]
+    up=[-direction[0]*direction[2]/horizontal,-direction[1]*direction[2]/horizontal,horizontal]
+    distance=0
+    for x in (low[0],high[0]):
+        for y in (low[1],high[1]):
+            for z in (low[2],high[2]):
+                delta=[v-c for v,c in zip((x,y,z),centre)]
+                back=sum(v*d for v,d in zip(delta,direction))
+                projected_x=abs(sum(v*d for v,d in zip(delta,right)))
+                projected_y=abs(sum(v*d for v,d in zip(delta,up)))
+                distance=max(distance,back+1.12*max(projected_x/tan_x,projected_y/tan_y),back+extent*.01)
     inspection={'projection':'perspective','position':[centre[i]+distance*direction[i] for i in range(3)],
                 'target':centre,'lens_mm':lens,'sensor_width_mm':sensor,'principal_point':[.5,.5]}
     lights=[]

@@ -9,6 +9,7 @@ import hashlib
 import html
 import json
 import os
+import shutil
 from pathlib import Path
 from urllib.parse import quote
 from PIL import Image
@@ -38,7 +39,14 @@ def save(path,data):
     Path(path).write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
 def relative(path,root):
-    return Path(os.path.relpath(path,root)).as_posix()
+    try:return Path(os.path.relpath(path,root)).as_posix()
+    except ValueError:return Path(path).resolve().as_posix()
+
+
+def asset_url(path,root):
+    """Local HTML can refer to another Windows drive without a relative path."""
+    value=relative(path,root)
+    return Path(value).as_uri() if Path(value).is_absolute() else quote(value,safe='/.:')
 
 def prepare(input_dir,out,image_path=None):
     out=Path(out).resolve()
@@ -56,9 +64,13 @@ def prepare(input_dir,out,image_path=None):
     out.mkdir(parents=True,exist_ok=True);cases=[]
     for source in sources:
         digest=sha(source);case_id='case_'+digest[:12];folder=out/case_id;folder.mkdir(exist_ok=True)
-        with Image.open(source) as im:width,height=im.size
+        snapshot=folder/('source'+source.suffix.lower())
+        if not snapshot.exists():shutil.copy2(source,snapshot)
+        if sha(snapshot)!=digest:raise ValueError('Input changed while snapshotting: '+str(source))
+        with Image.open(snapshot) as im:width,height=im.size
         (folder/'ai_prompt.txt').write_text(CLEAN_PROMPT,encoding='utf-8')
-        cases.append({'id':case_id,'title':source.stem,'source':relative(source,out),'source_sha256':digest,
+        cases.append({'id':case_id,'title':source.stem,'source':relative(snapshot,out),
+                      'source_original':str(source),'source_sha256':digest,
                       'source_size':[width,height],'baseline':None,'blender':None,'ai':None,
                       'spec':None,'native_verification':None,'notes':[],
                       'status':'observation_and_two_render_routes_pending'})
@@ -80,7 +92,7 @@ def report(manifest_path,output):
             path=(root/path).resolve()
             if not path.is_file():raise FileNotFoundError(path)
             with Image.open(path) as im:size=list(im.size)
-            url=quote(relative(path,output.parent),safe='/.:')
+            url=asset_url(path,output.parent)
             assets.append({'role':role,'path':relative(path,root),'sha256':sha(path),'size':size,
                            'same_dimensions_as_source':size==case.get('source_size')})
             cards.append('<figure><figcaption>'+label+'</figcaption><a href="'+html.escape(url,quote=True)+'">'
@@ -92,7 +104,7 @@ def report(manifest_path,output):
                 path=(root/case[role]).resolve()
                 if not path.is_file():raise FileNotFoundError(path)
                 assets.append({'role':role,'path':relative(path,root),'sha256':sha(path)})
-                links.append('<a href="'+html.escape(quote(relative(path,output.parent),safe='/.:'),quote=True)+'">'+label+'</a>')
+                links.append('<a href="'+html.escape(asset_url(path,output.parent),quote=True)+'">'+label+'</a>')
         notes=''.join('<li>'+html.escape(str(n))+'</li>' for n in case.get('notes',[]))
         sections.append('<section><h2>'+html.escape(case.get('title',case['id']))+'</h2><div class="grid">'+''.join(cards)
                         +'</div><p>'+' · '.join(links)+'</p><ul>'+notes+'</ul><p class="status">'+html.escape(case.get('status','review_required'))+'</p></section>')

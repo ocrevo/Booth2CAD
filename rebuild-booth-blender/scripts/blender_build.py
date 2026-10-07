@@ -18,6 +18,7 @@ from bpy_extras.object_utils import world_to_camera_view
 from common import read_json,write_json,digest,code_hash,file_sha,render_rig,material_rgba
 from validate_spec import validate
 from geometry import mesh_for
+from material_patterns import apply_grid
 
 
 def arguments():
@@ -28,7 +29,7 @@ def arguments():
     return p.parse_args(argv)
 
 
-def material(name,params,emission_only=False):
+def material(name,params,emission_only=False,component=None):
     m=bpy.data.materials.new(name);m.use_nodes=True
     n=m.node_tree.nodes;n.clear();out=n.new('ShaderNodeOutputMaterial')
     color=material_rgba(params)
@@ -41,6 +42,7 @@ def material(name,params,emission_only=False):
         shader.inputs['Metallic'].default_value=params.get('metallic',0)
         shader.inputs['Emission Color'].default_value=color
         shader.inputs['Emission Strength'].default_value=params.get('emission',0)
+        if component is not None:apply_grid(n,m.node_tree.links,shader,params,component)
     m.node_tree.links.new(shader.outputs[0],out.inputs['Surface']);return m
 
 
@@ -55,10 +57,18 @@ def main():
     if not math.isfinite(a.client_exposure):raise ValueError('client exposure must be a finite EV offset')
     check=validate(spec,spec_path.parent)
     if not check['valid']:raise ValueError(json.dumps(check,ensure_ascii=False))
+    source=(spec_path.parent/spec['source']['image']).resolve()
+    # Blender decodes the real input; no Pillow/pip dependency is needed here.
+    source_probe=bpy.data.images.load(str(source),check_existing=False)
+    try:
+        if not source_probe.has_data:_=source_probe.pixels[0]
+        source_size=list(source_probe.size)
+    finally:bpy.data.images.remove(source_probe)
+    check=validate(spec,spec_path.parent,source_size=source_size)
+    if not check['valid']:raise ValueError(json.dumps(check,ensure_ascii=False))
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=True)
     blend=out/'booth.blend'
     if blend.exists():raise FileExistsError('Use a fresh run directory; existing .blend is not overwritten')
-    source=(spec_path.parent/spec['source']['image']).resolve()
     write_json(out/'spec.json',spec)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene=bpy.context.scene;scene.unit_settings.system='METRIC';scene.unit_settings.scale_length=1
@@ -83,6 +93,10 @@ def main():
             v,f=mesh_for(c);data=bpy.data.meshes.new(c['id']);data.from_pydata(v,[],f);data.update()
             if c['kind'] in ('rounded_ring','cylinder'):
                 for i,p in enumerate(data.polygons):p.use_smooth=(i%4<2) if c['kind']=='rounded_ring' else (i%3==0)
+            elif c['kind']=='arc_panel':
+                # Only the curved inner/outer sides interpolate normals;
+                # level caps and radial end cuts remain flat.
+                for i,p in enumerate(data.polygons):p.use_smooth=i<len(data.polygons)-2 and i%4<2
             elif c['kind']=='swept_strip':
                 for i,p in enumerate(data.polygons):p.use_smooth=i<len(data.polygons)-2 and i%4 in (1,3)
             elif c['kind']=='box' and c['params'].get('bevel_radius',0)>0:
@@ -96,7 +110,7 @@ def main():
         collections[group].objects.link(obj);obj.location=c['location'];obj.rotation_euler=[math.radians(x) for x in c['rotation_deg']]
         obj['ownership']='booth';obj['component_id']=c['id'];obj['scope_id']=c['scope_id'];obj['primitive_kind']=c['kind']
         obj['dimension_basis']=spec['scale']['basis'];obj['evidence_status']=c['evidence']['status']
-        obj.data.materials.append(material(c['id']+'_material',c['material']));built[c['id']]=obj
+        obj.data.materials.append(material(c['id']+'_material',c['material'],component=c));built[c['id']]=obj
     bpy.context.view_layer.update()
     corners=[obj.matrix_world@Vector(corner) for obj in built.values() for corner in obj.bound_box]
     bounds=[[min(v[i] for v in corners) for i in range(3)],[max(v[i] for v in corners) for i in range(3)]]

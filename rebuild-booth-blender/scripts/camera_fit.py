@@ -17,7 +17,7 @@ def camera_vector(camera):
     pos=np.asarray(camera['position'],float)
     direction=np.asarray(camera['target'],float)-pos
     direction/=np.linalg.norm(direction)
-    yaw=math.atan2(direction[0],direction[1]);pitch=math.asin(direction[2])
+    yaw=math.atan2(direction[0],direction[1]);pitch=math.asin(float(np.clip(direction[2],-1,1)))
     return np.r_[pos,yaw,pitch,math.radians(camera.get('roll_deg',0)),camera['lens_mm']]
 
 
@@ -60,9 +60,12 @@ def fit(spec, max_nfev=400):
         raise ValueError('DEGENERATE_ANCHORS: fitted points are coplanar; constrain camera manually or add trusted depth-separated points')
     target=np.asarray([l['uv'] for l in landmarks]);w,h=spec['source']['width'],spec['source']['height']
     x0=camera_vector(camera)
-    lower=np.r_[x0[:3]-20,x0[3]-math.pi/2,-1.45,-.35,16.0]
-    upper=np.r_[x0[:3]+20,x0[3]+math.pi/2,1.45,.35,120.0]
-    if np.any(x0<=lower) or np.any(x0>=upper): raise ValueError('Initial camera outside fitting bounds')
+    # Bound the search around the supplied seed, rather than rejecting valid
+    # lenses/rolls because they fall outside one project's camera convention.
+    # Lens bounds remain positive and allow a factor-two change in either
+    # direction. Roll has local angular freedom even for a rotated source.
+    lower=np.r_[x0[:3]-20,x0[3]-math.pi/2,-math.pi/2,x0[5]-math.pi/2,x0[6]/2]
+    upper=np.r_[x0[:3]+20,x0[3]+math.pi/2,math.pi/2,x0[5]+math.pi/2,x0[6]*2]
     weights=np.asarray([math.sqrt(float(l.get('weight',1))) for l in landmarks])[fit_idx,None]
     def residual(x):
         c=vector_camera(x,camera);uv,z=project(xyz,c,w,h)

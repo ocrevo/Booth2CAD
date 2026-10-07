@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from common import finite_vector,file_sha,read_json,write_json
 from geometry import mesh_for,positive
+from material_patterns import grid_parameters
 
 PARAM_KEYS={
  'box':({'size'},{'size','bevel_radius','bevel_mode','segments_per_corner'}),
@@ -15,10 +16,103 @@ PARAM_KEYS={
                    {'width','height','depth','side_width','beam_height','outer_radius','inner_radius','segments_per_corner'}),
  'text':({'body','size'},{'body','size','extrude'}),
  'swept_strip':({'control_points','width','depth'},{'control_points','width','depth','segments_per_curve'}),
+ 'profile_extrusion':({'profile','depth'},{'profile','depth'}),
+ 'arc_panel':({'radius','thickness','height','start_deg','end_deg'},
+               {'radius','thickness','height','start_deg','end_deg','segments'}),
 }
 
 
-def validate(spec, source_root=None):
+PARAM_TYPES={
+ 'box':{'size':list,'bevel_radius':'number','bevel_mode':str,'segments_per_corner':int},
+ 'cylinder':{'radius':'number','height':'number','segments':int},
+ 'rounded_ring':{'outer_size':list,'inner_size':list,'outer_radius':'number','inner_radius':'number','height':'number','segments_per_corner':int},
+ 'rounded_portal':{k:('integer' if k=='segments_per_corner' else 'number') for k in PARAM_KEYS['rounded_portal'][1]},
+ 'text':{'body':str,'size':'number','extrude':'number'},
+ 'swept_strip':{'control_points':list,'width':'number','depth':'number','segments_per_curve':int},
+ 'profile_extrusion':{'profile':list,'depth':'number'},
+ 'arc_panel':{k:('integer' if k=='segments' else 'number') for k in PARAM_KEYS['arc_panel'][1]},
+}
+
+
+def typed_object(value,path,required,types,error,missing_code='MISSING_FIELD',unknown_code='UNKNOWN_FIELD'):
+    """Check this API's declared fields without a JSON Schema runtime dependency."""
+    if not isinstance(value,dict):
+        error('FIELD_TYPE',path,'Expected an object');return False
+    valid=True
+    for key in sorted(set(required)-set(value)):
+        error(missing_code,path+'.'+key,'Required field missing');valid=False
+    for key in sorted(set(value)-set(types)):
+        error(unknown_code,path+'.'+key,'Unsupported/unused field');valid=False
+    for key,expected in types.items():
+        if key not in value:continue
+        actual=value[key]
+        if expected=='number':matches=finite_vector([actual],1)
+        elif expected in (int,'integer'):matches=type(actual) is int
+        elif expected is str:matches=isinstance(actual,str) and len(actual)>0
+        else:matches=isinstance(actual,expected)
+        if not matches:
+            name=expected if isinstance(expected,str) else expected.__name__
+            error('FIELD_TYPE',path+'.'+key,'Expected '+name+(' (nonempty)' if expected is str else ''))
+            valid=False
+    return valid
+
+
+def check_structure(spec,error):
+    """Required/unknown/type checks shared by external Python and native Blender."""
+    def obj(value,path,required,types,**codes):
+        return typed_object(value,path,required,types,error,**codes)
+    obj(spec['project'],'project',{'id'},{'id':str,'status':str})
+    obj(spec['source'],'source',{'image','sha256','width','height'},
+        {'image':str,'sha256':str,'width':int,'height':int},missing_code='SOURCE_FIELD')
+    obj(spec['scale'],'scale',{'units','basis','footprint_m','notes'},
+        {'units':str,'basis':str,'footprint_m':list,'notes':str})
+    scope=spec['scope']
+    if obj(scope,'scope',{'decisions'},{'decisions':list}) and isinstance(scope.get('decisions'),list):
+        for i,d in enumerate(scope['decisions']):
+            obj(d,f'scope.decisions[{i}]',{'id','owner','decision','evidence'},
+                {'id':str,'owner':str,'decision':str,'evidence':str})
+    component_types={'id':str,'scope_id':str,'owner':str,'kind':str,'role':str,'critical':bool,
+                     'evidence':dict,'location':list,'rotation_deg':list,'params':dict,'material':dict}
+    for name in ('components','requirements','landmarks','uncertainties'):
+        if not isinstance(spec[name],list):error('FIELD_TYPE',name,'Expected an array')
+    if isinstance(spec['components'],list):
+        if not spec['components']:error('MISSING_COMPONENT','components','At least one component required')
+        for i,c in enumerate(spec['components']):
+            path=f'components[{i}]'
+            if not obj(c,path,set(component_types),component_types,
+                       missing_code='MISSING_COMPONENT_FIELD',unknown_code='UNUSED_COMPONENT_FIELD'):continue
+            obj(c['evidence'],path+'.evidence',{'status','note'},
+                {'status':str,'note':str,'roi_xyxy_norm':list})
+            kind=c['kind']
+            if kind in PARAM_KEYS:
+                obj(c['params'],path+'.params',PARAM_KEYS[kind][0],PARAM_TYPES[kind],
+                    missing_code='MISSING_PARAMETER',unknown_code='UNUSED_PARAMETER')
+            obj(c['material'],path+'.material',{'color'},
+                {'color':list,'color_space':str,'roughness':'number','metallic':'number','emission':'number','pattern':dict},
+                unknown_code='UNKNOWN_MATERIAL')
+    item_types={
+        'requirements':({'id','component_id'},{'id':str,'component_id':str,'kind':str,'must_be_critical':bool}),
+        'landmarks':({'id','component_id','local_xyz','uv','visibility','fit'},
+                     {'id':str,'component_id':str,'local_xyz':list,'uv':list,'visibility':str,'fit':bool,'weight':'number'}),
+        'uncertainties':({'id','critical','status','description'},
+                         {'id':str,'critical':bool,'status':str,'description':str})}
+    for name,(required,types) in item_types.items():
+        if isinstance(spec[name],list):
+            for i,value in enumerate(spec[name]):obj(value,f'{name}[{i}]',required,types)
+    cam_types={'projection':str,'position':list,'target':list,'lens_mm':'number','sensor_width_mm':'number',
+               'ortho_scale':'number','principal_point':list,'pixel_aspect':list,'fit_status':str,'roll_deg':'number'}
+    cam_required={'projection','position','target','principal_point','pixel_aspect','fit_status'}
+    cam=spec['camera']
+    if isinstance(cam,dict):
+        if cam.get('projection')=='perspective':cam_required|={'lens_mm','sensor_width_mm'}
+        elif cam.get('projection')=='orthographic':cam_required.add('ortho_scale')
+    obj(cam,'camera',cam_required,cam_types,unknown_code='UNKNOWN_CAMERA_FIELD')
+    quality_types={k:'number' for k in ('silhouette_iou_min','part_iou_min','landmark_median_max','landmark_p90_max','boundary_distance_max')}
+    quality_types['threshold_basis']=str
+    obj(spec['quality'],'quality',set(quality_types),quality_types)
+
+
+def validate(spec, source_root=None, source_size=None):
     errors=[]; warnings=[]
     def error(code,path,message): errors.append({'code':code,'path':path,'message':message})
     if not isinstance(spec,dict):
@@ -27,6 +121,8 @@ def validate(spec, source_root=None):
     for k in sorted(required-set(spec)): error('MISSING_FIELD',k,'Required v2 field missing; do not silently migrate an old proxy')
     for k in sorted(set(spec)-required): error('UNKNOWN_FIELD',k,'Unknown root field; likely unused parameter')
     if spec.get('schema_version')!='2.0': error('SCHEMA_VERSION','schema_version','Expected 2.0')
+    if errors: return {'valid':False,'errors':errors,'warnings':warnings}
+    check_structure(spec,error)
     if errors: return {'valid':False,'errors':errors,'warnings':warnings}
     try:
         source=spec['source']
@@ -39,6 +135,11 @@ def validate(spec, source_root=None):
             p=(Path(source_root)/source.get('image','')).resolve()
             if not p.is_file(): error('SOURCE_MISSING','source.image',str(p))
             elif file_sha(p)!=source['sha256']: error('SOURCE_CHANGED','source.sha256','Source bytes do not match the recorded input')
+        if source_size is not None:
+            if not finite_vector(list(source_size),2) or any(v<=0 or int(v)!=v for v in source_size):
+                error('SOURCE_SIZE','source','Decoded source size must contain two positive integer dimensions')
+            elif list(source_size)!=[source['width'],source['height']]:
+                error('SOURCE_DIMENSIONS','source','Recorded dimensions do not match decoded source size '+str(list(source_size)))
         scale=spec['scale']
         if scale.get('units')!='m': error('UNITS','scale.units','Only metres supported')
         if scale.get('basis') not in ('user_dimensions','user_assumption','single_image_estimate'): error('SCALE_BASIS','scale.basis','Record measured versus assumed scale')
@@ -70,7 +171,7 @@ def validate(spec, source_root=None):
             ev=c.get('evidence',{})
             if ev.get('status') not in ('observed','inferred'): error('EVIDENCE_STATUS',path,'Use observed or inferred')
             if not ev.get('note'): error('EVIDENCE_NOTE',path,'Document visible basis or hidden-geometry assumption')
-            if ev.get('status')=='observed':
+            if ev.get('status')=='observed' or 'roi_xyxy_norm' in ev:
                 roi=ev.get('roi_xyxy_norm')
                 if not finite_vector(roi,4) or not (0<=roi[0]<roi[2]<=1 and 0<=roi[1]<roi[3]<=1): error('OBSERVATION_ROI',path,'Visible components require a valid reference-image ROI')
             if not isinstance(c.get('critical'),bool): error('CRITICAL_FLAG',path,'Boolean required')
@@ -85,11 +186,12 @@ def validate(spec, source_root=None):
                 if kind=='text':
                     if not isinstance(params['body'],str) or not params['body'].strip(): raise ValueError('text body is empty')
                     positive('size',params['size'])
-                    if params.get('extrude',0)<0: raise ValueError('text extrude must be nonnegative')
+                    extrude=params.get('extrude',0)
+                    if not finite_vector([extrude],1) or extrude<0: raise ValueError('text extrude must be a finite nonnegative number')
                 else: mesh_for(c)
             except (KeyError,TypeError,ValueError,OverflowError) as ex: error('INVALID_GEOMETRY',path,str(ex))
             mat=c.get('material',{})
-            if set(mat)-{'color','color_space','roughness','metallic','emission'}: error('UNKNOWN_MATERIAL',path,'Unsupported material field')
+            if set(mat)-{'color','color_space','roughness','metallic','emission','pattern'}: error('UNKNOWN_MATERIAL',path,'Unsupported material field')
             if mat.get('color_space','linear') not in ('linear','srgb'): error('MATERIAL_COLOR_SPACE',path,'Use linear or srgb')
             if not finite_vector(mat.get('color'),4) or not all(0<=x<=1 for x in mat['color']): error('MATERIAL_COLOR',path,'RGBA values in [0,1] required')
             for key in ('roughness','metallic'):
@@ -97,6 +199,8 @@ def validate(spec, source_root=None):
                 if not finite_vector([value],1) or not 0<=value<=1: error('MATERIAL_PARAMETER',path,key)
             val=mat.get('emission',0)
             if not finite_vector([val],1) or val<0: error('MATERIAL_PARAMETER',path,'emission')
+            try:grid_parameters(mat,c)
+            except (KeyError,TypeError,ValueError,OverflowError) as ex:error('MATERIAL_PATTERN',path,str(ex))
         floors=[c for c in comps.values() if c.get('role')=='floor']
         if len(floors)!=1 or floors[0].get('kind')!='box':
             error('FOOTPRINT_GEOMETRY','components','v2.0 requires exactly one rectangular booth-owned floor/carpet component')
@@ -120,6 +224,8 @@ def validate(spec, source_root=None):
             if not finite_vector(lm.get('uv'),2) or not all(0<=x<=1 for x in lm['uv']): error('LANDMARK_2D',path,'Use original-image normalized coordinates')
             if lm.get('visibility') not in ('visible','occluded'): error('LANDMARK_VISIBILITY',path,'Explicit visibility required')
             if not isinstance(lm.get('fit'),bool): error('LANDMARK_SPLIT',path,'Mark fit or held-out anchor')
+            if not finite_vector([lm.get('weight',1)],1) or lm.get('weight',1)<=0:
+                error('LANDMARK_WEIGHT',path+'.weight','A finite positive fitting weight is required')
         cam=spec['camera']
         allowed_cam={'projection','position','target','lens_mm','sensor_width_mm','ortho_scale','principal_point','pixel_aspect','fit_status','roll_deg'}
         for key in set(cam)-allowed_cam:error('UNKNOWN_CAMERA_FIELD','camera.'+key,'Unsupported/unused camera parameter')
@@ -128,12 +234,11 @@ def validate(spec, source_root=None):
         if cam.get('position')==cam.get('target'): error('CAMERA_DEGENERATE','camera','Position equals target')
         if cam.get('projection') not in ('perspective','orthographic'): error('CAMERA_PROJECTION','camera','Explicit perspective or orthographic required')
         if cam.get('fit_status') not in ('unfitted','landmark_fitted','reviewed'): error('CAMERA_STATUS','camera.fit_status','Unknown fit state')
-        if cam.get('projection')=='perspective':
-            positive('lens_mm',cam['lens_mm']); positive('sensor_width_mm',cam['sensor_width_mm'])
-        else: positive('ortho_scale',cam['ortho_scale'])
+        for key in ('lens_mm','sensor_width_mm','ortho_scale'):
+            if key in cam:positive(key,cam[key])
         if not finite_vector(cam.get('principal_point'),2) or not all(0<=x<=1 for x in cam['principal_point']): error('PRINCIPAL_POINT','camera','Expected normalized principal point')
         if not finite_vector([cam.get('roll_deg',0)],1): error('CAMERA_ROLL','camera','Finite roll in degrees required')
-        if cam.get('pixel_aspect') != [1,1]: error('PIXEL_ASPECT','camera','v2.0 renderer supports square pixels only')
+        if not finite_vector(cam.get('pixel_aspect'),2) or cam['pixel_aspect'] != [1,1]: error('PIXEL_ASPECT','camera','v2.0 renderer supports square pixels only')
         for u in spec['uncertainties']:
             if u.get('status') not in ('open','resolved_by_evidence','accepted_by_user'): error('UNCERTAINTY_STATUS','uncertainties','Explicit uncertainty state required')
             if u.get('status')=='open' and u.get('critical'):
@@ -150,7 +255,17 @@ def validate(spec, source_root=None):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--spec',required=True);p.add_argument('--report');p.add_argument('--check-source',action='store_true')
-    a=p.parse_args();result=validate(read_json(a.spec),Path(a.spec).parent if a.check_source else None)
+    a=p.parse_args();spec=read_json(a.spec);source_root=Path(a.spec).parent if a.check_source else None
+    result=validate(spec,source_root)
+    if a.check_source and result['valid']:
+        try:
+            from PIL import Image
+            with Image.open((source_root/spec['source']['image']).resolve()) as image:
+                source_size=list(image.size)
+            result=validate(spec,source_root,source_size=source_size)
+        except (ImportError,OSError,ValueError) as ex:
+            result['valid']=False
+            result['errors'].append({'code':'SOURCE_IMAGE','path':'source.image','message':str(ex)})
     if a.report:write_json(a.report,result)
     import json;print(json.dumps(result,ensure_ascii=False,indent=2))
     return 0 if result['valid'] else 2

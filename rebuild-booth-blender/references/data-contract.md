@@ -2,10 +2,10 @@
 
 ## Spec
 
-`schemas/booth-spec-v2.schema.json` 是机器可读格式；`scripts/validate_spec.py` 同时执行跨字段、scope、尺寸与几何可构造性检查。
+`schemas/booth-spec-v2.schema.json` 是机器可读格式；`scripts/validate_spec.py` 同时执行嵌套结构、跨字段、scope、尺寸与几何可构造性检查。必填项、未知字段和非法类型会被拒绝；扩展契约时同时更新 schema、运行时校验和测试。
 必须同时理解 schema 与语义规则，不能以“JSON 合法”代替建模判断。
 
-`source` 锁定原始图片、SHA-256 和画幅。`scale` 声明尺寸依据。`scope` 与 `components` 通过 scope_id 关联。
+`source` 锁定原始图片或其字节不变的输入快照、SHA-256 和画幅。`--check-source` 和原生 builder 同时核对文件 hash 与真实像素尺寸，不能通过伪报分辨率改变画幅。`scale` 声明尺寸依据。`scope` 与 `components` 通过 scope_id 关联。
 组件默认位于局部几何中心，placement 是世界坐标。Z 朝上。Euler XYZ 单位为度。
 `rounded_portal` 位于 XZ 平面，厚度沿 Y，原点为整体包围盒中心；`rounded_ring` 位于 XY 平面，厚度沿 Z。
 环的内外圆角分别驱动轮廓；无孔或者相交的环会被拒绝。门架是一条有两只脚的连续带状实体，不跨底部封口。
@@ -13,10 +13,13 @@
 当前只支持一个矩形 floor/carpet 对象，尺寸须与 footprint 一致。非矩形展位边界要扩展几何与 schema，不能悄悄近似为矩形并声称完成。
 不支持的几何原型会报错；请新增确定性 builder、对应 params schema 和拓扑/回归测试后使用。
 box 支持 bevel_radius 和 bevel_mode=all/vertical（默认 all）；vertical 仅圆化四条竖边，上下端保持平切。swept_strip 的 control_points 使用 3n+1 个局部 [x,z] 点，每段 Bezier 的确定性偏移生成连续封闭条带，depth 沿 Y。无新增资产导入器、自动 UV 或孔阵生成器。
+`profile_extrusion` 的 profile 是局部 XZ 平面简单闭合轮廓，首点不重复，depth 沿 Y；坐标原点由作者确定，不自动居中。边缘缺口写进外轮廓，不能用它表示带独立内孔的多环面。`arc_panel` 是局部 XY 平面的圆弧带，height 沿 Z；radius 为中心线半径，thickness 为径向厚度，start_deg/end_deg 从 +X 逆时针，取两角之间跨度小于 360° 的区间。原点为圆心与高度中面，不是包围盒中心；同圆心、半径、厚度与标高的相邻角段可用不同材质组成弧形彩带。
 material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入 shader。client_render.png 是中性背景客户图，reference_render.png 仍是透明验收图，不应拿客户图背景做 silhouette。第二视角和灯光从实际变换后几何的包围盒产生。
+第二视角与源机位水平角至少相差 35°；根据全部包围盒角点在相机坐标中的投影计算距离，适配横竖画幅，保留取景余量。它只用于检查补全部分与连接，不增加源图测量证据。
+可选 material.pattern 格网参数为 `type=grid`、spacing=[横向米间距,纵向米间距]、line_width（米）、line_color（RGB3，继承 color_space）。coordinates=auto 默认弧板用 arc_length_z、其他用 xz；也可选 xy/xz/yz。offset=[米,米] 调整格网原点；弧板的 arc_origin_deg 指定展开角原点，相邻段共用它以保持纹样连续，并避免跨越 ±180° 展开缝。这是表面颜色纹样，不是实体孔洞，不能用它生成穿孔加工 BOM。
 
 `requirements` 是最低结构义务，例如 `top_ring.kind=rounded_ring`。它只能检验已写入的义务是否实现，不能证明写入的义务本身识别正确。
-`evidence.status=observed/inferred` 分离观察与补全。`uncertainties` 中 open 且 critical 的事项阻止最终交付，不阻止低成本候选测试。
+`evidence.status=observed/inferred` 分离观察与补全；observed 必须有源图 ROI。`uncertainties` 中 open 且 critical 的事项阻止严格已验证交付，不阻止低成本候选测试。
 
 ## QA 输入
 
@@ -26,7 +29,7 @@ annotations.json 的 source_sha256 必须对应原图。它引用 booth silhouet
 `part_masks/<component_id>.png` 是匹配相机下、保留其他展台物件遮挡的可见构件图。不是移除所有遮挡之后的孤立模型投影。
 
 投影点格式：`[{id, uv:[u,v], depth}]`。不可见点不评分；缺失可见点不是零误差，而是错误。
-`camera_fit.py` 对透视相机拟合位姿、roll、焦距，保持主点和几何固定；正交相机需手工/视觉复核设置。
+`camera_fit.py` 对透视相机拟合位姿、roll、焦距，保持主点和几何固定；透视相机必填 lens_mm/sensor_width_mm，正交相机必填 ortho_scale。拟合范围围绕种子设置，正交相机需手工/视觉复核设置。landmark.weight 必须是有限正数；compare/assess 分别报告全部可见点和保留点的中位数/P90，严格门禁单独检查保留点。
 
 ## 证据与真实文件绑定
 
@@ -43,7 +46,7 @@ visual_review 不是数字签名，也不是独立审计认证；其意义是记
 
 ## 依赖
 
-标准库：geometry、common、spec validator、boothctl（除了 doctor 探测外不加载第三方库）。
+标准库：geometry、common、spec validator 的结构/语义检查、boothctl（除了 doctor 探测外不加载第三方库）。外部 validator 使用 `--check-source` 时通过 Pillow 读取真实像素尺寸；原生 builder 通过 Blender 图像 API 读取，不需要额外 pip 依赖。
 外部 Python：camera_fit/compare/assess 使用 numpy、Pillow、scipy；完整测试另外使用 jsonschema 和 trimesh。
 Blender 内置 Python：blender_build / blender_verify，不需要往 Blender Python 里安装上述数据科学库。
 已锁定测试实际版本在 validation/dependency_versions.json。requirements.txt 是兼容范围，不是对范围内所有组合的测试声明。

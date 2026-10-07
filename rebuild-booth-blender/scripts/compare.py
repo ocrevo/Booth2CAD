@@ -62,6 +62,7 @@ def landmark_metrics(reference, projected, width, height):
     held=[d['error_diag'] for d in detail if not d['used_for_fit']]
     return {'median_diag':float(np.median(errors)),'p90_diag':float(np.quantile(errors,.9)),
             'held_out_count':len(held),'held_out_median_diag':float(np.median(held)) if held else None,
+            'held_out_p90_diag':float(np.quantile(held,.9)) if held else None,
             'detail':detail}
 
 

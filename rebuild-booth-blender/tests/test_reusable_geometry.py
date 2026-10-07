@@ -15,7 +15,7 @@ from PIL import Image
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
-from common import read_json,write_json,material_rgba,render_rig
+from common import read_json,write_json,material_rgba,render_rig,file_sha
 from geometry import mesh_for,triangulate
 from validate_spec import validate
 
@@ -99,12 +99,30 @@ class ReusableGeometryTests(unittest.TestCase):
         self.assertAlmostEqual(b['lights'][0]['energy']/a['lights'][0]['energy'],4)
         self.assertAlmostEqual(b['lights'][0]['size']/a['lights'][0]['size'],2)
 
-    def test_rig_fits_tall_stand_in_portrait_and_landscape(self):
-        for aspect in (.5,2):
-            rig=render_rig([[-1,-1,0],[1,1,18]],aspect,{'position':[6,-8,4],'target':[0,0,3]})
-            distance=math.dist(rig['inspection_camera']['position'],rig['centre'])
-            half_fov=math.atan(.45*min(1,1/aspect))
-            self.assertGreater(distance*math.sin(half_fov),math.sqrt(2**2+2**2+18**2)/2)
+    def test_rig_fits_bounds_in_portrait_and_landscape_without_excess_space(self):
+        for bounds in ([[-1,-1,0],[1,1,18]],[[-8,-2,0],[8,2,4]],[[-2,-8,0],[2,8,4]]):
+            for aspect in (.5,1,2,4):
+                rig=render_rig(bounds,aspect,{'position':[6,-8,4],'target':[0,0,3]})
+                camera=np.array(rig['inspection_camera']['position']);centre=np.array(rig['centre'])
+                forward=centre-camera;forward/=np.linalg.norm(forward)
+                right=np.cross(forward,[0,0,1]);right/=np.linalg.norm(right)
+                up=np.cross(right,forward)
+                points=np.array([[x,y,z] for x in (bounds[0][0],bounds[1][0])
+                                 for y in (bounds[0][1],bounds[1][1]) for z in (bounds[0][2],bounds[1][2])])
+                offsets=points-camera;depth=offsets@forward
+                self.assertTrue(np.all(depth>0))
+                projected=np.column_stack((offsets@right/depth/.45,offsets@up/depth/(.45/aspect)))
+                self.assertLessEqual(np.max(np.abs(projected)),1/1.12+1e-9)
+                self.assertGreater(np.max(np.abs(projected)),.85)
+
+    def test_inspection_azimuth_changes_even_for_frontal_source(self):
+        for position in ([0,-10,3],[.01,-10,3],[8,-10,6],[0,10,3]):
+            reference=np.array(position[:2],dtype=float);reference/=np.linalg.norm(reference)
+            rig=render_rig([[-5,-2,0],[5,2,4]],2,{'position':position,'target':[0,0,2]})
+            inspection=np.array(rig['inspection_camera']['position'][:2])-np.array(rig['centre'][:2])
+            inspection/=np.linalg.norm(inspection)
+            angle=math.degrees(math.acos(np.clip(np.dot(reference,inspection),-1,1)))
+            self.assertGreaterEqual(angle,35-1e-8)
 
     def test_explicit_srgb_preserves_alpha_and_defaults_remain_linear(self):
         rgba=material_rgba({'color':[.5,.04045,1,.3],'color_space':'srgb'})
@@ -117,7 +135,6 @@ class NativeReusableGeometryTests(unittest.TestCase):
     def test_native_bevel_strip_material_and_client_render(self):
         spec=read_json(ROOT/'examples/legacy-case/candidate_spec.json')
         spec['source']['image']=str(ROOT/'examples/legacy-case/reference.png')
-        spec['source']['width']=160;spec['source']['height']=128
         spec['components'][0]['params']['bevel_radius']=.005
         c=copy.deepcopy(spec['components'][0]);c.update(id='generic_rib',kind='swept_strip',role='decorative_rib',
                 critical=False,params=copy.deepcopy(STRIP),location=[0,0,2.1])
@@ -128,7 +145,10 @@ class NativeReusableGeometryTests(unittest.TestCase):
         spec['components'].append(counter)
         binary=os.environ['BLENDER_EXE'];base=[binary,'--background','--factory-startup','--disable-autoexec','--python-exit-code','1']
         with tempfile.TemporaryDirectory() as directory:
-            path=Path(directory);write_json(path/'spec.json',spec)
+            path=Path(directory)
+            source=path/'synthetic_source.png';Image.new('RGBA',(160,128),'white').save(source)
+            spec['source'].update(image=str(source),sha256=file_sha(source),width=160,height=128)
+            write_json(path/'spec.json',spec)
             build=subprocess.run(base+['--python',str(ROOT/'scripts/blender_build.py'),'--','--spec',str(path/'spec.json'),
                          '--out',str(path/'run'),'--render','--samples','1','--client-exposure','-.75'],timeout=180,capture_output=True,text=True)
             self.assertEqual(build.returncode,0,build.stdout+build.stderr)

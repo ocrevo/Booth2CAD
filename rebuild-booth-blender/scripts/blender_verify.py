@@ -8,6 +8,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 import bpy
 from common import read_json,write_json,digest,code_hash,file_sha,material_rgba
 from geometry import mesh_for
+from material_patterns import apply_grid,grid_graph_signature
 
 
 def main():
@@ -50,14 +51,37 @@ def main():
                         if isinstance(expected_value,list):matches=all(abs(a-b)<1e-5 for a,b in zip(value,expected_value))
                         else:matches=abs(value-expected_value)<1e-5
                         if not matches:errors.append('material_parameter_mismatch:'+ident+':'+input_name)
+                    # Compare the actual reopened graph to the shared pattern
+                    # builder, including coordinate mapping, intervals and links.
+                    expected_mat=bpy.data.materials.new('_verification_pattern');expected_mat.use_nodes=True
+                    expected_mat.node_tree.nodes.clear()
+                    expected_shader=expected_mat.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
+                    expected_shader.name=shader.name
+                    apply_grid(expected_mat.node_tree.nodes,expected_mat.node_tree.links,expected_shader,params,c)
+                    if grid_graph_signature(mat.node_tree)!=grid_graph_signature(expected_mat.node_tree):
+                        errors.append('material_pattern_mismatch:'+ident)
+                    bpy.data.materials.remove(expected_mat)
             if c['kind']=='text':
-                if obj.type!='FONT' or obj.data.body!=c['params']['body']:errors.append('text_mismatch:'+ident)
+                if obj.type!='FONT':errors.append('text_mismatch:'+ident)
+                else:
+                    params=c['params']
+                    if obj.data.body!=params['body']:errors.append('text_mismatch:'+ident)
+                    for name,value in (('size',params['size']),('extrude',params.get('extrude',.001))):
+                        if not math.isclose(getattr(obj.data,name),value,rel_tol=1e-5,abs_tol=1e-7):
+                            errors.append('text_parameter_mismatch:'+ident+':'+name)
+                    for name in ('align_x','align_y'):
+                        if getattr(obj.data,name)!='CENTER':
+                            errors.append('text_alignment_mismatch:'+ident+':'+name)
             elif obj.type!='MESH':errors.append('mesh_type_mismatch:'+ident)
             else:
                 v,f=mesh_for(c)
                 if len(obj.data.vertices)!=len(v) or len(obj.data.polygons)!=len(f):errors.append('mesh_count_mismatch:'+ident)
                 elif any(abs(obj.data.vertices[i].co[j]-v[i][j])>1e-5 for i in range(len(v)) for j in range(3)):errors.append('mesh_shape_mismatch:'+ident)
                 elif any(tuple(obj.data.polygons[i].vertices)!=tuple(f[i]) for i in range(len(f))):errors.append('mesh_topology_mismatch:'+ident)
+                if c['kind']=='arc_panel' and any(p.use_smooth!=(i<len(f)-2 and i%4<2) for i,p in enumerate(obj.data.polygons)):
+                    errors.append('curved_panel_shading_mismatch:'+ident)
+                if c['kind']=='profile_extrusion' and any(p.use_smooth for p in obj.data.polygons):
+                    errors.append('profile_cap_shading_mismatch:'+ident)
     for ident in set(expected)-set(observed):errors.append('missing_component:'+ident)
     result={'native_blender_reopened':True,'geometry_verified':not errors,'errors':errors,
             'blender_version':bpy.app.version_string,'spec_sha256':digest(spec),'builder_sha256':code_hash(),

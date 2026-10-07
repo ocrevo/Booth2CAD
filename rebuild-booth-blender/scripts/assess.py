@@ -73,7 +73,10 @@ def assess(spec_path,run_path,annotation_path,review_path):
     try:
         projected=read_json(run/'projected_landmarks.json');artifact('projected_landmarks',run/'projected_landmarks.json')
         lm=landmark_metrics(spec['landmarks'],projected,spec['source']['width'],spec['source']['height'])
-        metrics.update(landmark_median_diag=lm['median_diag'],landmark_p90_diag=lm['p90_diag'],held_out_anchor_count=lm['held_out_count'])
+        metrics.update(landmark_median_diag=lm['median_diag'],landmark_p90_diag=lm['p90_diag'],
+                       held_out_anchor_count=lm['held_out_count'],
+                       held_out_landmark_median_diag=lm['held_out_median_diag'],
+                       held_out_landmark_p90_diag=lm['held_out_p90_diag'])
     except (OSError,ValueError,KeyError) as ex:errors.append('landmarks:'+str(ex))
     evidence={'spec_sha256':digest(spec),'builder_sha256':code_hash(),
               'native_blender_reopened':verify.get('native_blender_reopened',False),

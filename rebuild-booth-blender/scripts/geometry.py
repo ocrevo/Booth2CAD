@@ -249,7 +249,125 @@ def cylinder(params: dict):
     return v,f
 
 
-BUILDERS={'box':box,'cylinder':cylinder,'rounded_ring':rounded_ring,'rounded_portal':rounded_portal,'swept_strip':swept_strip}
+def _orient(a,b,c):
+    return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+
+
+def _simple_profile(points):
+    """Validate one outer boundary; edge-open notches are part of that boundary.
+
+    Interior holes require a separate primitive: never bridge them with a cap.
+    Redundant collinear samples are removed before deterministic ear clipping.
+    """
+    if not isinstance(points,(list,tuple)) or not 3<=len(points)<=1024:
+        raise ValueError('profile must contain 3..1024 local [x,z] coordinates')
+    if any(not isinstance(p,(list,tuple)) or len(p)!=2 or
+           any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in p) for p in points):
+        raise ValueError('profile coordinates must be finite local [x,z] pairs')
+    points=[tuple(map(float,p)) for p in points]
+    extent=max(max(p[k] for p in points)-min(p[k] for p in points) for k in (0,1))
+    if extent<=0:raise ValueError('profile has zero area')
+    tolerance=extent*1e-10;area_tolerance=extent*extent*1e-12
+    def on_segment(a,b,p):
+        return (abs(_orient(a,b,p))<=area_tolerance and
+                all(min(a[k],b[k])-tolerance<=p[k]<=max(a[k],b[k])+tolerance for k in (0,1)))
+    n=len(points)
+    for i in range(n):
+        a,b=points[i],points[(i+1)%n]
+        if math.dist(a,b)<=tolerance:
+            raise ValueError('profile has a zero-length edge; do not repeat the closing point')
+        for j in range(i+2,n):
+            if i==0 and j==n-1:continue
+            c,d=points[j],points[(j+1)%n]
+            ab_c,ab_d,cd_a,cd_b=_orient(a,b,c),_orient(a,b,d),_orient(c,d,a),_orient(c,d,b)
+            if ((ab_c*ab_d<0 and cd_a*cd_b<0) or any((on_segment(a,b,c),on_segment(a,b,d),on_segment(c,d,a),on_segment(c,d,b)))):
+                raise ValueError('profile boundary self-intersects or touches itself')
+    # A collinear reversal overlaps its adjacent edge, even if there are no
+    # nonadjacent intersections (e.g. a three-vertex degenerate boundary).
+    changed=True
+    while changed and len(points)>3:
+        changed=False
+        for i in range(len(points)):
+            a,b,c=points[i-1],points[i],points[(i+1)%len(points)]
+            if abs(_orient(a,b,c))<=area_tolerance:
+                if sum((b[k]-a[k])*(c[k]-b[k]) for k in (0,1))<=0:
+                    raise ValueError('profile contains an overlapping boundary reversal')
+                points.pop(i);changed=True;break
+    # Translation avoids cancellation for profiles whose local origin is far
+    # from the boundary. Placement is still exactly the supplied coordinates.
+    origin=points[0]
+    relative=[(p[0]-origin[0],p[1]-origin[1]) for p in points]
+    area=sum(relative[i][0]*relative[(i+1)%len(points)][1]-relative[(i+1)%len(points)][0]*relative[i][1] for i in range(len(points)))/2
+    if abs(area)<=area_tolerance:raise ValueError('profile has zero area')
+    if area<0:points.reverse()
+    return points,area_tolerance
+
+
+def _profile_triangles(points,tolerance):
+    """Triangulate a concave simple CCW boundary without filling its notches."""
+    remaining=list(range(len(points)));triangles=[]
+    while len(remaining)>3:
+        for offset,b in enumerate(remaining):
+            a,c=remaining[offset-1],remaining[(offset+1)%len(remaining)]
+            if _orient(points[a],points[b],points[c])<=tolerance:continue
+            def inside(p):
+                return all(_orient(points[u],points[v],p)>=-tolerance for u,v in ((a,b),(b,c),(c,a)))
+            if any(inside(points[index]) for index in remaining if index not in (a,b,c)):continue
+            triangles.append((a,b,c));remaining.pop(offset);break
+        else:raise ValueError('profile cannot be triangulated; boundary is degenerate')
+    if _orient(*(points[i] for i in remaining))<=tolerance:
+        raise ValueError('profile triangulation contains a degenerate cap')
+    return triangles+[tuple(remaining)]
+
+
+def profile_extrusion(params: dict):
+    """One arbitrary simple local XZ profile extruded symmetrically along Y.
+
+    The supplied profile coordinates define the local origin; they are not
+    automatically centred. Both winding directions are accepted. Rounded
+    openings are sampled contour points and remain real negative space.
+    """
+    points,tolerance=_simple_profile(params['profile'])
+    depth=positive('depth',params['depth']);n=len(points)
+    caps=_profile_triangles(points,tolerance)
+    vertices=[(x,y,z) for y in (-depth/2,depth/2) for x,z in points]
+    faces=list(caps)+[tuple(n+i for i in reversed(face)) for face in caps]
+    faces.extend((i,n+i,n+(i+1)%n,(i+1)%n) for i in range(n))
+    return vertices,faces
+
+
+def arc_panel(params: dict):
+    """Vertical annular sector with a common XY centre and Z-centred height.
+
+    Radius is the centreline radius. Adjacent coloured panels can share the
+    same centre/radius/thickness with contiguous angle intervals. Angles use
+    x=r*cos(angle), y=r*sin(angle); no layout or material is prescribed.
+    """
+    radius,thickness,height=(positive(k,params[k]) for k in ('radius','thickness','height'))
+    if thickness>=2*radius:raise ValueError('arc_panel thickness must be smaller than twice its centreline radius')
+    angles=[params[k] for k in ('start_deg','end_deg')]
+    if any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in angles):
+        raise ValueError('arc_panel angles must be finite numbers')
+    span=abs(angles[1]-angles[0])
+    if not 1e-6<span<360:raise ValueError('arc_panel angular span must be positive and smaller than 360 degrees')
+    steps=params.get('segments',64)
+    if isinstance(steps,bool) or not isinstance(steps,int) or not 4<=steps<=512:
+        raise ValueError('arc_panel segments must be an integer in [4,512]')
+    start,end=map(math.radians,sorted(angles));n=steps+1
+    loops=[[(r*math.cos(start+(end-start)*i/steps),r*math.sin(start+(end-start)*i/steps)) for i in range(n)]
+           for r in (radius+thickness/2,radius-thickness/2)]
+    vertices=[(x,y,z) for z in (-height/2,height/2) for loop in loops for x,y in loop]
+    faces=[]
+    for i in range(n-1):
+        j=i+1
+        faces.extend(((i,j,2*n+j,2*n+i),(n+j,n+i,3*n+i,3*n+j),
+                      (j,i,n+i,n+j),(2*n+i,2*n+j,3*n+j,3*n+i)))
+    faces.extend(((0,2*n,3*n,n),(n-1,2*n-1,4*n-1,3*n-1)))
+    return vertices,faces
+
+
+BUILDERS={'box':box,'cylinder':cylinder,'rounded_ring':rounded_ring,'rounded_portal':rounded_portal,
+          'swept_strip':swept_strip,'profile_extrusion':profile_extrusion,'arc_panel':arc_panel}
 
 
 def mesh_for(component: dict):
