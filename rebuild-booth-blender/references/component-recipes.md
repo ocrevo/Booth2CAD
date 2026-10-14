@@ -16,6 +16,24 @@
 | 自有灯带/下照灯 | 窄 box/swept_strip/薄 cylinder + emission | 路径、数量、朝向、booth 归属；不从光斑补展馆灯 |
 | 座椅/植物等装饰 | 可准确表达的 primitive 组合，否则按范围扩展或用允许资产 | 数量与曲面按图，不默认添加家具或以盒子代曲面 |
 
+## 代码宏（scripts/components.py）
+
+`SpecBuilder` 收集 scope、构件、landmark（世界坐标自动换成局部坐标）、uncertainties，关键构件自动生成 requirements。宏只发出上表的 primitive：
+
+| 宏 | 产出 | 主要参数 |
+|---|---|---|
+| `box` / `cylinder` | 由 (min, max) 区间生成轴对齐盒或圆柱 | x、y、z 区间；bevel |
+| `counter` | 可选退台踢脚 + 柜体 + 台面 | x、y 区间，高度默认 1.05 |
+| `round_table` | 台面、立柱、底盘 | 中心、半径、高度 |
+| `shell_chair` | 圆座、环绕靠背（arc_panel）、四根外撇腿 | 中心、朝向 yaw（0 朝 −Y） |
+| `louvre_wall` | 一排竖向百叶，可隔片后退 | 分布区间、厚度区间、片数、片宽 |
+| `slats` | 等距格栅 | 首根中心、间距、根数 |
+| `planter` | 种植槽、土面、确定性草叶 | 区间、高度、叶数 |
+| `wall_screens` | 墙面框带 + 中性显示面 | 墙面 y、框和屏的 (x, z) 区间 |
+| `shelves` | 侧墙搁板与可选背衬条 | 墙面 x、y 区间、各层高度 |
+
+位置优先用 `camera_math.unproject` / `rect_on_plane` / `floor_point` 从原图像素反投影得到，默认尺寸来自 [设计先验](design-priors.md)。宏的默认值都要按本图覆盖。
+
 ## 形状 API
 
 - box：`size=[x,y,z]`，可选 bevel_radius、bevel_mode=all/vertical。all 圆角小于最薄边一半；vertical 约束 XY 最薄边且上下端平切。圆角真实驱动顶点。

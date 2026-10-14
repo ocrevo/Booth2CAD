@@ -21,6 +21,15 @@ material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入
 `requirements` 是最低结构义务，例如 `top_ring.kind=rounded_ring`。它只能检验已写入的义务是否实现，不能证明写入的义务本身识别正确。
 `evidence.status=observed/inferred` 分离观察与补全；observed 必须有源图 ROI。`uncertainties` 中 open 且 critical 的事项阻止严格已验证交付，不阻止低成本候选测试。
 
+`validate` 的 warnings 包含 `COPLANAR_OVERLAP`：两个构件同向的外露面落在同一平面且有重叠面积（凸面精确求交；被第三个构件反向面贴住而看不见的情况不报）。它不阻止构建，但渲染会出现黑面或闪烁，交付前应清零。
+
+## 快速路线的输入与输出
+
+- `box_fit.py`：输入为像素角点和带符号的坐标表达式，输出 `camera`（`fit_status=landmark_fitted`）、W/D/H、自由量、逐点误差和多起点解的离散度；`dim_source` 区分 given、assumed、fitted。它与 `camera_fit.py` 不同：后者在固定几何上精修相机，前者同时求比例，用于建模前。
+- `camera_math.py`：与 blender_build 一致的投影/反投影（水平 sensor fit、principal point、roll），只用标准库。
+- `blender_build.py --preview`：只渲染源机位 `preview_render.png`（Workbench 或 Cycles 低采样），状态 `preview_only`，不能作为交付。`--render --hd-scale N` 在同一进程追加 `client_render_hd.png` 与 `inspection_render_hd.png`（中性灰底），并写入 build_report 哈希。
+- `boothctl.py preview` 在 `--out-root` 下建新的 `preview_NNN`，生成 `compare_sheet.png` 与 `compare.json`（landmark 像素误差，无相似度分数）。
+
 ## QA 输入
 
 annotations.json 的 source_sha256 必须对应原图。它引用 booth silhouette、各关键件可见 mask 和有效区域 mask。

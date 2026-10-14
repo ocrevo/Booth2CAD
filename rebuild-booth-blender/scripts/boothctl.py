@@ -9,6 +9,8 @@ import json
 import shutil
 import subprocess
 import sys
+import time
+import os
 from pathlib import Path
 from common import read_json,write_json,digest,file_sha,code_hash,fingerprints,cache_valid
 from validate_spec import validate
@@ -106,14 +108,58 @@ def delivery_gate(spec, evidence, root):
             'note':'Only visual reconstruction; no inference of measured dimensions or engineering certification.'}
 
 
+def find_blender(blender=None):
+    candidate=blender or os.environ.get('BLENDER_EXE') or shutil.which('blender')
+    if not candidate or not Path(candidate).exists() and not shutil.which(candidate):
+        raise ValueError('Blender not found: pass --blender, set BLENDER_EXE or put blender on PATH')
+    return candidate
+
+
+def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600):
+    """Validate -> fresh numbered run -> one matched-camera render -> comparison sheet.
+    Iteration aid only; the final delivery still uses a full --render build and blender_verify."""
+    spec_path=Path(spec_path).resolve();spec=read_json(spec_path)
+    check=validate(spec,spec_path.parent)
+    if not check['valid']:return {'status':'invalid_spec','errors':check['errors'][:10]}
+    out_root=Path(out_root).resolve();out_root.mkdir(parents=True,exist_ok=True)
+    n=1+max([int(p.name.split('_')[-1]) for p in out_root.glob('preview_*') if p.name.split('_')[-1].isdigit()]+[0])
+    run=out_root/f'preview_{n:03d}'
+    cmd=[find_blender(blender),'--background','--factory-startup','--disable-autoexec','--python-exit-code','1',
+         '--python',str(Path(__file__).resolve().parent/'blender_build.py'),'--','--spec',str(spec_path),'--out',str(run),
+         '--preview','--preview-engine',engine,'--samples',str(samples)]
+    started=time.time()
+    proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
+    fallback=None
+    if proc.returncode!=0 and engine=='workbench':
+        # Integrated-GPU OpenGL drivers can crash headless Workbench; Cycles CPU needs no GPU.
+        fallback={'engine':'cycles','failed_run':str(run),'reason':(proc.stdout+proc.stderr)[-400:]}
+        run=out_root/f'preview_{n:03d}b';cmd[cmd.index('--out')+1]=str(run);cmd[cmd.index('--preview-engine')+1]='cycles'
+        proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
+    seconds=round(time.time()-started,1)
+    if proc.returncode!=0:
+        return {'status':'build_failed','run':str(run),'seconds':seconds,'fallback':fallback,'log_tail':(proc.stdout+proc.stderr)[-2000:]}
+    from preview_compare import sheet  # numpy/Pillow only for this optional step
+    summary=sheet(run)
+    return {'status':'preview_ready','run':str(run),'seconds':seconds,'fallback':fallback,'sheet':summary['sheet'],
+            'landmark_median_px':summary['landmark_median_px'],'landmark_max_px':summary['landmark_max_px'],
+            'worst_landmarks':sorted(summary['landmarks'],key=lambda r:-r['err_px'])[:5],
+            'warnings':[{k:w[k] for k in ('code','ids','plane') if k in w} for w in check['warnings']][:20]}
+
+
 def main():
     p=argparse.ArgumentParser();sp=p.add_subparsers(dest='command',required=True)
     s=sp.add_parser('doctor');s.add_argument('--blender');s.add_argument('--output')
     s=sp.add_parser('fingerprint');s.add_argument('--spec',required=True);s.add_argument('--output')
     s=sp.add_parser('patch');s.add_argument('--spec',required=True);s.add_argument('--component',required=True);s.add_argument('--field',required=True);s.add_argument('--value',required=True);s.add_argument('--output',required=True)
     s=sp.add_parser('gate');s.add_argument('--spec',required=True);s.add_argument('--evidence',required=True);s.add_argument('--root',required=True);s.add_argument('--output',required=True)
+    s=sp.add_parser('preview',help='Fast iteration render + comparison sheet in a fresh numbered folder')
+    s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
+    s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
     a=p.parse_args()
     try:
+        if a.command=='preview':
+            result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples)
+            print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if result['status']=='preview_ready' else 2
         if a.command=='doctor':result=doctor(a.blender)
         elif a.command=='fingerprint':result=fingerprints(read_json(a.spec))
         elif a.command=='patch':
@@ -123,6 +169,6 @@ def main():
         if getattr(a,'output',None):write_json(a.output,result)
         print(json.dumps(result,ensure_ascii=False,indent=2))
         return 2 if result.get('status') in ('review_required','blocked_native_blender') else 0
-    except (ValueError,KeyError,OSError) as ex:print(str(ex),file=sys.stderr);return 2
+    except (ValueError,KeyError,OSError,subprocess.SubprocessError) as ex:print(str(ex),file=sys.stderr);return 2
 
 if __name__=='__main__':raise SystemExit(main())

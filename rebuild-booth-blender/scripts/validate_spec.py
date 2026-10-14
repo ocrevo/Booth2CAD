@@ -4,7 +4,7 @@ import argparse
 import re
 from pathlib import Path
 from common import finite_vector,file_sha,read_json,write_json
-from geometry import mesh_for,positive
+from geometry import mesh_for,positive,transform_point
 from material_patterns import grid_parameters
 
 PARAM_KEYS={
@@ -55,6 +55,97 @@ def typed_object(value,path,required,types,error,missing_code='MISSING_FIELD',un
             error('FIELD_TYPE',path+'.'+key,'Expected '+name+(' (nonempty)' if expected is str else ''))
             valid=False
     return valid
+
+
+def _area2(poly):
+    return sum(poly[i-1][0]*poly[i][1]-poly[i][0]*poly[i-1][1] for i in range(len(poly)))/2
+
+
+def _convex_ccw(poly,tol=1e-9):
+    """Return the polygon counter-clockwise if it is convex, otherwise None."""
+    if len(poly)<3 or abs(_area2(poly))<=tol:return None
+    if _area2(poly)<0:poly=poly[::-1]
+    n=len(poly)
+    for i in range(n):
+        (x0,y0),(x1,y1),(x2,y2)=poly[i-1],poly[i],poly[(i+1)%n]
+        if (x1-x0)*(y2-y1)-(y1-y0)*(x2-x1)<-tol:return None
+    return poly
+
+
+def _clip(subject,clip):
+    """Intersection polygon of two convex counter-clockwise polygons (Sutherland-Hodgman)."""
+    def cross(u,v):return u[0]*v[1]-u[1]*v[0]
+    out=subject
+    for i in range(len(clip)):
+        a,b=clip[i-1],clip[i];e=(b[0]-a[0],b[1]-a[1])
+        def inside(p):return cross(e,(p[0]-a[0],p[1]-a[1]))>=-1e-12
+        def cut(p,q):
+            d=(q[0]-p[0],q[1]-p[1]);den=cross(e,d)
+            t=-cross(e,(p[0]-a[0],p[1]-a[1]))/den if abs(den)>1e-15 else 0.0
+            return (p[0]+t*d[0],p[1]+t*d[1])
+        src,out=out,[]
+        for j in range(len(src)):
+            p,q=src[j-1],src[j]
+            if inside(q):
+                if not inside(p):out.append(cut(p,q))
+                out.append(q)
+            elif inside(p):out.append(cut(p,q))
+        if not out:return []
+    return out if len(out)>=3 else []
+
+
+def _clip_area(subject,clip):
+    out=_clip(subject,clip)
+    return abs(_area2(out)) if out else 0.0
+
+
+def coplanar_overlaps(components,meshes,tol=1e-4,min_area=1e-4,limit=50):
+    """Exposed axis-aligned faces of different parts lying in one plane and facing
+    the same way. Renderers shade such pairs with black or speckled z-fighting.
+    Touching faces that point opposite ways (contact) are not reported, nor is an
+    overlap hidden against another part's opposite face (two backs on one wall,
+    two bases on one floor). Concave faces are skipped rather than guessed."""
+    groups={}
+    for c in components:
+        mesh=meshes.get(c.get('id'))
+        if not mesh:continue
+        verts,faces=mesh
+        world=[transform_point(p,c['location'],c['rotation_deg']) for p in verts]
+        lo=[min(p[i] for p in world) for i in range(3)];hi=[max(p[i] for p in world) for i in range(3)]
+        for face in faces:
+            pts=[world[i] for i in face]
+            for ax in range(3):
+                vals=[p[ax] for p in pts]
+                if max(vals)-min(vals)>tol:continue
+                coord=sum(vals)/len(vals)
+                if abs(coord-hi[ax])<=tol:sign=1
+                elif abs(coord-lo[ax])<=tol:sign=-1
+                else:break
+                a,b=[k for k in range(3) if k!=ax]
+                poly=_convex_ccw([(p[a],p[b]) for p in pts])
+                if poly and abs(_area2(poly))>=min_area:
+                    box=(min(p[0] for p in poly),max(p[0] for p in poly),min(p[1] for p in poly),max(p[1] for p in poly))
+                    groups.setdefault((ax,sign,round(coord,4)),[]).append((c['id'],box,poly))
+                break
+    found=[];seen=set()
+    for (ax,sign,coord),items in sorted(groups.items()):
+        for i in range(len(items)):
+            for j in range(i+1,len(items)):
+                (ca,ra,pa),(cb,rb,pb)=items[i],items[j]
+                if ca==cb:continue
+                key=tuple(sorted((ca,cb)))+(ax,sign,coord)
+                if key in seen:continue
+                if min(ra[1],rb[1])-max(ra[0],rb[0])<=tol or min(ra[3],rb[3])-max(ra[2],rb[2])<=tol:continue
+                shared=_clip(pa,pb);area=abs(_area2(shared)) if shared else 0.0
+                if area<min_area:continue
+                hidden=any(other!=ca and other!=cb and _clip_area(shared,po)>=.9*area
+                           for other,_,po in groups.get((ax,-sign,coord),[]))
+                if not hidden:
+                    seen.add(key)
+                    found.append({'code':'COPLANAR_OVERLAP','ids':[ca,cb],'plane':('+' if sign>0 else '-')+'xyz'[ax]+f'={coord:g}',
+                                  'area_m2':round(area,4),'message':'Same-facing faces share a plane; renders show black/speckled z-fighting. Make the parts adjacent or offset one by >=1 mm.'})
+                    if len(found)>=limit:return found
+    return found
 
 
 def check_structure(spec,error):
@@ -154,7 +245,7 @@ def validate(spec, source_root=None, source_size=None):
             if d.get('decision') not in ('include','exclude','defer'): error('SCOPE_DECISION',path,'Unknown decision')
             if d.get('decision')=='include' and d.get('owner')!='booth': error('NON_BOOTH_INCLUDED',path,'Only confirmed booth components may be built')
             if not d.get('evidence'): error('SCOPE_EVIDENCE',path,'Record the visual or user basis of ownership')
-        comps={}
+        comps={};meshes={}
         allowed={'id','scope_id','owner','kind','role','critical','evidence','location','rotation_deg','params','material'}
         for i,c in enumerate(spec['components']):
             path=f'components[{i}]'; ident=c.get('id')
@@ -188,7 +279,7 @@ def validate(spec, source_root=None, source_size=None):
                     positive('size',params['size'])
                     extrude=params.get('extrude',0)
                     if not finite_vector([extrude],1) or extrude<0: raise ValueError('text extrude must be a finite nonnegative number')
-                else: mesh_for(c)
+                else: meshes[ident]=mesh_for(c)
             except (KeyError,TypeError,ValueError,OverflowError) as ex: error('INVALID_GEOMETRY',path,str(ex))
             mat=c.get('material',{})
             if set(mat)-{'color','color_space','roughness','metallic','emission','pattern'}: error('UNKNOWN_MATERIAL',path,'Unsupported material field')
@@ -201,6 +292,7 @@ def validate(spec, source_root=None, source_size=None):
             if not finite_vector([val],1) or val<0: error('MATERIAL_PARAMETER',path,'emission')
             try:grid_parameters(mat,c)
             except (KeyError,TypeError,ValueError,OverflowError) as ex:error('MATERIAL_PATTERN',path,str(ex))
+        warnings.extend(coplanar_overlaps([c for c in spec['components'] if isinstance(c,dict) and c.get('id') in meshes],meshes))
         floors=[c for c in comps.values() if c.get('role')=='floor']
         if len(floors)!=1 or floors[0].get('kind')!='box':
             error('FOOTPRINT_GEOMETRY','components','v2.0 requires exactly one rectangular booth-owned floor/carpet component')

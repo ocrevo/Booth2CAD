@@ -1,4 +1,4 @@
-Test results directory: <repo>\output\_validation\release_2_2_rc2_final
+Test results directory: <repo>\output\_validation\release-check-2.3.0-rc1b
 Native preflight: {"requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe", "available": true, "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe", "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n", "probe_stderr": "", "returncode": 0}
 test_builder_checks_real_source_size_before_writing_scene (test_audit_contract.NativeSourceContractTests.test_builder_checks_real_source_size_before_writing_scene) ... ok
 test_camera_projection_requires_its_parameters (test_audit_contract.SyntheticContractTests.test_camera_projection_requires_its_parameters) ... ok
@@ -26,6 +26,24 @@ test_prepared_source_survives_input_removal (test_benchmark.BenchmarkTests.test_
 test_previous_outputs_are_not_new_inputs (test_benchmark.BenchmarkTests.test_previous_outputs_are_not_new_inputs) ... ok
 test_report_binds_bytes_and_records_different_ai_size (test_benchmark.BenchmarkTests.test_report_binds_bytes_and_records_different_ai_size) ... ok
 test_single_image_does_not_read_other_sources (test_benchmark.BenchmarkTests.test_single_image_does_not_read_other_sources) ... ok
+test_recovers_proportions_free_variable_and_camera (test_fast_path.BoxFitTests.test_recovers_proportions_free_variable_and_camera) ... ok
+test_scale_must_be_anchored (test_fast_path.BoxFitTests.test_scale_must_be_anchored) ... ok
+test_token_grammar (test_fast_path.BoxFitTests.test_token_grammar) ... ok
+test_too_few_points_is_underdetermined (test_fast_path.BoxFitTests.test_too_few_points_is_underdetermined) ... ok
+test_matches_camera_fit_projection_including_principal_point (test_fast_path.CameraMathTests.test_matches_camera_fit_projection_including_principal_point) ... ok
+test_plane_behind_camera_is_refused (test_fast_path.CameraMathTests.test_plane_behind_camera_is_refused) ... ok
+test_unproject_round_trip_on_each_axis (test_fast_path.CameraMathTests.test_unproject_round_trip_on_each_axis) ... ok
+test_landmark_local_coordinates_map_back_to_world (test_fast_path.ComponentMacroTests.test_landmark_local_coordinates_map_back_to_world) ... ok
+test_macro_booth_is_valid_without_z_fighting (test_fast_path.ComponentMacroTests.test_macro_booth_is_valid_without_z_fighting) ... ok
+test_tv_table_is_sixteen_by_nine (test_fast_path.ComponentMacroTests.test_tv_table_is_sixteen_by_nine) ... ok
+test_adjacent_and_opposite_contact_are_not_reported (test_fast_path.CoplanarLintTests.test_adjacent_and_opposite_contact_are_not_reported) ... ok
+test_overlap_hidden_against_another_part_is_not_reported (test_fast_path.CoplanarLintTests.test_overlap_hidden_against_another_part_is_not_reported) ... ok
+test_rotated_strips_on_one_plane_do_not_false_alarm (test_fast_path.CoplanarLintTests.test_rotated_strips_on_one_plane_do_not_false_alarm) ... ok
+test_same_facing_overlap_is_reported (test_fast_path.CoplanarLintTests.test_same_facing_overlap_is_reported) ... ok
+test_preview_and_render_flags_are_exclusive (test_fast_path.NativeFastPathTests.test_preview_and_render_flags_are_exclusive) ... ok
+test_preview_writes_one_matched_render_and_releases_lock (test_fast_path.NativeFastPathTests.test_preview_writes_one_matched_render_and_releases_lock) ... ok
+test_render_with_hd_scale_hashes_hd_outputs (test_fast_path.NativeFastPathTests.test_render_with_hd_scale_hashes_hd_outputs) ... ok
+test_sheet_reports_landmark_error_in_pixels (test_fast_path.PreviewSheetTests.test_sheet_reports_landmark_error_in_pixels) ... ok
 test_native_notched_plate_curved_panel_and_flat_caps (test_profile_geometry.NativeProfileGeometryTests.test_native_notched_plate_curved_panel_and_flat_caps) ... ok
 test_arc_adjacent_segments_share_exact_end_boundary (test_profile_geometry.ProfileGeometryTests.test_arc_adjacent_segments_share_exact_end_boundary) ... ok
 test_arc_invalid_span_radius_thickness_and_segments_fail (test_profile_geometry.ProfileGeometryTests.test_arc_invalid_span_radius_thickness_and_segments_fail) ... ok
@@ -106,7 +124,7 @@ test_source_change_during_execution_blocks_release_evidence (test_test_runner.Te
 test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details (test_test_runner.TestRunnerTests.test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details) ... ok
 
 ----------------------------------------------------------------------
-Ran 104 tests in 55.479s
+Ran 122 tests in 103.875s
 
 OK
 Final status: passed
