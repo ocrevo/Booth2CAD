@@ -181,6 +181,8 @@ def main():
     s.add_argument('--fit',required=True);s.add_argument('--image',required=True);s.add_argument('--out',required=True)
     s=sp.add_parser('design-check',help='Advisory design checks on a spec (no verdicts; missing context is reported as not checked)')
     s.add_argument('--spec',required=True);s.add_argument('--context');s.add_argument('--output')
+    s=sp.add_parser('glb',help='Export the spec as a GLB (needs trimesh; no Blender) for viewers and the web editor')
+    s.add_argument('--spec',required=True);s.add_argument('--out',required=True)
     s=sp.add_parser('preview',help='Fast iteration render + comparison sheet in a fresh numbered folder')
     s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
@@ -194,6 +196,9 @@ def main():
             result=design_run(read_json(a.spec),read_json(a.context) if a.context else {})
             if a.output:write_json(a.output,result)
             print(json.dumps(result,ensure_ascii=False,indent=2));return 0
+        if a.command=='glb':
+            from export_glb import run as glb_run
+            code,result=glb_run(a.spec,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return code
         if a.command=='overlay':
             from overlay import draw_overlay  # Pillow only for this optional step
             result=draw_overlay(read_json(a.fit),a.image,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return 0

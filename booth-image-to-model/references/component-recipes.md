@@ -36,6 +36,8 @@
 | `led_wall` | 整块模组的 LED 墙，接缝为对齐板边的表面格网 | cols、rows、module（0.5 / 0.498 m 或图中所见）、深度（必须给出） |
 | `spotlights` | 自发光小灯体，只建灯体、不建光锥 | 平面位置列表、挂点标高 |
 
+每个宏发出的零件都带 `group=前缀`（`with b.grouped('名字'):` 可给手写零件同样分组，`add(..., group=...)` 可单独指定）。
+
 位置优先用 `camera_math.unproject` / `rect_on_plane` / `floor_point` 从原图像素反投影得到，默认尺寸来自 [设计先验](design-priors.md)。宏的默认值都要按本图覆盖。
 
 ## 形状 API

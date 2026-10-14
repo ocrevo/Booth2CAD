@@ -1,4 +1,4 @@
-# booth-image-to-model · v2.5.0-rc1
+# booth-image-to-model · v2.6.0-rc1
 
 从一张展台图片生成纯展台客户图和分件可编辑的参数化三维模型（Blender 场景）。原名 rebuild-booth-blender，2.5.0 起改名。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
 

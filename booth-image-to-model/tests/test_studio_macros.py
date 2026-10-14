@@ -51,6 +51,12 @@ def studio_booth(folder):
     return b
 
 
+def fingerprint(components):
+    """Hash of the geometry-bearing fields; the optional editing `group` is additive and left out."""
+    plain = [{k: v for k, v in c.items() if k != 'group'} for c in components]
+    return hashlib.sha256(json.dumps(plain, sort_keys=True).encode()).hexdigest()
+
+
 class StudioMacroTests(unittest.TestCase):
     def test_existing_macro_output_is_byte_identical(self):
         with tempfile.TemporaryDirectory() as d:
@@ -59,13 +65,13 @@ class StudioMacroTests(unittest.TestCase):
             b.components.clear()
             b._ids.clear()
             cm.shell_chair(b, 'chair', 's', 1.5, -0.5, -40, floor_z=0.1, px=(1, 1, 5, 5))
-            self.assertEqual(hashlib.sha256(json.dumps(b.components, sort_keys=True).encode()).hexdigest(),
+            self.assertEqual(fingerprint(b.components),
                              '9641ccd321cedf7dfacd7db0e6ca06684813d90594f77bdae67c2c6e08844302')
             b.components.clear()
             b._ids.clear()
             cm.round_table(b, 't', 's', 0.5, 0.5, floor_z=0.1)
             cm.counter(b, 'c', 's', (0, 1.5), (0, 0.5), floor_z=0.1)
-            self.assertEqual(hashlib.sha256(json.dumps(b.components, sort_keys=True).encode()).hexdigest(),
+            self.assertEqual(fingerprint(b.components),
                              '1ed2aeeccf24073bacc81aa098a5e46f85670d8956dc5687c1a4e7630387a02d')
 
     def test_studio_booth_is_valid_without_overlaps_or_advisory_findings(self):

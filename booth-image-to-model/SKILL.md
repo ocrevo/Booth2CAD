@@ -2,7 +2,7 @@
 name: booth-image-to-model
 description: 从一张展台图片生成分件可编辑的参数化三维模型（Blender 场景）和无展厅、无品牌、无人物的客户渲染图；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.5.0-rc1"
+  version: "2.6.0-rc1"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
@@ -34,6 +34,8 @@ python booth-image-to-model/scripts/boothctl.py preview --spec output/new-booth/
 & $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_build.py -- --spec output/new-booth/spec_work/spec.json --out output/new-booth/native --render --samples 32 --hd-scale 3
 & $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_verify.py -- --spec output/new-booth/native/spec.json --blend output/new-booth/native/booth.blend --report output/new-booth/native/native_verification.json
 ```
+
+导出 GLB（给网页编辑器和其他查看器，不需要 Blender，需要 trimesh）：`boothctl.py glb --spec spec.json --out booth.glb`。每个构件一个节点（名字是构件 id，mesh extras 带 role、scope、evidence、kind、group），同一 `group` 的构件挂在 `group:<名>` 父节点下；Z 向上换成 glTF 的 Y 向上；文字构件、格网纹样不导出，发光强度超过 1 会截断，这些都列在返回的报告里。
 
 建议性设计检查：`boothctl.py design-check --spec spec.json [--context context.json]`。context 提供 spec 没有的事实（限高、是否允许吊挂、开口方向、LED 箱体尺寸）；缺哪项就把对应检查标为 not_checked，不套默认值。结果只说"超出常用范围"或"没有建模的支撑路径"，不是合规结论；原图本身可以偏离常见做法。数值来自 `schemas/design-priors.v1.json`（reviewed=false）。
 

@@ -2,5 +2,5 @@ numpy>=1.26,<3
 Pillow>=10,<13
 scipy>=1.11,<2
 jsonschema>=4.20,<5
-# Tests use trimesh for independent mesh-topology checks.
+# trimesh: independent mesh-topology checks in the tests, and the optional GLB export (boothctl glb).
 trimesh>=4,<5

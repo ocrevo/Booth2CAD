@@ -163,14 +163,14 @@ def check_structure(spec,error):
             obj(d,f'scope.decisions[{i}]',{'id','owner','decision','evidence'},
                 {'id':str,'owner':str,'decision':str,'evidence':str})
     component_types={'id':str,'scope_id':str,'owner':str,'kind':str,'role':str,'critical':bool,
-                     'evidence':dict,'location':list,'rotation_deg':list,'params':dict,'material':dict}
+                     'evidence':dict,'location':list,'rotation_deg':list,'params':dict,'material':dict,'group':str}
     for name in ('components','requirements','landmarks','uncertainties'):
         if not isinstance(spec[name],list):error('FIELD_TYPE',name,'Expected an array')
     if isinstance(spec['components'],list):
         if not spec['components']:error('MISSING_COMPONENT','components','At least one component required')
         for i,c in enumerate(spec['components']):
             path=f'components[{i}]'
-            if not obj(c,path,set(component_types),component_types,
+            if not obj(c,path,set(component_types)-{'group'},component_types,
                        missing_code='MISSING_COMPONENT_FIELD',unknown_code='UNUSED_COMPONENT_FIELD'):continue
             obj(c['evidence'],path+'.evidence',{'status','note'},
                 {'status':str,'note':str,'roi_xyxy_norm':list})
@@ -246,13 +246,14 @@ def validate(spec, source_root=None, source_size=None):
             if d.get('decision')=='include' and d.get('owner')!='booth': error('NON_BOOTH_INCLUDED',path,'Only confirmed booth components may be built')
             if not d.get('evidence'): error('SCOPE_EVIDENCE',path,'Record the visual or user basis of ownership')
         comps={};meshes={}
-        allowed={'id','scope_id','owner','kind','role','critical','evidence','location','rotation_deg','params','material'}
+        allowed={'id','scope_id','owner','kind','role','critical','evidence','location','rotation_deg','params','material','group'}
         for i,c in enumerate(spec['components']):
             path=f'components[{i}]'; ident=c.get('id')
             if not isinstance(ident,str) or not re.fullmatch('[a-z][a-z0-9_]*',ident): error('COMPONENT_ID',path,'Use a stable lowercase identifier')
             if ident in comps: error('DUPLICATE_COMPONENT',path,ident)
             comps[ident]=c
-            for k in sorted(allowed-set(c)): error('MISSING_COMPONENT_FIELD',path+'.'+k,'Required field missing')
+            for k in sorted((allowed-{'group'})-set(c)): error('MISSING_COMPONENT_FIELD',path+'.'+k,'Required field missing')
+            if 'group' in c and not (isinstance(c['group'],str) and re.fullmatch('[a-z][a-z0-9_]*',c['group'])): error('COMPONENT_GROUP',path+'.group','Optional editing group: a stable lowercase identifier')
             for k in sorted(set(c)-allowed): error('UNUSED_COMPONENT_FIELD',path+'.'+k,'Unknown component field')
             decision=scope.get(c.get('scope_id'),{})
             if decision.get('owner')!='booth' or decision.get('decision')!='include' or c.get('owner')!='booth':

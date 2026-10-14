@@ -10,6 +10,8 @@ Convention: metres, footprint centre at the origin, X right, Y back, Z up.
 Colours are sRGB RGBA picked from the photo (material color_space=srgb).
 """
 from __future__ import annotations
+import contextlib
+import functools
 import hashlib
 import json
 import math
@@ -59,6 +61,7 @@ class SpecBuilder:
         self.project_id = project_id
         self.scopes, self.components, self.landmarks = {}, [], []
         self.uncertainties, self.requirements = [], []
+        self._group = None
         self.scale_block = None
         self.camera_block = None
         self._ids = set()
@@ -87,9 +90,18 @@ class SpecBuilder:
         w, h = self.source['width'], self.source['height']
         return [round(_clamp01(x0 / w), 4), round(_clamp01(y0 / h), 4), round(_clamp01(x1 / w), 4), round(_clamp01(y1 / h), 4)]
 
+    @contextlib.contextmanager
+    def grouped(self, name):
+        """Parts added inside the block share an editing group (they move and swap together in an editor)."""
+        previous, self._group = self._group, name
+        try:
+            yield self
+        finally:
+            self._group = previous
+
     # ---- geometry
     def add(self, cid, scope, kind, role, centre, params, color, *, critical=False, px=None, note=None,
-            inferred=False, rot=(0, 0, 0), roughness=0.55, metallic=0.0, emission=0.0, pattern=None):
+            inferred=False, rot=(0, 0, 0), roughness=0.55, metallic=0.0, emission=0.0, pattern=None, group=None):
         if cid in self._ids:
             raise ValueError(f'duplicate component id {cid}')
         if scope not in self.scopes:
@@ -107,6 +119,9 @@ class SpecBuilder:
         comp = {'id': cid, 'scope_id': scope, 'owner': 'booth', 'kind': kind, 'role': role, 'critical': bool(critical),
                 'evidence': ev, 'location': [round(float(v), 4) for v in centre],
                 'rotation_deg': [round(float(v), 4) for v in rot], 'params': params, 'material': mat}
+        group = group if group is not None else self._group
+        if group:
+            comp['group'] = group
         self.components.append(comp)
         if critical:
             self.requirements.append({'id': f'keep_{cid}', 'component_id': cid, 'kind': kind, 'must_be_critical': True})
@@ -162,6 +177,15 @@ class SpecBuilder:
 
 # ====================================================================== macros
 
+def _grouped(fn):
+    """Macro decorator: every part a macro adds carries the macro's prefix as its group."""
+    @functools.wraps(fn)
+    def wrapper(b, prefix, *args, **kwargs):
+        with b.grouped(prefix):
+            return fn(b, prefix, *args, **kwargs)
+    return wrapper
+
+
 def _lcg(seed):
     s = seed
     while True:
@@ -169,6 +193,7 @@ def _lcg(seed):
         yield s / 0x7FFFFFFF
 
 
+@_grouped
 def round_table(b, prefix, scope, x, y, floor_z=0.0, radius=None, height=None, color=WHITE,
                 stem_color=METAL_DARK, px=None, inferred=False):
     """Pedestal table: top disc, stem, base disc."""
@@ -182,6 +207,7 @@ def round_table(b, prefix, scope, x, y, floor_z=0.0, radius=None, height=None, c
                inferred=True, metallic=0.6, roughness=0.3, note='Base disc assumed.')
 
 
+@_grouped
 def shell_chair(b, prefix, scope, x, y, yaw_deg, floor_z=0.0, color=WHITE, leg_color=WOOD, px=None, inferred=False,
                 seat_height=None):
     """Moulded shell chair: round seat, wrap-around back (arc_panel), four splayed legs.
@@ -214,6 +240,7 @@ def shell_chair(b, prefix, scope, x, y, yaw_deg, floor_z=0.0, color=WHITE, leg_c
               px=px, inferred=inferred, note=note, metallic=0.3, roughness=0.4)
 
 
+@_grouped
 def counter(b, prefix, scope, x, y, floor_z=0.0, height=None, body_color=WHITE, top_color=None,
             plinth=0.0, plinth_color=None, top_thickness=0.04, px=None, inferred=False, bevel=None):
     """Reception counter: optional recessed plinth, body, top slab."""
@@ -229,6 +256,7 @@ def counter(b, prefix, scope, x, y, floor_z=0.0, height=None, body_color=WHITE, 
           (floor_z + height - top_thickness, floor_z + height), top_color or body_color, px=px, inferred=inferred, roughness=0.35)
 
 
+@_grouped
 def louvre_wall(b, prefix, scope, span, depth, z, count, fin_width, color, along='y', stagger=0.0, px=None, inferred=False):
     """Row of vertical fins spread over `span` (along 'y' or 'x'); `depth` is the other-axis range.
 
@@ -249,6 +277,7 @@ def louvre_wall(b, prefix, scope, span, depth, z, count, fin_width, color, along
             b.box(f'{prefix}_{i}', scope, 'fin', rng, d, z, color, px=px, inferred=inferred)
 
 
+@_grouped
 def slats(b, prefix, scope, first_centre, pitch, count, y, z, width, color, along='x', px=None, inferred=False):
     """Repeated vertical slats with centre spacing `pitch` (screen along X by default)."""
     for i in range(count):
@@ -260,6 +289,7 @@ def slats(b, prefix, scope, first_centre, pitch, count, y, z, width, color, alon
             b.box(f'{prefix}_{i}', scope, 'slat', y, rng, z, color, px=px, inferred=inferred, roughness=0.6)
 
 
+@_grouped
 def planter(b, prefix, scope, x, y, floor_z=0.0, height=0.45, color=WHITE, blades=24, grass_height=(0.30, 0.55),
             seed=7, px=None, inferred=False):
     """Planter box with soil and a deterministic clump of grass blades."""
@@ -281,6 +311,7 @@ def planter(b, prefix, scope, x, y, floor_z=0.0, height=0.45, color=WHITE, blade
               inferred=True, note='Representative grass blade (count and lean are artistic).', roughness=0.7)
 
 
+@_grouped
 def wall_screens(b, prefix, scope, wall_y, frame, displays, frame_color=METAL_DARK, screen_color=DARK_SCREEN,
                  frame_depth=0.06, px=None, display_px=None, inferred=False):
     """Frame band and neutral displays on a wall whose visible face is at y=wall_y, facing -Y.
@@ -294,6 +325,7 @@ def wall_screens(b, prefix, scope, wall_y, frame, displays, frame_color=METAL_DA
               note='Display kept; media content neutralised.')
 
 
+@_grouped
 def shelves(b, prefix, scope, wall_x, y, levels, color=WHITE, depth=0.35, thickness=0.04, face='+x',
             backing_color=None, px=None, inferred=False):
     """Floating shelves on a side wall face at x=wall_x (face '+x' or '-x'), optional backing strips."""
@@ -307,6 +339,7 @@ def shelves(b, prefix, scope, wall_x, y, levels, color=WHITE, depth=0.35, thickn
                   px=px, inferred=inferred)
 
 
+@_grouped
 def header_band(b, prefix, scope, path, depth, z_range, posts=(), post_size=0.2, floor_z=0.0, color=WHITE,
                 critical=False, px=None, inferred=False):
     """Connected header band along an axis-aligned plan path (straight, L or U), with floor posts.
@@ -349,6 +382,7 @@ def header_band(b, prefix, scope, path, depth, z_range, posts=(), post_size=0.2,
               color, px=px, inferred=inferred, note='Header post from the floor to the band.')
 
 
+@_grouped
 def tv(b, prefix, scope, wall_y, centre_x, inch, *, bezel, depth, centre_z=None, face='-y', frame_color=METAL_DARK,
        screen_color=DARK_SCREEN, px=None, inferred=False):
     """Wall TV at a standard 16:9 size class: frame plus a neutral display 3 mm proud of the frame.
@@ -381,6 +415,7 @@ def tv(b, prefix, scope, wall_y, centre_x, inch, *, bezel, depth, centre_z=None,
           roughness=0.2, emission=0.35, note=f'{inch}-inch class display; content neutralised.')
 
 
+@_grouped
 def led_wall(b, prefix, scope, wall_y, x_left, z_bottom, *, cols, rows, module, depth, face_color=DARK_SCREEN,
              seam_color=(0.32, 0.32, 0.35), px=None, inferred=False):
     """LED wall made of whole standard modules on a wall face at y=wall_y (looking towards -Y).
@@ -401,6 +436,7 @@ def led_wall(b, prefix, scope, wall_y, x_left, z_bottom, *, cols, rows, module, 
           note=f'LED wall of {cols} x {rows} modules of {module} m; media content neutralised.')
 
 
+@_grouped
 def spotlights(b, prefix, scope, positions, z_top, *, radius=0.04, length=0.12, color=(1.0, 1.0, 0.95, 1), emission=4.0,
                px=None, inferred=False):
     """Small emissive light bodies hanging from z_top at plan positions [(x, y), ...].

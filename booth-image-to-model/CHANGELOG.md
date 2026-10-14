@@ -1,3 +1,9 @@
+# 2.6.0-rc1 — 2026-10-14
+
+- 为网页编辑器做准备：spec 的构件新增可选字段 `group`（schema 与校验器接受小写标识符，缺省即独立件，旧 spec 不变）。构件宏的所有零件自动带宏前缀作 group；`SpecBuilder.grouped(名)` 和 `add(..., group=)` 可手动分组；Blender 构建把 group 写进对象自定义属性。宏输出除多出 `group` 外与此前逐字节一致（测试去掉 group 后比对原指纹）。
+- 新增 `scripts/export_glb.py` 与 `boothctl.py glb`：不用 Blender，把 spec 导出为 GLB。Z 向上换成 Y 向上（纯旋转，三角形绕向不变；测试检查每个网格体积为正），颜色按 sRGB 转线性并以精确浮点写入（trimesh 默认存 8 位，暗色会分层，所以重写材质表），每个构件一个节点并带 extras，同组构件挂在 `group:<名>` 下。文字构件、格网纹样不导出、发光强度大于 1 会截断，均列入报告。校验不通过的 spec 不会写出 GLB。trimesh 现在也是 GLB 导出的可选依赖。
+- 测试：新增 `tests/test_group_glb.py`（宏分组、可选性、schema/校验器拒绝坏值、GLB 节点层级、extras、坐标轴与绕向、颜色转换、命令行与 boothctl）。
+
 # 2.5.0-rc1 — 2026-10-14
 
 - 改名：skill 与目录由 `rebuild-booth-blender` 改为 `booth-image-to-model`（从一张展台图片生成参数化三维模型和客户渲染图）。新名字不绑定 Blender，也不暗示 CAD 或图纸：当前不输出图纸，尺寸也不是实测值。

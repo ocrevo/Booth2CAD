@@ -18,6 +18,8 @@ material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入
 第二视角与源机位水平角至少相差 35°；根据全部包围盒角点在相机坐标中的投影计算距离，适配横竖画幅，保留取景余量。它只用于检查补全部分与连接，不增加源图测量证据。
 可选 material.pattern 格网参数为 `type=grid`、spacing=[横向米间距,纵向米间距]、line_width（米）、line_color（RGB3，继承 color_space）。coordinates=auto 默认弧板用 arc_length_z、其他用 xz；也可选 xy/xz/yz。offset=[米,米] 调整格网原点；弧板的 arc_origin_deg 指定展开角原点，相邻段共用它以保持纹样连续，并避免跨越 ±180° 展开缝。这是表面颜色纹样，不是实体孔洞，不能用它生成穿孔加工 BOM。
 
+构件可带可选字段 `group`（小写标识符，同 id 规则）：同一个家具的零件共用一个 group，编辑器里一起移动、换件；构件宏自动把宏的前缀写成 group。没有 group 的构件是独立件；旧 spec 不受影响。Blender 构建把它写成对象的自定义属性 `group`，GLB 导出把它作为父节点 `group:<名>`。
+
 `requirements` 是最低结构义务，例如 `top_ring.kind=rounded_ring`。它只能检验已写入的义务是否实现，不能证明写入的义务本身识别正确。
 `evidence.status=observed/inferred` 分离观察与补全；observed 必须有源图 ROI。`uncertainties` 中 open 且 critical 的事项阻止严格已验证交付，不阻止低成本候选测试。
 

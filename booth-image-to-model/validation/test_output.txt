@@ -1,4 +1,4 @@
-Test results directory: <repo>\output\_validation\release-check-2.5.0-rc1a
+Test results directory: <repo>\output\_validation\release-check-2.6.0-rc1a
 Native preflight: {"requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe", "available": true, "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe", "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n", "probe_stderr": "", "returncode": 0}
 test_builder_checks_real_source_size_before_writing_scene (test_audit_contract.NativeSourceContractTests.test_builder_checks_real_source_size_before_writing_scene) ... ok
 test_camera_projection_requires_its_parameters (test_audit_contract.SyntheticContractTests.test_camera_projection_requires_its_parameters) ... ok
@@ -110,6 +110,16 @@ test_sheet_reports_landmark_error_in_pixels (test_fast_path.PreviewSheetTests.te
 test_template_builds_a_valid_spec_from_a_synthetic_fit (test_fast_path.TemplateTests.test_template_builds_a_valid_spec_from_a_synthetic_fit) ... ok
 test_template_has_no_hard_coded_canvas (test_fast_path.TemplateTests.test_template_has_no_hard_coded_canvas) ... ok
 test_template_refuses_a_snapshot_of_another_size (test_fast_path.TemplateTests.test_template_refuses_a_snapshot_of_another_size) ... ok
+test_axes_and_winding_match_the_spec_geometry (test_group_glb.GlbTests.test_axes_and_winding_match_the_spec_geometry) ... ok
+test_cli_and_boothctl_export_valid_specs_and_refuse_invalid_ones (test_group_glb.GlbTests.test_cli_and_boothctl_export_valid_specs_and_refuse_invalid_ones) ... ok
+test_material_conversion (test_group_glb.GlbTests.test_material_conversion) ... ok
+test_mesh_extras_carry_spec_metadata (test_group_glb.GlbTests.test_mesh_extras_carry_spec_metadata) ... ok
+test_nodes_follow_component_ids_and_group_parents (test_group_glb.GlbTests.test_nodes_follow_component_ids_and_group_parents) ... ok
+test_report_lists_what_was_not_carried_over (test_group_glb.GlbTests.test_report_lists_what_was_not_carried_over) ... ok
+test_bad_group_values_are_rejected_by_validator_and_schema (test_group_glb.GroupTests.test_bad_group_values_are_rejected_by_validator_and_schema) ... ok
+test_group_is_optional_valid_and_schema_accepted (test_group_glb.GroupTests.test_group_is_optional_valid_and_schema_accepted) ... ok
+test_grouped_block_explicit_argument_and_restore (test_group_glb.GroupTests.test_grouped_block_explicit_argument_and_restore) ... ok
+test_macro_parts_share_the_macro_prefix_as_group (test_group_glb.GroupTests.test_macro_parts_share_the_macro_prefix_as_group) ... ok
 test_native_notched_plate_curved_panel_and_flat_caps (test_profile_geometry.NativeProfileGeometryTests.test_native_notched_plate_curved_panel_and_flat_caps) ... ok
 test_arc_adjacent_segments_share_exact_end_boundary (test_profile_geometry.ProfileGeometryTests.test_arc_adjacent_segments_share_exact_end_boundary) ... ok
 test_arc_invalid_span_radius_thickness_and_segments_fail (test_profile_geometry.ProfileGeometryTests.test_arc_invalid_span_radius_thickness_and_segments_fail) ... ok
@@ -202,7 +212,7 @@ test_source_change_during_execution_blocks_release_evidence (test_test_runner.Te
 test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details (test_test_runner.TestRunnerTests.test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details) ... ok
 
 ----------------------------------------------------------------------
-Ran 200 tests in 155.807s
+Ran 210 tests in 200.499s
 
 OK
 Final status: passed

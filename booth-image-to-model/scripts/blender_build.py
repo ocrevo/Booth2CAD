@@ -142,6 +142,7 @@ def main():
             group='BOOTH_GRAPHICS' if c['kind']=='text' else ('BOOTH_STRUCTURE' if c['critical'] else 'BOOTH_FURNITURE')
             collections[group].objects.link(obj);obj.location=c['location'];obj.rotation_euler=[math.radians(x) for x in c['rotation_deg']]
             obj['ownership']='booth';obj['component_id']=c['id'];obj['scope_id']=c['scope_id'];obj['primitive_kind']=c['kind']
+            if c.get('group'):obj['group']=c['group']
             obj['dimension_basis']=spec['scale']['basis'];obj['evidence_status']=c['evidence']['status']
             obj.data.materials.append(material(c['id']+'_material',c['material'],component=c));built[c['id']]=obj
         bpy.context.view_layer.update()
