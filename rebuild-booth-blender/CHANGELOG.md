@@ -1,3 +1,14 @@
+# 2.3.0-rc2 — 2026-10-14
+
+- 依据对一张新图的计时基线（约 27.7 分钟，其中读图与写 spec 约 16 分钟、3 倍高清终版 376 秒）补齐测量与诊断，默认行为不变。
+- build_report 新增 `stage_seconds`（校验、建模保存、每张渲染、遮罩、终存）；`boothctl preview` 回报阶段用时和启动开销；`--hd-views client|both` 可只出客户视角高清图（默认仍两张）。
+- Workbench 预览崩溃后，同一预览目录的后续预览直接用 Cycles（`.preview_engine.json`）。
+- box_fit 结果带画幅和地面高；不确定时点名未被约束的尺寸并给出补点建议（`ambiguous_dims`、`ambiguity_hint`）；文件头示例改为中性数字。
+- 新增 `overlay.py` 与 `boothctl overlay`：在原图上画拟合出的展台外框、0.5 m 地面和墙面网格、点击点到拟合点的偏差，建模前检查机位是否贴合。
+- camera_math 新增 `on_wall_x`（侧墙反投影）和 `height_above`（由底部与顶部像素估直立物体高度，并报告偏离垂线的距离）。
+- 预览对照把 landmark 误差分成参与拟合（循环）与独立检查（fit=false）两类；SKILL 说明高调展台用 Cycles 预览和 `--client-exposure`。
+- 项目模板从 box_fit.json 读取画幅，并核对输入快照的真实尺寸，不再含固定画幅和像素坐标；新增运行模板的测试。
+
 # 2.3.0-rc1 — 2026-10-14
 
 - 新增快速路线，按上一次单图重建的耗时复盘设计：先用 6–10 个角点同时拟合相机、焦距与展台比例（box_fit），再建模；尺度来自客户尺寸、标准件或显式标注的假设。

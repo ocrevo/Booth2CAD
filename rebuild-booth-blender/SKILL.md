@@ -2,7 +2,7 @@
 name: rebuild-booth-blender
 description: 从展台照片或效果图重建分件可编辑 Blender 展台，生成无展厅、无品牌、无人物的客户展示渲染；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.3.0-rc1"
+  version: "2.3.0-rc2"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
@@ -36,7 +36,7 @@ python rebuild-booth-blender/scripts/boothctl.py preview --spec output/new-booth
 ```
 
 `points.json` 格式见 `scripts/box_fit.py` 文件头：坐标用 `W/2`、`-D/2`、`H`、`F`（地面高）、数值或 `?名称`（共享未知量，例如右墙前沿 y）。尺度锚点优先用客户尺寸，其次是标准件，例如前台台面点写 `["?cx", "?cy", 1.05]`。只有假设值时写进 `assumed` 或用 `--assume D=4.5`，结果会标成 assumed。
-没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。
+没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。Workbench 是平光，看不出自发光和曝光；高调（全白）展台用 `boothctl.py preview --engine cycles` 判断，终版客户图曝光用 `--client-exposure`（EV，默认 −0.5）调整。预览对照报告里的 landmark 中位数分 fit（参与拟合，循环）和 check（独立检查，fit=false）两类，以 check 为准；至少留 2–4 个 fit=false 的角点。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。
 
 ## 1. 实际观察原图，裁定范围
 

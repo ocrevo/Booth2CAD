@@ -11,6 +11,7 @@ import json
 import math
 import os
 import sys
+import time
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import bpy
@@ -31,6 +32,7 @@ def arguments():
     p.add_argument('--preview-engine',choices=('workbench','cycles'),default='workbench')
     p.add_argument('--hd-scale',type=int,default=1,help='With --render, also write client/inspection *_hd.png at this integer scale (>1)')
     p.add_argument('--hd-samples',type=int,help='Cycles samples for the HD renders (default: --samples)')
+    p.add_argument('--hd-views',choices=('client','both'),default='both',help='HD images to write: the customer view only, or customer + second view')
     a=p.parse_args(argv)
     if a.hd_scale<1 or a.hd_scale>8:raise ValueError('hd-scale must be an integer from 1 to 8')
     if a.preview and (a.render or a.part_masks):raise ValueError('--preview replaces --render/--part-masks; run them in a separate final build')
@@ -80,6 +82,10 @@ def main():
     lock=out/'.build.lock'
     try:os.close(os.open(str(lock),os.O_CREAT|os.O_EXCL|os.O_WRONLY))
     except FileExistsError:raise FileExistsError('Another build is writing this run directory (remove .build.lock only if none is running): '+str(lock))
+    stages={};clock=[time.perf_counter()]
+    def stage(name):
+        now=time.perf_counter();stages[name]=round(stages.get(name,0)+now-clock[0],2);clock[0]=now
+    stage('validate_and_setup')
     try:
         blend=out/'booth.blend'
         if blend.exists():raise FileExistsError('Use a fresh run directory; existing .blend is not overwritten')
@@ -178,6 +184,7 @@ def main():
             anchors.append({'id':lm['id'],'uv':[float(ndc.x),float(1-ndc.y)],'depth':float(ndc.z)})
         write_json(out/'projected_landmarks.json',anchors)
         bpy.ops.wm.save_as_mainfile(filepath=str(blend),compress=True)
+        stage('scene_and_first_save')
         renders=[]
         background=world.node_tree.nodes.get('Background')
         def client_look(on,saved={}):
@@ -195,7 +202,7 @@ def main():
                 scene.view_settings.view_transform=saved['transform'];scene.view_settings.exposure=saved['exposure']
                 scene.render.film_transparent=True
         def shoot(cam,name):
-            scene.camera=cam;scene.render.filepath=str(out/name);bpy.ops.render.render(write_still=True);renders.append(name)
+            scene.camera=cam;scene.render.filepath=str(out/name);bpy.ops.render.render(write_still=True);renders.append(name);stage('render:'+name)
         if a.preview:
             # Iteration only: one matched-camera image, transparent so it can be laid over the source.
             if a.preview_engine=='workbench':
@@ -217,7 +224,8 @@ def main():
                 base=(scene.render.resolution_x,scene.render.resolution_y,scene.cycles.samples)
                 scene.render.resolution_x,scene.render.resolution_y=base[0]*a.hd_scale,base[1]*a.hd_scale
                 scene.cycles.samples=max(1,a.hd_samples or a.samples)
-                shoot(hero,'client_render_hd.png');shoot(inspection,'inspection_render_hd.png')
+                shoot(hero,'client_render_hd.png')
+                if a.hd_views=='both':shoot(inspection,'inspection_render_hd.png')
                 scene.render.resolution_x,scene.render.resolution_y,scene.cycles.samples=base
             client_look(False)
         if a.part_masks:
@@ -241,7 +249,9 @@ def main():
             scene.render.film_transparent=True;scene.render.image_settings.color_mode='RGBA';scene.cycles.samples=max(1,a.samples);scene.cycles.use_denoising=True
             scene.view_settings.view_transform=old_view[0];scene.view_settings.look=old_view[1];scene.view_settings.exposure=old_view[2];scene.view_settings.gamma=old_view[3]
         scene.camera=hero
+        stage('part_masks')
         bpy.ops.wm.save_as_mainfile(filepath=str(blend),compress=True)
+        stage('final_save')
         artifact_names=['booth.blend','source_reference.png','projected_landmarks.json']+renders
         artifact_names += [str(p.relative_to(out)) for p in sorted((out/'part_masks').glob('*.png'))] if (out/'part_masks').exists() else []
         hashed_artifacts=[{'path':name,'sha256':file_sha(out/name)} for name in artifact_names]
@@ -249,6 +259,8 @@ def main():
                    'spec_sha256':digest(spec),'builder_sha256':code_hash(),'blend_sha256':file_sha(blend),
                    'booth_object_count':len(built),'renders':renders,'scope':'booth_only','render_rig':rig,
                    'client_exposure_ev':a.client_exposure,'hd_scale':a.hd_scale if a.render else None,
+                   'hd_views':a.hd_views if a.render and a.hd_scale>1 else None,
+                   'stage_seconds':dict(stages,total_in_script=round(sum(stages.values()),2)),
                    'preview_engine':a.preview_engine if a.preview else None,
                    'render_purposes':{'reference_render.png':'transparent_acceptance','inspection_render.png':'transparent_secondary_view',
                                       'client_render.png':'neutral_customer_display','client_render_hd.png':'neutral_customer_display_hd',

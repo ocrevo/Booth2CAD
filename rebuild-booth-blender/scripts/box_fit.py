@@ -6,14 +6,14 @@ instead of reading the whole layout by eye.
 
 points.json:
 {
-  "image": {"width": 738, "height": 415},
-  "known": {"D": 4.5},          # any of W (x), D (y), H (top z); measured or assumed
+  "image": {"width": 1280, "height": 720},
+  "known": {"D": 3.0},          # any of W (x), D (y), H (top z); measured or assumed
   "assumed": ["D"],             # names in `known` that are assumptions, not client facts
   "floor_z": 0.1,               # z of the walking surface (default 0)
   "points": [
-    {"id": "top_front_left", "uv_px": [65, 59], "xyz": ["-W/2", "-D/2", "H"]},
-    {"id": "wall_front_bottom", "uv_px": [570, 366], "xyz": ["W/2", "?yf", "F"]},
-    {"id": "counter_top", "uv_px": [230, 255], "xyz": ["?cx", "?cy", 1.05]}
+    {"id": "top_front_left", "uv_px": [140, 95], "xyz": ["-W/2", "-D/2", "H"]},
+    {"id": "wall_front_bottom", "uv_px": [910, 520], "xyz": ["W/2", "?yf", "F"]},
+    {"id": "counter_top", "uv_px": [420, 380], "xyz": ["?cx", "?cy", 1.05]}
   ]
 }
 Coordinate tokens: a number; 0; W/2, -W/2, D/2, -D/2; H; F (floor_z); ?name for
@@ -165,6 +165,19 @@ class Problem:
         return np.r_[((uv - self.uv) * self.sqrt_w).ravel(), np.maximum(0, 0.3 - z) * 100]
 
 
+def ambiguous_dims(spread, dims, free_dims, tol=0.05):
+    """Fitted dimensions whose value varies by more than tol (relative) across equally good solutions."""
+    return [d for d in free_dims if spread.get(d, 0.0) > tol * dims[d]]
+
+
+def ambiguity_hint(names):
+    if not names:
+        return None
+    parts = {'W': 'a point on a known plane at the far left/right end', 'D': 'a known depth or a point on the front/back edge',
+             'H': 'a point whose z is numeric (a hidden-base tie, a counter top at a standard height) or a known height'}
+    return 'Not constrained by the clicks: ' + ', '.join(names) + '. Add ' + '; '.join(parts[n] for n in names) + ', or give the value as known/assumed.'
+
+
 def solve(data, seeds=40, rng_seed=1):
     pb = Problem(data)
     rng = np.random.default_rng(rng_seed)
@@ -213,7 +226,7 @@ def solve(data, seeds=40, rng_seed=1):
         spread[d] = round(float(max(vals) - min(vals)), 4)
     fvals = [r.x[6] for r in good]
     spread['lens_mm'] = round(float((max(fvals) - min(fvals)) / pb.width * SENSOR_MM), 3)
-    ambiguous = any(spread[d] > 0.05 * dims[d] for d in pb.free_dims) or len(good) < 3
+    ambiguous = bool(ambiguous_dims(spread, dims, pb.free_dims)) or len(good) < 3
     rms = float(math.sqrt(np.mean(np.square(errs))))
     return {
         'status': 'ambiguous' if ambiguous else 'fitted',
@@ -221,6 +234,8 @@ def solve(data, seeds=40, rng_seed=1):
         'dims_m': {d: round(float(dims[d]), 4) for d in DIMS if d in dims},
         'dim_source': {d: ('assumed' if d in pb.assumed else 'given') if d in pb.known else 'fitted' for d in DIMS if d in dims},
         'free': {k: round(float(v), 4) for k, v in free.items()},
+        'image': {'width': pb.width, 'height': pb.height}, 'floor_z': pb.floor_z,
+        'ambiguous_dims': ambiguous_dims(spread, dims, pb.free_dims), 'ambiguity_hint': ambiguity_hint(ambiguous_dims(spread, dims, pb.free_dims)),
         'camera': camera, 'points': per_point,
         'solution_spread': spread, 'converged_seeds': len(good), 'seeds': seeds,
         'note': 'Proportions and pose come from the clicked corners; absolute size only from known/assumed values. '

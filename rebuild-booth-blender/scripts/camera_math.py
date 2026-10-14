@@ -90,3 +90,33 @@ def rect_on_plane(top_left, bottom_right, camera, width, height, axis, value):
 def floor_point(px, py, camera, width, height, z=0.0):
     """Where a floor-contact pixel (chair foot, counter base) meets the plane z."""
     return unproject(px, py, camera, width, height, 'z', z)
+
+
+def on_wall_x(px, py, camera, width, height, x):
+    """Pixel on a wall facing +/-X (a side wall) -> [x, y, z]; the mirror of the back-wall case."""
+    return unproject(px, py, camera, width, height, 'x', x)
+
+
+def height_above(top_px, base_px, camera, width, height, floor_z=0.0):
+    """Height of an upright object from its floor-contact pixel and its top pixel.
+
+    The base pixel is unprojected onto the floor plane; the top pixel's ray is then
+    closed in on the vertical line through that point. Returns (height_m, miss_m):
+    miss_m is the distance between the ray and the vertical, so a large value means
+    the two pixels do not belong to one upright object (or the camera is wrong).
+    """
+    base = floor_point(base_px[0], base_px[1], camera, width, height, floor_z)
+    d = ray(top_px[0], top_px[1], camera, width, height)
+    o = camera['position']
+    w0 = [o[i] - base[i] for i in range(3)]
+    k = (0.0, 0.0, 1.0)
+    a, b, c = 1.0, _dot(d, k), 1.0
+    den = a * c - b * b
+    if den < 1e-12:
+        raise ValueError('looking straight up or down; height is undefined')
+    dd, e = _dot(d, w0), _dot(k, w0)
+    t = (b * e - c * dd) / den
+    s = (a * e - b * dd) / den
+    on_ray = [o[i] + t * d[i] for i in range(3)]
+    on_line = [base[0], base[1], base[2] + s]
+    return on_line[2] - floor_z, math.dist(on_ray, on_line)

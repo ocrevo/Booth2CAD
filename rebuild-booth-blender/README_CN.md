@@ -1,4 +1,4 @@
-# rebuild-booth-blender · v2.3.0-rc1
+# rebuild-booth-blender · v2.3.0-rc2
 
 从展台照片或效果图制作纯展台客户图和分件可编辑 Blender 场景。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
 

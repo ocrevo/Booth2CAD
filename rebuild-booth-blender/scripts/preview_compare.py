@@ -74,9 +74,15 @@ def sheet(run, render_name=None, out=None):
     out = Path(out) if out else run / 'compare_sheet.png'
     canvas.save(out)
     errs = [r['err_px'] for r in rows]
+    fit_errs = [r['err_px'] for r in rows if r['fit']]
+    check_errs = [r['err_px'] for r in rows if not r['fit']]
     summary = {'sheet': str(out), 'render': render_name, 'landmarks': rows,
                'landmark_median_px': float(np.median(errs)) if errs else None,
                'landmark_max_px': float(max(errs)) if errs else None,
+               'landmark_median_fit_px': float(np.median(fit_errs)) if fit_errs else None,
+               'landmark_median_check_px': float(np.median(check_errs)) if check_errs else None,
+               'landmark_check_count': len(check_errs),
+               'landmark_note': 'Fit landmarks drive the camera, so their error is circular; judge the render by the independent check landmarks (fit=false).',
                'booth_pixel_fraction': round(float(alpha.mean()), 4),
                'note': 'Panels: source | render on gray | 50% blend | source with render outline (cyan), inner edges (yellow), '
                        'landmark target (green) vs render (red). Visual aid only, no fidelity score.'}

@@ -115,6 +115,16 @@ def find_blender(blender=None):
     return candidate
 
 
+def resolve_preview_engine(out_root,engine):
+    """A Workbench crash on this machine is sticky: later previews in the same folder go straight to Cycles."""
+    sticky=Path(out_root)/'.preview_engine.json'
+    if engine=='workbench' and sticky.is_file():
+        try:
+            if json.loads(sticky.read_text(encoding='utf-8')).get('engine')=='cycles':return 'cycles',True
+        except (ValueError,OSError):pass
+    return engine,False
+
+
 def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600):
     """Validate -> fresh numbered run -> one matched-camera render -> comparison sheet.
     Iteration aid only; the final delivery still uses a full --render build and blender_verify."""
@@ -122,6 +132,7 @@ def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout
     check=validate(spec,spec_path.parent)
     if not check['valid']:return {'status':'invalid_spec','errors':check['errors'][:10]}
     out_root=Path(out_root).resolve();out_root.mkdir(parents=True,exist_ok=True)
+    engine,sticky_used=resolve_preview_engine(out_root,engine)
     n=1+max([int(p.name.split('_')[-1]) for p in out_root.glob('preview_*') if p.name.split('_')[-1].isdigit()]+[0])
     run=out_root/f'preview_{n:03d}'
     cmd=[find_blender(blender),'--background','--factory-startup','--disable-autoexec','--python-exit-code','1',
@@ -135,12 +146,19 @@ def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout
         fallback={'engine':'cycles','failed_run':str(run),'reason':(proc.stdout+proc.stderr)[-400:]}
         run=out_root/f'preview_{n:03d}b';cmd[cmd.index('--out')+1]=str(run);cmd[cmd.index('--preview-engine')+1]='cycles'
         proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
+        if proc.returncode==0:
+            write_json(out_root/'.preview_engine.json',{'engine':'cycles','reason':'Workbench failed headless on this machine','first_failed_run':fallback['failed_run']})
     seconds=round(time.time()-started,1)
     if proc.returncode!=0:
         return {'status':'build_failed','run':str(run),'seconds':seconds,'fallback':fallback,'log_tail':(proc.stdout+proc.stderr)[-2000:]}
     from preview_compare import sheet  # numpy/Pillow only for this optional step
     summary=sheet(run)
-    return {'status':'preview_ready','run':str(run),'seconds':seconds,'fallback':fallback,'sheet':summary['sheet'],
+    report=read_json(run/'build_report.json')
+    stages=report.get('stage_seconds') or {}
+    inside=stages.get('total_in_script')
+    return {'status':'preview_ready','run':str(run),'seconds':seconds,'fallback':fallback,'engine_used':'cycles' if (fallback or sticky_used) else engine,
+            'stage_seconds':stages,'startup_overhead_s':round(seconds-inside,1) if isinstance(inside,(int,float)) else None,
+            'sheet':summary['sheet'],
             'landmark_median_px':summary['landmark_median_px'],'landmark_max_px':summary['landmark_max_px'],
             'worst_landmarks':sorted(summary['landmarks'],key=lambda r:-r['err_px'])[:5],
             'warnings':[{k:w[k] for k in ('code','ids','plane') if k in w} for w in check['warnings']][:20]}
@@ -152,11 +170,16 @@ def main():
     s=sp.add_parser('fingerprint');s.add_argument('--spec',required=True);s.add_argument('--output')
     s=sp.add_parser('patch');s.add_argument('--spec',required=True);s.add_argument('--component',required=True);s.add_argument('--field',required=True);s.add_argument('--value',required=True);s.add_argument('--output',required=True)
     s=sp.add_parser('gate');s.add_argument('--spec',required=True);s.add_argument('--evidence',required=True);s.add_argument('--root',required=True);s.add_argument('--output',required=True)
+    s=sp.add_parser('overlay',help='Draw the fitted box and 0.5 m grids over the source image (check the fit before modelling)')
+    s.add_argument('--fit',required=True);s.add_argument('--image',required=True);s.add_argument('--out',required=True)
     s=sp.add_parser('preview',help='Fast iteration render + comparison sheet in a fresh numbered folder')
     s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
     a=p.parse_args()
     try:
+        if a.command=='overlay':
+            from overlay import draw_overlay  # Pillow only for this optional step
+            result=draw_overlay(read_json(a.fit),a.image,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return 0
         if a.command=='preview':
             result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples)
             print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if result['status']=='preview_ready' else 2
