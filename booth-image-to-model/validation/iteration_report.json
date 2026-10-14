@@ -1,6 +1,6 @@
 {
   "date": "2026-10-14",
-  "version": "2.6.0-rc1",
+  "version": "2.6.0-rc2",
   "blender": "5.2.2 LTS",
   "tests": {
     "tests_run": 210,

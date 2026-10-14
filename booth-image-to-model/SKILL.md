@@ -2,7 +2,7 @@
 name: booth-image-to-model
 description: 从一张展台图片生成分件可编辑的参数化三维模型（Blender 场景）和无展厅、无品牌、无人物的客户渲染图；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.6.0-rc1"
+  version: "2.6.0-rc2"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
@@ -10,7 +10,7 @@ metadata:
 
 # 展台图转模型（booth-image-to-model）
 
-默认交付纯展台客户图、可编辑 `.blend` 和第二视角；模型以参数化 spec 为唯一真源（图纸和网页编辑器属于后续功能，尚未提供）。视觉 Agent 决定范围与造型，代码负责相机拟合、确定性几何、参数校验、渲染和文件证据；AI 图片是视觉对照，不是测量来源。
+默认交付纯展台客户图、可编辑 `.blend` 和第二视角；模型以参数化 spec 为唯一真源。设计师可用仓库根目录 `web/` 里的网页编辑器直接改 spec（见下“编辑 spec”；该目录不随本 skill 包分发）；图纸（平面图、立面图，SVG/DXF）尚未提供。视觉 Agent 决定范围与造型，代码负责相机拟合、确定性几何、参数校验、渲染和文件证据；AI 图片是视觉对照，不是测量来源。
 以下命令从包含本 skill 的项目根目录执行；原始输入放在 `input/`，每次结果写入新的 `output/` 子目录。生产包只保留通用规则与构件，不依赖某个机器的绝对路径。
 首次使用查看 `validation/test_results.json` 与 `validation/runtime_probe.json` 的环境/日期和实际状态，再以本次 doctor 核实能力。
 
@@ -36,6 +36,8 @@ python booth-image-to-model/scripts/boothctl.py preview --spec output/new-booth/
 ```
 
 导出 GLB（给网页编辑器和其他查看器，不需要 Blender，需要 trimesh）：`boothctl.py glb --spec spec.json --out booth.glb`。每个构件一个节点（名字是构件 id，mesh extras 带 role、scope、evidence、kind、group），同一 `group` 的构件挂在 `group:<名>` 父节点下；Z 向上换成 glTF 的 Y 向上；文字构件、格网纹样不导出，发光强度超过 1 会截断，这些都列在返回的报告里。
+
+编辑 spec（网页编辑器，不属于本 skill 包）：仓库根目录的静态网页 `web/`，运行 `python web/tools/serve.py` 后在浏览器里载入 spec。可移动、旋转、改色、改尺寸、整体缩放、复制、删除零件，同一 `group` 的零件一起动，可撤销；“对齐原图视角”按 spec 里的相机摆放镜头，也能直接导出 GLB。保存的 spec 会把改过的零件标成 `inferred`（备注 “Edited in the web editor”）并把相机标为 `unfitted`，地面尺寸改动会同步 `scale.footprint_m`。保存后先用 `validate_spec.py --check-source` 校验，再用 `blender_build.py` 或 `boothctl.py glb` 重新生成；改动只写回 spec，不会反向修改已有的 `.blend`。所有处理都在本机浏览器里，不上传文件；细节见 `web/README.md`。
 
 建议性设计检查：`boothctl.py design-check --spec spec.json [--context context.json]`。context 提供 spec 没有的事实（限高、是否允许吊挂、开口方向、LED 箱体尺寸）；缺哪项就把对应检查标为 not_checked，不套默认值。结果只说"超出常用范围"或"没有建模的支撑路径"，不是合规结论；原图本身可以偏离常见做法。数值来自 `schemas/design-priors.v1.json`（reviewed=false）。
 

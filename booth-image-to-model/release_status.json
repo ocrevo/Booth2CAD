@@ -1,6 +1,6 @@
 {
   "skill_name": "booth-image-to-model",
-  "version": "2.6.0-rc1",
+  "version": "2.6.0-rc2",
   "baseline": "Frozen independent AI audits of 2.2.0-rc1 repository source, followed by generic fixes and source-bound native regression.",
   "python_tests": {
     "tests_run": 210,
