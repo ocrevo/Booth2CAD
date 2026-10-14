@@ -111,6 +111,11 @@ def camera_cases():
     return out
 
 
+def write_lf(path, text):
+    """Python's text mode writes CRLF on Windows; the repository stores LF."""
+    Path(path).write_bytes(text.encode('utf-8'))
+
+
 def main():
     out = []
     for name, kind, params, location, rotation in CASES:
@@ -122,10 +127,11 @@ def main():
         out.append(case)
     path = HERE / 'fixtures' / 'geometry_reference.json'
     path.parent.mkdir(exist_ok=True)
-    path.write_text(json.dumps({'generated_by': 'web/tests/make_geometry_reference.py',
-                                 'param_keys': {k: [sorted(v[0]), sorted(v[1])] for k, v in PARAM_KEYS.items()}, 'cases': out}, indent=1) + '\n', encoding='utf-8')
+    geometry_doc = {'generated_by': 'web/tests/make_geometry_reference.py',
+                    'param_keys': {k: [sorted(v[0]), sorted(v[1])] for k, v in PARAM_KEYS.items()}, 'cases': out}
+    write_lf(path, json.dumps(geometry_doc, indent=1) + '\n')
     camera_doc = {'generated_by': 'web/tests/make_geometry_reference.py', 'cases': camera_cases()}
-    (path.parent / 'camera_reference.json').write_text(json.dumps(camera_doc, indent=1) + '\n', encoding='utf-8')
+    write_lf(path.parent / 'camera_reference.json', json.dumps(camera_doc, indent=1) + '\n')
     ok = sum('expect' in c for c in out)
     print(f'{len(out)} cases ({ok} meshes, {len(out) - ok} refusals) -> {path}')
 

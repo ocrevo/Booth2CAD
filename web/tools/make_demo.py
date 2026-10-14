@@ -60,6 +60,8 @@ def main():
               'fit_status': 'unfitted', 'roll_deg': 0.0})
     b.uncertain('synthetic_demo', 'Everything in this file is synthetic test content.')
     b.write(OUT / 'demo-booth.spec.json')
+    path = OUT / 'demo-booth.spec.json'
+    path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n'))      # the repository stores LF
     print('wrote', OUT / 'demo-booth.spec.json')
 
 
