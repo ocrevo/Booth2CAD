@@ -2,7 +2,7 @@
 name: rebuild-booth-blender
 description: 从展台照片或效果图重建分件可编辑 Blender 展台，生成无展厅、无品牌、无人物的客户展示渲染；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.4.0-rc1"
+  version: "2.4.0-rc2"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
@@ -20,7 +20,7 @@ metadata:
 
 1. **登记与探测**：`benchmark.py prepare` 保存输入快照，`boothctl.py doctor` 确认 Blender。
 2. **事实与假设**：读出展位类型、开口、剖切表现和可见的标准件（电视、LED、椅、桌、前台）。缺的参数按 [设计先验](references/design-priors.md) 直接假设并记录，不为非关键项提问。
-3. **角点拟合**：点 6–10 个可见外角（远近、上下都要有），写 `points.json`，至少一个尺度锚点，运行 `box_fit.py`。要求 `status=fitted`、RMS ≤ 3 px；`ambiguous` 时按 `ambiguity_hint` 补点（例如给屋顶高度一个数值约束）；否则先检查点读错或拓扑理解错。再用 `boothctl.py overlay` 把拟合出的外框和 0.5 m 网格叠到原图上检查机位。
+3. **角点拟合**：点 6–10 个可见外角（远近、上下都要有），写 `points.json`，至少一个尺度锚点，运行 `box_fit.py`。要求 `status=fitted`（RMS 在 4 px 以内）；`high_residual` 时按 `worst_points` 检查最差的几个点（坏点会被拟合摊开，不一定排第一）；`ambiguous` 时按 `ambiguity_hint` 补点（例如给屋顶高度一个数值约束）。再用 `boothctl.py overlay` 把拟合出的外框和 0.5 m 网格叠到原图上检查机位。
 4. **写 spec 脚本**：复制 `templates/build_spec_template.py`，用 `components.py` 的 SpecBuilder 和宏（柜台、圆桌、壳椅、百叶、格栅、种植槽、壁挂屏、搁板）。墙面件和落地件用 `camera_math` 从像素反投影定位，不要逐个试位置。
 5. **预览迭代（不超过 3 轮）**：`boothctl.py preview` 每轮约 10–25 秒，输出原图、渲染、叠加、轮廓与角点误差四宫格；同时报告共面重叠（会渲染出黑面或闪烁）。传 `--context` 还会给出建议性设计检查结果。先修拓扑和位置，再修颜色。
 6. **终版**：一次 `blender_build.py --render --hd-scale 3` 同进程出匹配图、第二视角、客户图和高清图，再用 `blender_verify.py` 独立重开。
@@ -38,7 +38,7 @@ python rebuild-booth-blender/scripts/boothctl.py preview --spec output/new-booth
 建议性设计检查：`boothctl.py design-check --spec spec.json [--context context.json]`。context 提供 spec 没有的事实（限高、是否允许吊挂、开口方向、LED 箱体尺寸）；缺哪项就把对应检查标为 not_checked，不套默认值。结果只说"超出常用范围"或"没有建模的支撑路径"，不是合规结论；原图本身可以偏离常见做法。数值来自 `schemas/design-priors.v1.json`（reviewed=false）。
 
 `points.json` 格式见 `scripts/box_fit.py` 文件头：坐标用 `W/2`、`-D/2`、`H`、`F`（地面高）、数值或 `?名称`（共享未知量，例如右墙前沿 y）。尺度锚点优先用客户尺寸，其次是标准件，例如前台台面点写 `["?cx", "?cy", 1.05]`。只有假设值时写进 `assumed` 或用 `--assume D=4.5`，结果会标成 assumed。
-没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。Workbench 是平光，看不出自发光和曝光；高调（全白）展台用 `boothctl.py preview --engine cycles` 判断，终版客户图曝光用 `--client-exposure`（EV，默认 −0.5）调整。预览对照报告里的 landmark 中位数分 fit（参与拟合，循环）和 check（独立检查，fit=false）两类，以 check 为准；至少留 2–4 个 fit=false 的角点。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。
+没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。Workbench 是平光，看不出自发光和曝光；高调（全白）展台用 `boothctl.py preview --engine cycles` 判断，终版客户图曝光用 `--client-exposure`（EV，默认 −0.5）调整。预览对照报告里的 landmark 中位数分 fit（参与拟合，循环）和 check（独立检查，fit=false）两类，以 check 为准；至少留 2–4 个 fit=false 的角点。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。高清帧默认不超过 5 MP（`--hd-max-mp`），超过时自动降低 `--hd-scale` 并在 build_report 的 `hd` 里记录；实测 4.9 MP 能渲出，6.9 MP 会让降噪器内存不足并使 Blender 崩溃。build_report 会在高清阶段之前先写一份（`partial: true`），崩溃时仍有记录。
 
 ## 1. 实际观察原图，裁定范围
 

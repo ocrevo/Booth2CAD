@@ -17,7 +17,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 import bpy
 from mathutils import Vector,Quaternion
 from bpy_extras.object_utils import world_to_camera_view
-from common import read_json,write_json,digest,code_hash,file_sha,render_rig,material_rgba
+from common import read_json,write_json,digest,code_hash,file_sha,render_rig,material_rgba,hd_scale_for
 from validate_spec import validate
 from geometry import mesh_for
 from material_patterns import apply_grid
@@ -32,9 +32,11 @@ def arguments():
     p.add_argument('--preview-engine',choices=('workbench','cycles'),default='workbench')
     p.add_argument('--hd-scale',type=int,default=1,help='With --render, also write client/inspection *_hd.png at this integer scale (>1)')
     p.add_argument('--hd-samples',type=int,help='Cycles samples for the HD renders (default: --samples)')
+    p.add_argument('--hd-max-mp',type=float,default=5.0,help='Cap for an HD frame in megapixels; the HD scale is lowered to fit (default 5)')
     p.add_argument('--hd-views',choices=('client','both'),default='both',help='HD images to write: the customer view only, or customer + second view')
     a=p.parse_args(argv)
     if a.hd_scale<1 or a.hd_scale>8:raise ValueError('hd-scale must be an integer from 1 to 8')
+    if not a.hd_max_mp>0:raise ValueError('hd-max-mp must be positive')
     if a.preview and (a.render or a.part_masks):raise ValueError('--preview replaces --render/--part-masks; run them in a separate final build')
     return a
 
@@ -186,6 +188,23 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=str(blend),compress=True)
         stage('scene_and_first_save')
         renders=[]
+        hd_info={'requested':a.hd_scale if a.render else None,'effective':None,'capped':False,'max_megapixels':a.hd_max_mp}
+        def write_report(partial=False):
+            """Build record. Written before the memory-heavy HD stage too, so a crash there still leaves a report."""
+            artifact_names=[n for n in ['booth.blend','source_reference.png','projected_landmarks.json']+renders if (out/n).is_file()]
+            artifact_names += [str(p.relative_to(out)) for p in sorted((out/'part_masks').glob('*.png'))] if (out/'part_masks').exists() else []
+            hashed_artifacts=[{'path':name,'sha256':file_sha(out/name)} for name in artifact_names]
+            write_json(out/'build_report.json',{'artifacts':hashed_artifacts,'status':'preview_only' if a.preview else 'built_not_verified','partial':partial,'blender_version':bpy.app.version_string,
+                       'spec_sha256':digest(spec),'builder_sha256':code_hash(),'blend_sha256':file_sha(blend),
+                       'booth_object_count':len(built),'renders':renders,'scope':'booth_only','render_rig':rig,
+                       'client_exposure_ev':a.client_exposure,'hd_scale':hd_info['effective'] if hd_info['effective'] is not None else (a.hd_scale if a.render else None),'hd':hd_info,
+                       'hd_views':a.hd_views if a.render and a.hd_scale>1 else None,
+                       'stage_seconds':dict(stages,total_in_script=round(sum(stages.values()),2)),
+                       'preview_engine':a.preview_engine if a.preview else None,
+                       'render_purposes':{'reference_render.png':'transparent_acceptance','inspection_render.png':'transparent_secondary_view',
+                                          'client_render.png':'neutral_customer_display','client_render_hd.png':'neutral_customer_display_hd',
+                                          'inspection_render_hd.png':'neutral_secondary_view_hd','preview_render.png':'transparent_iteration_preview'},
+                       'notes':check['warnings']})
         background=world.node_tree.nodes.get('Background')
         def client_look(on,saved={}):
             """Neutral gray customer backdrop and display transform; restore exactly afterwards."""
@@ -221,12 +240,17 @@ def main():
             client_look(True)
             shoot(hero,'client_render.png')
             if a.hd_scale>1:
+                write_report(partial=True)
                 base=(scene.render.resolution_x,scene.render.resolution_y,scene.cycles.samples)
-                scene.render.resolution_x,scene.render.resolution_y=base[0]*a.hd_scale,base[1]*a.hd_scale
-                scene.cycles.samples=max(1,a.hd_samples or a.samples)
-                shoot(hero,'client_render_hd.png')
-                if a.hd_views=='both':shoot(inspection,'inspection_render_hd.png')
-                scene.render.resolution_x,scene.render.resolution_y,scene.cycles.samples=base
+                eff=hd_scale_for(base[0],base[1],a.hd_scale,a.hd_max_mp)
+                hd_info.update(effective=eff,capped=eff<a.hd_scale)
+                if eff>1:
+                    scene.render.use_persistent_data=False        # do not keep cached scene data next to the large frames
+                    scene.render.resolution_x,scene.render.resolution_y=base[0]*eff,base[1]*eff
+                    scene.cycles.samples=max(1,a.hd_samples or a.samples)
+                    shoot(hero,'client_render_hd.png')
+                    if a.hd_views=='both':shoot(inspection,'inspection_render_hd.png')
+                    scene.render.resolution_x,scene.render.resolution_y,scene.cycles.samples=base
             client_look(False)
         if a.part_masks:
             old_view=(scene.view_settings.view_transform,scene.view_settings.look,scene.view_settings.exposure,scene.view_settings.gamma)
@@ -252,20 +276,7 @@ def main():
         stage('part_masks')
         bpy.ops.wm.save_as_mainfile(filepath=str(blend),compress=True)
         stage('final_save')
-        artifact_names=['booth.blend','source_reference.png','projected_landmarks.json']+renders
-        artifact_names += [str(p.relative_to(out)) for p in sorted((out/'part_masks').glob('*.png'))] if (out/'part_masks').exists() else []
-        hashed_artifacts=[{'path':name,'sha256':file_sha(out/name)} for name in artifact_names]
-        write_json(out/'build_report.json',{'artifacts':hashed_artifacts,'status':'preview_only' if a.preview else 'built_not_verified','blender_version':bpy.app.version_string,
-                   'spec_sha256':digest(spec),'builder_sha256':code_hash(),'blend_sha256':file_sha(blend),
-                   'booth_object_count':len(built),'renders':renders,'scope':'booth_only','render_rig':rig,
-                   'client_exposure_ev':a.client_exposure,'hd_scale':a.hd_scale if a.render else None,
-                   'hd_views':a.hd_views if a.render and a.hd_scale>1 else None,
-                   'stage_seconds':dict(stages,total_in_script=round(sum(stages.values()),2)),
-                   'preview_engine':a.preview_engine if a.preview else None,
-                   'render_purposes':{'reference_render.png':'transparent_acceptance','inspection_render.png':'transparent_secondary_view',
-                                      'client_render.png':'neutral_customer_display','client_render_hd.png':'neutral_customer_display_hd',
-                                      'inspection_render_hd.png':'neutral_secondary_view_hd','preview_render.png':'transparent_iteration_preview'},
-                   'notes':check['warnings']})
+        write_report()
     finally:
         lock.unlink(missing_ok=True)
 

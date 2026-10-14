@@ -184,6 +184,27 @@ class DesignCheckTests(unittest.TestCase):
         self.assertAlmostEqual(gaps[0]['value'], 0.5, places=3)
         self.assertEqual(result['status'], 'info_only')
 
+    def test_chair_legs_and_a_table_set_are_one_furniture_group(self):
+        cm.round_table(self.b, 't', 's', -1.0, 0.0, floor_z=ZF, px=(1, 1, 5, 5))
+        cm.shell_chair(self.b, 'c1', 's', -0.35, 0.0, 90, floor_z=ZF, px=(1, 1, 5, 5))
+        cm.shell_chair(self.b, 'c2', 's', -1.65, 0.0, -90, floor_z=ZF, px=(1, 1, 5, 5))
+        cm.counter(self.b, 'far', 's', (1.5, 2.8), (-1.5, -0.95), floor_z=ZF, px=(1, 1, 5, 5))
+        names = checks(self.b)[1]
+        self.assertNotIn('narrow_gap', names)
+
+    def test_chair_beside_a_cabinet_is_still_reported(self):
+        cm.shell_chair(self.b, 'c1', 's', 0.0, 0.0, 90, floor_z=ZF, px=(1, 1, 5, 5))
+        self.b.box('cab', 's', 'cabinet', (0.55, 1.4), (-0.4, 0.4), (ZF, 1.1), cm.WHITE, px=(1, 1, 5, 5))
+        self.assertIn('narrow_gap', checks(self.b)[1])
+
+    def test_header_band_that_is_not_a_box_skips_the_depth_check(self):
+        self.b.box('post', 's', 'header_post', (-1, -0.8), (-1, -0.8), (ZF, 2.5), cm.WHITE, px=(1, 1, 5, 5))
+        self.b.add('frame', 's', 'profile_extrusion', 'header_band', [0.0, -0.9, 2.7],
+                   {'profile': [[-1.0, -0.2], [1.0, -0.2], [1.0, 0.2], [-1.0, 0.2]], 'depth': 5.0}, cm.WHITE, px=(1, 1, 5, 5))
+        result, names = checks(self.b)
+        self.assertNotIn('header_band_depth', names)
+        self.assertIn('header_band_depth', {n['check'] for n in result['not_checked']})
+
     def test_clean_booth_reports_no_findings(self):
         cm.counter(self.b, 'c', 's', (-1.0, 0.8), (-1.5, -0.95), floor_z=ZF, px=(1, 1, 5, 5))
         result, _ = checks(self.b)

@@ -1,3 +1,10 @@
+# 2.4.0-rc2 — 2026-10-14
+
+- 修复：`--hd-scale 3` 在 938×816 的图上（6.9 MP）让 OIDN 降噪器内存不足，Blender 崩溃，高清图损坏且没有 build_report。现在高清帧默认限制在 5 MP（`--hd-max-mp`，4.9 MP 实测可渲出），超出时降低有效倍数，必要时跳过高清；高清阶段前先写一份 `partial` 报告，渲染高清前释放持久数据；build_report 的 `hd` 记录请求倍数、有效倍数和是否被限制。
+- box_fit：残差超过 4 px 时状态为 `high_residual`，并点名最差的三个点与警告（此前会报 fitted）。
+- design_check：单个挤出的 U 形门头不再按平面范围误报带深（改为 not_checked）；椅子和桌子按 0.6 m 内归为一个座位组，避免椅腿被当成独立家具而产生大量窄间隙提示。
+- 依据：orange 图的新流程计时（约 26 分钟，终版因上述崩溃失败）。
+
 # 2.4.0-rc1 — 2026-10-14
 
 - 新增建议性设计检查 `design_check.py` 与 `boothctl design-check`（`preview --context` 同步给出）：部件出界、限高、无建模支撑路径、门头楣带、前台、显示面、LED 整块模组、坡道、画面底边、窄间隙。只用中性措辞；缺少 context 的检查报告为 not_checked，不套默认值；不改 `validate()`。

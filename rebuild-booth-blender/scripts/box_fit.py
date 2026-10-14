@@ -34,6 +34,7 @@ import camera_math
 DIMS = ('W', 'D', 'H')
 TOKEN = re.compile(r'^\s*([+-]?)\s*(W|D)\s*/\s*2\s*$|^\s*(H|F)\s*$|^\s*\?([A-Za-z_][A-Za-z0-9_]*)\s*$')
 SENSOR_MM = 36.0
+RMS_LIMIT_PX = 4.0          # above this the clicks disagree with a pinhole box; the fit is reported as high_residual
 
 
 def parse_token(token):
@@ -228,8 +229,15 @@ def solve(data, seeds=40, rng_seed=1):
     spread['lens_mm'] = round(float((max(fvals) - min(fvals)) / pb.width * SENSOR_MM), 3)
     ambiguous = bool(ambiguous_dims(spread, dims, pb.free_dims)) or len(good) < 3
     rms = float(math.sqrt(np.mean(np.square(errs))))
+    worst = sorted(per_point, key=lambda r: -r['err_px'])[:3]
+    warnings = []
+    if rms > RMS_LIMIT_PX:
+        warnings.append(f"rms {rms:.1f} px is above {RMS_LIMIT_PX} px; check the worst points "
+                        + ', '.join(f"{w['id']} ({w['err_px']} px)" for w in worst)
+                        + ' for mis-clicks, an under-constrained plane, or a render that is not a true perspective')
+    status = 'ambiguous' if ambiguous else ('high_residual' if rms > RMS_LIMIT_PX else 'fitted')
     return {
-        'status': 'ambiguous' if ambiguous else 'fitted',
+        'status': status, 'worst_points': [{'id': w['id'], 'err_px': w['err_px']} for w in worst], 'warnings': warnings,
         'rms_px': round(rms, 3), 'max_px': round(float(max(errs)), 3),
         'dims_m': {d: round(float(dims[d]), 4) for d in DIMS if d in dims},
         'dim_source': {d: ('assumed' if d in pb.assumed else 'given') if d in pb.known else 'fitted' for d in DIMS if d in dims},
@@ -263,6 +271,10 @@ def main():
     write_json(a.output, result)
     print(json.dumps({k: result[k] for k in ('status', 'rms_px', 'max_px', 'dims_m', 'dim_source', 'free')}, ensure_ascii=False))
     print(json.dumps(result['camera'], ensure_ascii=False))
+    for w in result['warnings']:
+        print('WARNING: ' + w)
+    if result['ambiguity_hint']:
+        print('HINT: ' + result['ambiguity_hint'])
     return 0 if result['status'] == 'fitted' else 3
 
 

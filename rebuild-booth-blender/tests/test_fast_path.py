@@ -25,6 +25,7 @@ from geometry import mesh_for
 from preview_compare import sheet
 from overlay import draw_overlay, grid_segments
 from boothctl import resolve_preview_engine
+from common import hd_scale_for
 
 CAM = {'projection': 'perspective', 'position': [7.0, -11.0, 6.5], 'target': [0.2, 0.3, 1.2], 'lens_mm': 42.0,
        'sensor_width_mm': 36.0, 'principal_point': [0.5, 0.5], 'pixel_aspect': [1, 1], 'fit_status': 'unfitted', 'roll_deg': 3.0}
@@ -299,7 +300,42 @@ class FitOverlayTests(unittest.TestCase):
                 draw_overlay(res, src, Path(d) / 'o.png')
 
 
+class HdCapTests(unittest.TestCase):
+    def test_cap_follows_the_measured_memory_bracket(self):
+        self.assertEqual(hd_scale_for(736, 736, 3), 3)        # 4.9 MP rendered on a 16 GB machine
+        self.assertEqual(hd_scale_for(938, 816, 3), 2)        # 6.9 MP ran the denoiser out of memory
+        self.assertEqual(hd_scale_for(1200, 878, 3), 2)
+        self.assertEqual(hd_scale_for(446, 214, 3), 3)
+
+    def test_cap_edges(self):
+        self.assertEqual(hd_scale_for(4000, 3000, 2), 1)      # even 2x is too big: no HD
+        self.assertEqual(hd_scale_for(100, 100, 1), 1)
+        self.assertEqual(hd_scale_for(100, 100, 8, max_megapixels=0.05), 2)
+        for bad in ((100, 100, 0), (100, 100, 2.5), (100, 100, True)):
+            with self.assertRaises(ValueError):
+                hd_scale_for(*bad)
+        with self.assertRaises(ValueError):
+            hd_scale_for(100, 100, 2, max_megapixels=0)
+
+
 class FitDiagnosticsTests(unittest.TestCase):
+    def test_high_residual_fit_is_not_called_fitted_and_names_the_worst_point(self):
+        data = BoxFitTests().clicks(FitOverlayTests.CAM2)
+        data['points'][3]['uv_px'] = [data['points'][3]['uv_px'][0] + 60, data['points'][3]['uv_px'][1] - 45]
+        moved = data['points'][3]['id']
+        res = solve(data, seeds=16)
+        self.assertEqual(res['status'], 'high_residual')
+        worst_ids = [w['id'] for w in res['worst_points']]
+        self.assertIn(moved, worst_ids)               # a bad click is spread over the fit, so it need not rank first
+        self.assertEqual(len(worst_ids), 3)
+        self.assertTrue(res['warnings'])
+        self.assertIn(moved, res['warnings'][0])
+
+    def test_clean_fit_has_no_warnings(self):
+        res = solve(BoxFitTests().clicks(FitOverlayTests.CAM2), seeds=16)
+        self.assertEqual(res['status'], 'fitted')
+        self.assertEqual(res['warnings'], [])
+
     def test_ambiguity_names_the_unconstrained_dimension(self):
         self.assertEqual(ambiguous_dims({'W': 0.0, 'H': 2.3}, {'W': 8.0, 'H': 4.8}, ['W', 'H']), ['H'])
         self.assertEqual(ambiguous_dims({'W': 0.1}, {'W': 8.0}, ['W']), [])
@@ -413,6 +449,30 @@ class NativeFastPathTests(unittest.TestCase):
             report = json.loads((out / 'build_report.json').read_text(encoding='utf-8'))
             self.assertIn('client_render_hd.png', {a['path'] for a in report['artifacts']})
             self.assertEqual(report['hd_scale'], 2)
+
+    def test_hd_scale_is_capped_and_the_report_says_so(self):
+        with tempfile.TemporaryDirectory() as d:
+            spec = self.fixture(d)
+            out = Path(d) / 'final'
+            r = self.run_build(spec, out, '--render', '--samples', '2', '--hd-scale', '4', '--hd-samples', '2', '--hd-max-mp', '0.02')
+            self.assertEqual(r.returncode, 0, (r.stdout + r.stderr)[-1500:])
+            self.assertEqual(Image.open(out / 'client_render_hd.png').size, (128, 96))      # 64x48 at 2x; 4x would be 0.049 MP
+            report = json.loads((out / 'build_report.json').read_text(encoding='utf-8'))
+            self.assertEqual(report['hd'], {'requested': 4, 'effective': 2, 'capped': True, 'max_megapixels': 0.02})
+            self.assertEqual(report['hd_scale'], 2)
+            self.assertIs(report['partial'], False)
+            self.assertIn('client_render_hd.png', {a['path'] for a in report['artifacts']})
+
+    def test_hd_is_skipped_when_even_double_size_exceeds_the_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            spec = self.fixture(d)
+            out = Path(d) / 'final'
+            r = self.run_build(spec, out, '--render', '--samples', '2', '--hd-scale', '3', '--hd-max-mp', '0.001')
+            self.assertEqual(r.returncode, 0, (r.stdout + r.stderr)[-1500:])
+            self.assertFalse((out / 'client_render_hd.png').exists())
+            report = json.loads((out / 'build_report.json').read_text(encoding='utf-8'))
+            self.assertEqual((report['hd']['effective'], report['hd']['capped']), (1, True))
+            self.assertTrue((out / 'client_render.png').is_file())
 
     def test_hd_views_client_writes_only_the_customer_hd_image(self):
         with tempfile.TemporaryDirectory() as d:

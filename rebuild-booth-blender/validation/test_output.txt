@@ -1,4 +1,4 @@
-Test results directory: <repo>\output\_validation\release-check-2.4.0-rc1a
+Test results directory: <repo>\output\_validation\release-check-2.4.0-rc2a
 Native preflight: {"requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe", "available": true, "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe", "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n", "probe_stderr": "", "returncode": 0}
 test_builder_checks_real_source_size_before_writing_scene (test_audit_contract.NativeSourceContractTests.test_builder_checks_real_source_size_before_writing_scene) ... ok
 test_camera_projection_requires_its_parameters (test_audit_contract.SyntheticContractTests.test_camera_projection_requires_its_parameters) ... ok
@@ -26,6 +26,8 @@ test_prepared_source_survives_input_removal (test_benchmark.BenchmarkTests.test_
 test_previous_outputs_are_not_new_inputs (test_benchmark.BenchmarkTests.test_previous_outputs_are_not_new_inputs) ... ok
 test_report_binds_bytes_and_records_different_ai_size (test_benchmark.BenchmarkTests.test_report_binds_bytes_and_records_different_ai_size) ... ok
 test_single_image_does_not_read_other_sources (test_benchmark.BenchmarkTests.test_single_image_does_not_read_other_sources) ... ok
+test_chair_beside_a_cabinet_is_still_reported (test_design_check.DesignCheckTests.test_chair_beside_a_cabinet_is_still_reported) ... ok
+test_chair_legs_and_a_table_set_are_one_furniture_group (test_design_check.DesignCheckTests.test_chair_legs_and_a_table_set_are_one_furniture_group) ... ok
 test_clean_booth_reports_no_findings (test_design_check.DesignCheckTests.test_clean_booth_reports_no_findings) ... ok
 test_cli_round_trip_and_invalid_input_exit_codes (test_design_check.DesignCheckTests.test_cli_round_trip_and_invalid_input_exit_codes) ... ok
 test_counter_in_range_passes (test_design_check.DesignCheckTests.test_counter_in_range_passes) ... ok
@@ -36,6 +38,7 @@ test_floating_part_has_no_support_path (test_design_check.DesignCheckTests.test_
 test_floating_part_is_information_when_hanging_is_allowed (test_design_check.DesignCheckTests.test_floating_part_is_information_when_hanging_is_allowed) ... ok
 test_graphic_bottom (test_design_check.DesignCheckTests.test_graphic_bottom) ... ok
 test_header_band_in_range_has_no_findings (test_design_check.DesignCheckTests.test_header_band_in_range_has_no_findings) ... ok
+test_header_band_that_is_not_a_box_skips_the_depth_check (test_design_check.DesignCheckTests.test_header_band_that_is_not_a_box_skips_the_depth_check) ... ok
 test_header_band_too_low_or_too_tall (test_design_check.DesignCheckTests.test_header_band_too_low_or_too_tall) ... ok
 test_header_band_top_margin_needs_the_limit (test_design_check.DesignCheckTests.test_header_band_top_margin_needs_the_limit) ... ok
 test_height_limit (test_design_check.DesignCheckTests.test_height_limit) ... ok
@@ -75,7 +78,9 @@ test_overlap_hidden_against_another_part_is_not_reported (test_fast_path.Coplana
 test_rotated_strips_on_one_plane_do_not_false_alarm (test_fast_path.CoplanarLintTests.test_rotated_strips_on_one_plane_do_not_false_alarm) ... ok
 test_same_facing_overlap_is_reported (test_fast_path.CoplanarLintTests.test_same_facing_overlap_is_reported) ... ok
 test_ambiguity_names_the_unconstrained_dimension (test_fast_path.FitDiagnosticsTests.test_ambiguity_names_the_unconstrained_dimension) ... ok
+test_clean_fit_has_no_warnings (test_fast_path.FitDiagnosticsTests.test_clean_fit_has_no_warnings) ... ok
 test_good_fit_reports_no_ambiguous_dimension (test_fast_path.FitDiagnosticsTests.test_good_fit_reports_no_ambiguous_dimension) ... ok
+test_high_residual_fit_is_not_called_fitted_and_names_the_worst_point (test_fast_path.FitDiagnosticsTests.test_high_residual_fit_is_not_called_fitted_and_names_the_worst_point) ... ok
 test_preview_sheet_splits_fit_and_check_landmarks (test_fast_path.FitDiagnosticsTests.test_preview_sheet_splits_fit_and_check_landmarks) ... ok
 test_fit_result_carries_image_size_and_floor (test_fast_path.FitOverlayTests.test_fit_result_carries_image_size_and_floor) ... ok
 test_grid_follows_half_metre_steps_and_includes_the_centre_lines (test_fast_path.FitOverlayTests.test_grid_follows_half_metre_steps_and_includes_the_centre_lines) ... ok
@@ -83,6 +88,10 @@ test_image_size_mismatch_is_refused (test_fast_path.FitOverlayTests.test_image_s
 test_overlay_draws_the_fitted_box_where_the_camera_projects_it (test_fast_path.FitOverlayTests.test_overlay_draws_the_fitted_box_where_the_camera_projects_it) ... ok
 test_result_from_an_older_box_fit_is_explained (test_fast_path.FitOverlayTests.test_result_from_an_older_box_fit_is_explained) ... ok
 test_segments_behind_the_camera_are_skipped_not_fatal (test_fast_path.FitOverlayTests.test_segments_behind_the_camera_are_skipped_not_fatal) ... ok
+test_cap_edges (test_fast_path.HdCapTests.test_cap_edges) ... ok
+test_cap_follows_the_measured_memory_bracket (test_fast_path.HdCapTests.test_cap_follows_the_measured_memory_bracket) ... ok
+test_hd_is_skipped_when_even_double_size_exceeds_the_cap (test_fast_path.NativeFastPathTests.test_hd_is_skipped_when_even_double_size_exceeds_the_cap) ... ok
+test_hd_scale_is_capped_and_the_report_says_so (test_fast_path.NativeFastPathTests.test_hd_scale_is_capped_and_the_report_says_so) ... ok
 test_hd_views_client_writes_only_the_customer_hd_image (test_fast_path.NativeFastPathTests.test_hd_views_client_writes_only_the_customer_hd_image) ... ok
 test_preview_and_render_flags_are_exclusive (test_fast_path.NativeFastPathTests.test_preview_and_render_flags_are_exclusive) ... ok
 test_preview_writes_one_matched_render_and_releases_lock (test_fast_path.NativeFastPathTests.test_preview_writes_one_matched_render_and_releases_lock) ... ok
@@ -183,7 +192,7 @@ test_source_change_during_execution_blocks_release_evidence (test_test_runner.Te
 test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details (test_test_runner.TestRunnerTests.test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details) ... ok
 
 ----------------------------------------------------------------------
-Ran 181 tests in 141.545s
+Ran 190 tests in 155.910s
 
 OK
 Final status: passed

@@ -66,12 +66,16 @@ def world_bounds(component):
     return [min(p[i] for p in pts) for i in range(3)], [max(p[i] for p in pts) for i in range(3)]
 
 
+SEATING_ROLES = {'chair', 'table'}
+SEATING_JOIN_M = 0.6      # chairs around a table form one seating group
+
+
 def _touching(a, b, tol=CONTACT_TOL):
     return all(a[0][i] - tol <= b[1][i] and b[0][i] - tol <= a[1][i] for i in range(3))
 
 
-def _clusters(ids, bounds):
-    """Connected groups of parts whose bounds touch or overlap."""
+def _clusters(ids, bounds, tol=CONTACT_TOL):
+    """Connected groups of parts whose bounds touch or overlap (within tol)."""
     parent = {i: i for i in ids}
 
     def find(i):
@@ -82,7 +86,7 @@ def _clusters(ids, bounds):
     ids = list(ids)
     for x in range(len(ids)):
         for y in range(x + 1, len(ids)):
-            if _touching(bounds[ids[x]], bounds[ids[y]]):
+            if _touching(bounds[ids[x]], bounds[ids[y]], tol):
                 parent[find(ids[x])] = find(ids[y])
     groups = {}
     for i in ids:
@@ -172,11 +176,15 @@ def run(spec, context=None, priors=None):
         margin = priors['header_band_top_margin']['value']
         for i in bands:
             lo, hi = bounds[i]
-            h, depth = hi[2] - lo[2], min(hi[0] - lo[0], hi[1] - lo[1])
+            h = hi[2] - lo[2]
             if not hmin - 1e-6 <= h <= hmax + 1e-6:
                 finding('header_band_height', 'advisory', [i], f'band height {h:.2f} m is outside the usual {hmin}-{hmax} m', round(h, 3), [hmin, hmax])
-            if not dmin - 1e-6 <= depth <= dmax + 1e-6:
-                finding('header_band_depth', 'advisory', [i], f'band depth {depth:.2f} m is outside the usual {dmin}-{dmax} m', round(depth, 3), [dmin, dmax])
+            if comps[i]['kind'] == 'box':
+                depth = min(hi[0] - lo[0], hi[1] - lo[1])
+                if not dmin - 1e-6 <= depth <= dmax + 1e-6:
+                    finding('header_band_depth', 'advisory', [i], f'band depth {depth:.2f} m is outside the usual {dmin}-{dmax} m', round(depth, 3), [dmin, dmax])
+            else:
+                not_checked.append({'check': 'header_band_depth', 'reason': f"{i} is a {comps[i]['kind']}; depth is only checked on straight box runs"})
             if lo[2] < bottom_abs - 1e-6:
                 finding('header_band_bottom_min', 'advisory', [i], f'band bottom {lo[2]:.2f} m is below even the lowest usual value {bottom_abs} m', round(lo[2], 3), bottom_abs)
             elif lo[2] < bottom_min - 1e-6:
@@ -275,7 +283,8 @@ def run(spec, context=None, priors=None):
     # ---- narrow gaps between floor-standing furniture groups (information only)
     furn = [i for i, c in comps.items() if c.get('role') in NARROW_GAP_ROLES and bounds[i][0][2] - floor_top < 0.3]
     secondary = priors['path_secondary_min']['value']
-    groups = _clusters(furn, bounds)
+    seating = [i for i in furn if comps[i].get('role') in SEATING_ROLES]
+    groups = _clusters(seating, bounds, SEATING_JOIN_M) + _clusters([i for i in furn if i not in set(seating)], bounds)
     ran.append('narrow_gap')
     gaps = []
     for x in range(len(groups)):

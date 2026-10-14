@@ -105,6 +105,22 @@ def render_rig(bounds, aspect, reference_camera):
     return {'bounds':[list(low),list(high)],'centre':centre,'extent':extent,'inspection_camera':inspection,'lights':lights}
 
 
+def hd_scale_for(width, height, requested, max_megapixels=5.0):
+    """Largest integer HD scale <= requested whose frame stays within max_megapixels (1 means no HD).
+
+    Measured on a 16 GB CPU-only machine: a 4.9 MP HD frame rendered, a 6.9 MP frame ran the OIDN denoiser
+    out of memory and killed the process, so the default cap is 5 MP.
+    """
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested < 1:
+        raise ValueError('requested HD scale must be an integer >= 1')
+    if not (isinstance(max_megapixels, (int, float)) and math.isfinite(max_megapixels) and max_megapixels > 0):
+        raise ValueError('max_megapixels must be positive')
+    for scale in range(requested, 1, -1):
+        if width * scale * height * scale <= max_megapixels * 1e6:
+            return scale
+    return 1
+
+
 def code_hash():
     root=Path(__file__).resolve().parent
     return digest({p.name:file_sha(p) for p in sorted(root.glob('*.py'))})
