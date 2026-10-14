@@ -110,7 +110,7 @@ Cycles printed `WARNING CUEW initialization failed`. This is harmless: there is 
 
 ### Accuracy anecdote: one image, no ground truth [M]
 
-The image is `input/images.jpg`. The existing least-squares fit (`output/archelo-booth/fit_notes.json`) used 8 eyeballed corners at 1.76 px RMS, **with booth depth assumed to be 4.5 m**. It gives f = 1034 px, which is a horizontal FOV of 39.2°.
+The image is one local 738×415 client render (not tracked). The existing least-squares fit used 8 eyeballed corners at 1.76 px RMS, **with booth depth assumed to be 4.5 m**. It gives f = 1034 px, which is a horizontal FOV of 39.2°.
 
 | Method | Horizontal FOV | Principal point / other |
 |---|---|---|
@@ -369,7 +369,7 @@ out = moge(rgb, num_tokens=1200, fov_x_deg=39.2)               # pass the least-
 ### 5.2 LSD → three vanishing points → focal and principal point
 
 ```python
-# vp_calib.py -- tested on input/images.jpg: f=892 px, principal point within 2 px of centre, 2.8 s total
+# vp_calib.py -- tested on one local 738×415 client render: f=892 px, principal point within 2 px of centre, 2.8 s total
 import numpy as np, cv2
 
 def segments(gray, min_len_frac=0.03):

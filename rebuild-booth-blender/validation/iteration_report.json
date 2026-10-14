@@ -12,15 +12,15 @@
     "unexpected_successes": [],
     "all_executed_tests_passed": true,
     "python": "3.12.3",
-    "started_at_utc": "2026-10-14T08:23:16.490541+00:00",
+    "started_at_utc": "2026-10-14T11:00:15.007310+00:00",
     "require_native": true,
     "discovery_pattern": "test_*.py",
-    "output_directory": "<repo>\\output\\_validation\\release-check-2.3.0-rc1b",
-    "artifact_root": "<repo>\\output\\_validation\\release-check-2.3.0-rc1b\\artifacts",
+    "output_directory": "<repo>\\output\\_validation\\release-check-2.3.0-rc1c",
+    "artifact_root": "<repo>\\output\\_validation\\release-check-2.3.0-rc1c\\artifacts",
     "scope": "Regression evidence only; does not certify source-image fidelity.",
     "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
-    "builder_sha256": "cc04ff791f48de06d08e262bf3dc1b9c2176d62d7f479e806e11a5a470a071e0",
-    "regression_inputs_sha256": "4f87a5df87ad60b98992fd79189e776239ca62e2ad69461fc81cd2a0933573b4",
+    "builder_sha256": "65f19e43e67bca221fd7f7265d269a1e4812935fddabbcddb4c172ba1966cf05",
+    "regression_inputs_sha256": "95106eb166b9e1037df4b2848d53efa3ea86d03755e505dba820ec52f4126247",
     "native_blender": {
       "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
       "available": true,
@@ -31,16 +31,16 @@
     },
     "native_skipped": [],
     "status": "passed",
-    "executed_at_utc": "2026-10-14T08:25:02.868947+00:00",
-    "builder_sha256_after": "cc04ff791f48de06d08e262bf3dc1b9c2176d62d7f479e806e11a5a470a071e0",
-    "regression_inputs_sha256_after": "4f87a5df87ad60b98992fd79189e776239ca62e2ad69461fc81cd2a0933573b4",
+    "executed_at_utc": "2026-10-14T11:02:02.537257+00:00",
+    "builder_sha256_after": "65f19e43e67bca221fd7f7265d269a1e4812935fddabbcddb4c172ba1966cf05",
+    "regression_inputs_sha256_after": "95106eb166b9e1037df4b2848d53efa3ea86d03755e505dba820ec52f4126247",
     "exit_code": 0,
     "transcript": {
       "path": "test_transcript.txt",
-      "sha256": "e4f7e10c3278ed6a1f8a632a98c129233a4bc8c419bfd3f489d41c07f4629c81"
+      "sha256": "c7d4524a902ca91d447bf771b15cb7b3d18e8aaa640689fe34f01917879eea92"
     }
   },
-  "builder_sha256": "cc04ff791f48de06d08e262bf3dc1b9c2176d62d7f479e806e11a5a470a071e0",
+  "builder_sha256": "65f19e43e67bca221fd7f7265d269a1e4812935fddabbcddb4c172ba1966cf05",
   "improvements": [
     "simple concave XZ profile extrusion with real edge notches",
     "vertical circular arc panels and matching segment boundaries",
@@ -65,13 +65,13 @@
   ],
   "previous_record": "history/2.2.0-rc1/evidence_9f9c04030cb07371/iteration_report.json",
   "artifact_location": "Local ignored output/; raw inputs in input/ and historical test/ access retained.",
-  "regression_inputs_sha256": "4f87a5df87ad60b98992fd79189e776239ca62e2ad69461fc81cd2a0933573b4",
+  "regression_inputs_sha256": "95106eb166b9e1037df4b2848d53efa3ea86d03755e505dba820ec52f4126247",
   "test_run_evidence": {
-    "source_test_run": "<repo>\\output\\_validation\\release-check-2.3.0-rc1b",
+    "source_test_run": "<repo>\\output\\_validation\\release-check-2.3.0-rc1c",
     "summary": "validation/test_results.json",
-    "summary_sha256": "22b54e257e765c4793872c39fc6b175713359f5676b3cb77c1985a78ff41e2e3",
+    "summary_sha256": "9f45466b9a8810393041ead6057a045d26ae2e796d3d54e4f6f59c69bd89d4ac",
     "transcript": "validation/test_transcript.txt",
-    "transcript_sha256": "e4f7e10c3278ed6a1f8a632a98c129233a4bc8c419bfd3f489d41c07f4629c81"
+    "transcript_sha256": "c7d4524a902ca91d447bf771b15cb7b3d18e8aaa640689fe34f01917879eea92"
   },
   "audit_evidence": "audit_report.json"
 }
