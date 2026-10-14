@@ -47,7 +47,8 @@ export class Viewport {
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
-    sun.shadow.bias = -0.0004;
+    sun.shadow.bias = -0.0006;
+    sun.shadow.normalBias = 0.04;                           // stops the speckle (shadow acne) on large flat walls
     this.scene.add(sun);
 
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.22 }));
