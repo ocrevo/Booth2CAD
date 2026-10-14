@@ -24,7 +24,7 @@ This project (GitHub repository still named Booth2CAD) turns one booth photo or 
 
 ## Changing the skill
 
-1. Make files LF before testing. The Write tool and Python `open(...,'w')` can produce CRLF on this machine; git stores LF, and release evidence hashes the working-copy bytes. Check with `git ls-files -m -o --exclude-standard | xargs grep -l $'\r'`.
+1. Make files LF before testing. The Write tool and Python `open(...,'w')` can produce CRLF on this machine; git stores LF, and release evidence hashes the working-copy bytes. Check with `python tools/check_lf.py` (the earlier `grep -l $'\r'` one-liner proved unreliable in this shell).
 2. Do not edit `scripts/`, `schemas/` or `tests/` while a regression is running (the runner blocks evidence if sources change).
 3. Full regression into a new folder: `python booth-image-to-model/tests/run_tests.py --blender "<blender.exe>" --require-native --output output/_validation/<new-name>` (zero failures, zero skips).
 4. `python tools/package_skill.py --test-run output/_validation/<new-name>` updates `release_status.json`, `FILE_MANIFEST.json` and `validation/`. Never edit those by hand.
