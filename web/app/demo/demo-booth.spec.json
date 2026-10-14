@@ -1,0 +1,3266 @@
+{
+  "schema_version": "2.0",
+  "project": {
+    "id": "web_editor_demo",
+    "status": "review_required"
+  },
+  "source": {
+    "image": "demo_source.png",
+    "sha256": "259eb27537b471d13b0b1a09a141ca122039ab5a6bcab17666d9cd17ae371f3d",
+    "width": 960,
+    "height": 600
+  },
+  "scale": {
+    "units": "m",
+    "basis": "single_image_estimate",
+    "footprint_m": [
+      6.0,
+      5.0
+    ],
+    "notes": "Synthetic dimensions invented for the editor demo; not measured from anything."
+  },
+  "scope": {
+    "decisions": [
+      {
+        "id": "shell",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic platform, back wall, header and screens."
+      },
+      {
+        "id": "media",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic wall screens."
+      },
+      {
+        "id": "furniture",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic counter, tables, chairs and planter."
+      },
+      {
+        "id": "lighting",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic spotlight bodies."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "floor",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "floor",
+      "critical": true,
+      "evidence": {
+        "status": "inferred",
+        "note": "Synthetic platform."
+      },
+      "location": [
+        0.0,
+        0.0,
+        0.05
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          6.0,
+          5.0,
+          0.1
+        ]
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "back_wall",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "back_wall",
+      "critical": true,
+      "evidence": {
+        "status": "inferred",
+        "note": "Synthetic back wall."
+      },
+      "location": [
+        0.0,
+        2.45,
+        1.55
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          6.0,
+          0.1,
+          2.9
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "louvres_0",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        -1.56,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_1",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        -1.1429,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_2",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        -0.7257,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_3",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        -0.3086,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_4",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        0.1086,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_5",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        0.5257,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_6",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        0.9429,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "louvres_7",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "fin",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.84,
+        1.36,
+        1.35
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.12,
+          0.08,
+          2.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.55,
+          0.4,
+          0.28,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "louvres"
+    },
+    {
+      "id": "header_0",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "header_band",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Connected header band segment."
+      },
+      "location": [
+        -2.6,
+        -0.0,
+        2.8
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.4,
+          3.8,
+          0.6
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "header"
+    },
+    {
+      "id": "header_1",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "header_band",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Connected header band segment."
+      },
+      "location": [
+        0.0,
+        -2.1,
+        2.8
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          5.6,
+          0.4,
+          0.6
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "header"
+    },
+    {
+      "id": "header_2",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "header_band",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Connected header band segment."
+      },
+      "location": [
+        2.6,
+        -0.0,
+        2.8
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.4,
+          3.8,
+          0.6
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "header"
+    },
+    {
+      "id": "header_post_0",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "header_post",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Header post from the floor to the band."
+      },
+      "location": [
+        -2.6,
+        -2.1,
+        1.3
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.2,
+          0.2,
+          2.4
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "header"
+    },
+    {
+      "id": "header_post_1",
+      "scope_id": "shell",
+      "owner": "booth",
+      "kind": "box",
+      "role": "header_post",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Header post from the floor to the band."
+      },
+      "location": [
+        2.6,
+        -2.1,
+        1.3
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.2,
+          0.2,
+          2.4
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "header"
+    },
+    {
+      "id": "tv_frame",
+      "scope_id": "media",
+      "owner": "booth",
+      "kind": "box",
+      "role": "screen_frame",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        -2.0,
+        2.375,
+        1.6
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          1.258,
+          0.05,
+          0.725
+        ]
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.3,
+          0.32,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "tv"
+    },
+    {
+      "id": "tv_display",
+      "scope_id": "media",
+      "owner": "booth",
+      "kind": "box",
+      "role": "display",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "55-inch class display; content neutralised."
+      },
+      "location": [
+        -2.0,
+        2.3485,
+        1.6
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          1.218,
+          0.003,
+          0.685
+        ]
+      },
+      "material": {
+        "color": [
+          0.2,
+          0.2,
+          0.22,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.2,
+        "metallic": 0.0,
+        "emission": 0.35
+      },
+      "group": "tv"
+    },
+    {
+      "id": "led_panel",
+      "scope_id": "media",
+      "owner": "booth",
+      "kind": "box",
+      "role": "led_wall",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "LED wall of 4 x 3 modules of 0.5 m; media content neutralised."
+      },
+      "location": [
+        0.0,
+        2.34,
+        1.45
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          2.0,
+          0.12,
+          1.5
+        ]
+      },
+      "material": {
+        "color": [
+          0.2,
+          0.2,
+          0.22,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.25,
+        "metallic": 0.0,
+        "emission": 0.35,
+        "pattern": {
+          "type": "grid",
+          "spacing": [
+            0.5,
+            0.5
+          ],
+          "line_width": 0.003,
+          "line_color": [
+            0.32,
+            0.32,
+            0.35
+          ],
+          "coordinates": "xz",
+          "offset": [
+            0.0,
+            0.25
+          ]
+        }
+      },
+      "group": "led"
+    },
+    {
+      "id": "spot_0",
+      "scope_id": "lighting",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "spotlight",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Fixture body only; no light cone modelled."
+      },
+      "location": [
+        -1.5,
+        -2.1,
+        2.44
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.04,
+        "height": 0.12,
+        "segments": 24
+      },
+      "material": {
+        "color": [
+          1.0,
+          1.0,
+          0.95,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0,
+        "emission": 4.0
+      },
+      "group": "spot"
+    },
+    {
+      "id": "spot_1",
+      "scope_id": "lighting",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "spotlight",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Fixture body only; no light cone modelled."
+      },
+      "location": [
+        0.0,
+        -2.1,
+        2.44
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.04,
+        "height": 0.12,
+        "segments": 24
+      },
+      "material": {
+        "color": [
+          1.0,
+          1.0,
+          0.95,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0,
+        "emission": 4.0
+      },
+      "group": "spot"
+    },
+    {
+      "id": "spot_2",
+      "scope_id": "lighting",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "spotlight",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Fixture body only; no light cone modelled."
+      },
+      "location": [
+        1.5,
+        -2.1,
+        2.44
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.04,
+        "height": 0.12,
+        "segments": 24
+      },
+      "material": {
+        "color": [
+          1.0,
+          1.0,
+          0.95,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0,
+        "emission": 4.0
+      },
+      "group": "spot"
+    },
+    {
+      "id": "counter_body",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "box",
+      "role": "counter",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        0.0,
+        -1.625,
+        0.605
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          1.8,
+          0.55,
+          1.01
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "counter"
+    },
+    {
+      "id": "counter_top",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "box",
+      "role": "counter",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        0.0,
+        -1.625,
+        1.13
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          1.84,
+          0.59,
+          0.04
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.35,
+        "metallic": 0.0
+      },
+      "group": "counter"
+    },
+    {
+      "id": "table_a_top",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        1.7,
+        0.3,
+        0.825
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.45,
+        "height": 0.03,
+        "segments": 64
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.35,
+        "metallic": 0.0
+      },
+      "group": "table_a"
+    },
+    {
+      "id": "table_a_stem",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Pedestal stem assumed."
+      },
+      "location": [
+        1.7,
+        0.3,
+        0.465
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.035,
+        "height": 0.69,
+        "segments": 24
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.3,
+          0.32,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.3,
+        "metallic": 0.6
+      },
+      "group": "table_a"
+    },
+    {
+      "id": "table_a_base",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Base disc assumed."
+      },
+      "location": [
+        1.7,
+        0.3,
+        0.11
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.27,
+        "height": 0.02,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.3,
+          0.32,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.3,
+        "metallic": 0.6
+      },
+      "group": "table_a"
+    },
+    {
+      "id": "table_b_top",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        -1.7,
+        0.3,
+        0.825
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.45,
+        "height": 0.03,
+        "segments": 64
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.35,
+        "metallic": 0.0
+      },
+      "group": "table_b"
+    },
+    {
+      "id": "table_b_stem",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Pedestal stem assumed."
+      },
+      "location": [
+        -1.7,
+        0.3,
+        0.465
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.035,
+        "height": 0.69,
+        "segments": 24
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.3,
+          0.32,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.3,
+        "metallic": 0.6
+      },
+      "group": "table_b"
+    },
+    {
+      "id": "table_b_base",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "table",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Base disc assumed."
+      },
+      "location": [
+        -1.7,
+        0.3,
+        0.11
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.27,
+        "height": 0.02,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.3,
+          0.32,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.3,
+        "metallic": 0.6
+      },
+      "group": "table_b"
+    },
+    {
+      "id": "chair_a1_seat",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.4,
+        0.3,
+        0.56
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        90.0
+      ],
+      "params": {
+        "radius": 0.25,
+        "height": 0.05,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a1_back",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "arc_panel",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.38,
+        0.3,
+        0.76
+      ],
+      "rotation_deg": [
+        -10.0,
+        0.0,
+        90.0
+      ],
+      "params": {
+        "radius": 0.245,
+        "thickness": 0.035,
+        "height": 0.3,
+        "start_deg": -15,
+        "end_deg": 195,
+        "segments": 32
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a1_leg_0",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.545,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        -168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a1_leg_1",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.545,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a1_leg_2",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.255,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        -168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a1_leg_3",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        2.255,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a1"
+    },
+    {
+      "id": "chair_a2_seat",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        1.0,
+        0.3,
+        0.56
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.25,
+        "height": 0.05,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_a2_back",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "arc_panel",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        1.02,
+        0.3,
+        0.76
+      ],
+      "rotation_deg": [
+        -10.0,
+        0.0,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.245,
+        "thickness": 0.035,
+        "height": 0.3,
+        "start_deg": -15,
+        "end_deg": 195,
+        "segments": 32
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_a2_leg_0",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        0.855,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        -168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_a2_leg_1",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        0.855,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_a2_leg_2",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        1.145,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        -168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_a2_leg_3",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        1.145,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_a2"
+    },
+    {
+      "id": "chair_b1_seat",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -1.0,
+        0.3,
+        0.56
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        90.0
+      ],
+      "params": {
+        "radius": 0.25,
+        "height": 0.05,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b1_back",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "arc_panel",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -1.02,
+        0.3,
+        0.76
+      ],
+      "rotation_deg": [
+        -10.0,
+        0.0,
+        90.0
+      ],
+      "params": {
+        "radius": 0.245,
+        "thickness": 0.035,
+        "height": 0.3,
+        "start_deg": -15,
+        "end_deg": 195,
+        "segments": 32
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b1_leg_0",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -0.855,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        -168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b1_leg_1",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -0.855,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b1_leg_2",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -1.145,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        -168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b1_leg_3",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -1.145,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        168.44,
+        90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b1"
+    },
+    {
+      "id": "chair_b2_seat",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.4,
+        0.3,
+        0.56
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.25,
+        "height": 0.05,
+        "segments": 48
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "chair_b2_back",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "arc_panel",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.38,
+        0.3,
+        0.76
+      ],
+      "rotation_deg": [
+        -10.0,
+        0.0,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.245,
+        "thickness": 0.035,
+        "height": 0.3,
+        "start_deg": -15,
+        "end_deg": 195,
+        "segments": 32
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.0
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "chair_b2_leg_0",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.545,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        -168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "chair_b2_leg_1",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.545,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        11.332,
+        168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "chair_b2_leg_2",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.255,
+        0.465,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        -168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "chair_b2_leg_3",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "chair",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Chair placement assumed (hidden)."
+      },
+      "location": [
+        -2.255,
+        0.135,
+        0.32
+      ],
+      "rotation_deg": [
+        -11.332,
+        168.44,
+        -90.0
+      ],
+      "params": {
+        "radius": 0.013,
+        "height": 0.458,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.62,
+          0.47,
+          0.35,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.4,
+        "metallic": 0.3
+      },
+      "group": "chair_b2"
+    },
+    {
+      "id": "planter_box",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "box",
+      "role": "planter",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Hidden or assumed part."
+      },
+      "location": [
+        2.5,
+        -1.7,
+        0.325
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.6,
+          0.6,
+          0.45
+        ]
+      },
+      "material": {
+        "color": [
+          0.95,
+          0.94,
+          0.93,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_soil",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "box",
+      "role": "soil",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Soil surface hidden by grass."
+      },
+      "location": [
+        2.5,
+        -1.7,
+        0.54
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "params": {
+        "size": [
+          0.52,
+          0.52,
+          0.04
+        ]
+      },
+      "material": {
+        "color": [
+          0.2,
+          0.15,
+          0.12,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.55,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_00",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5446,
+        -1.7923,
+        0.7374
+      ],
+      "rotation_deg": [
+        4.61,
+        11.83,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.383,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.3699,
+          0.4844,
+          0.1762,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_01",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.7197,
+        -1.4837,
+        0.73
+      ],
+      "rotation_deg": [
+        -4.01,
+        -3.79,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.361,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4545,
+          0.5952,
+          0.2164,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_02",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.686,
+        -1.5668,
+        0.6996
+      ],
+      "rotation_deg": [
+        -11.76,
+        -1.61,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.306,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.448,
+          0.5866,
+          0.2133,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_03",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5388,
+        -1.8253,
+        0.6994
+      ],
+      "rotation_deg": [
+        1.53,
+        -8.28,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.302,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.471,
+          0.6168,
+          0.2243,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_04",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5236,
+        -1.7247,
+        0.8184
+      ],
+      "rotation_deg": [
+        1.38,
+        7.39,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.541,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4151,
+          0.5436,
+          0.1977,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_05",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.4662,
+        -1.7488,
+        0.7994
+      ],
+      "rotation_deg": [
+        -8.71,
+        8.03,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.505,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4495,
+          0.5887,
+          0.2141,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_06",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5614,
+        -1.8818,
+        0.7354
+      ],
+      "rotation_deg": [
+        9.91,
+        2.69,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.376,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4093,
+          0.536,
+          0.1949,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_07",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.2816,
+        -1.5262,
+        0.7184
+      ],
+      "rotation_deg": [
+        -0.48,
+        -2.18,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.337,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.3843,
+          0.5033,
+          0.183,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_08",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3465,
+        -1.8812,
+        0.7326
+      ],
+      "rotation_deg": [
+        7.57,
+        -6.31,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.368,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4311,
+          0.5645,
+          0.2053,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_09",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5479,
+        -1.5266,
+        0.776
+      ],
+      "rotation_deg": [
+        -4.06,
+        -11.69,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.462,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4221,
+          0.5527,
+          0.201,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_10",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3946,
+        -1.4828,
+        0.761
+      ],
+      "rotation_deg": [
+        3.6,
+        2.36,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.423,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4161,
+          0.5449,
+          0.1982,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_11",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.5173,
+        -1.7462,
+        0.7894
+      ],
+      "rotation_deg": [
+        -9.07,
+        -5.76,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.485,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4485,
+          0.5873,
+          0.2136,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_12",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.6249,
+        -1.9293,
+        0.7678
+      ],
+      "rotation_deg": [
+        0.44,
+        -5.66,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.438,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4514,
+          0.5912,
+          0.215,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_13",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.6923,
+        -1.5398,
+        0.737
+      ],
+      "rotation_deg": [
+        -6.68,
+        -10.1,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.38,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4348,
+          0.5694,
+          0.2071,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_14",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.7239,
+        -1.4973,
+        0.8113
+      ],
+      "rotation_deg": [
+        -4.58,
+        -3.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.524,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4613,
+          0.6041,
+          0.2197,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_15",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.6228,
+        -1.8987,
+        0.7375
+      ],
+      "rotation_deg": [
+        -7.57,
+        -11.19,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.382,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4607,
+          0.6033,
+          0.2194,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_16",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.7281,
+        -1.7518,
+        0.7655
+      ],
+      "rotation_deg": [
+        4.21,
+        -8.86,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.436,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.3915,
+          0.5127,
+          0.1864,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_17",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.6955,
+        -1.8059,
+        0.761
+      ],
+      "rotation_deg": [
+        4.24,
+        4.11,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.423,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4028,
+          0.5274,
+          0.1918,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_18",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3434,
+        -1.8911,
+        0.7794
+      ],
+      "rotation_deg": [
+        -4.36,
+        -9.0,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.464,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4698,
+          0.6152,
+          0.2237,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_19",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3392,
+        -1.5936,
+        0.8208
+      ],
+      "rotation_deg": [
+        -6.58,
+        9.98,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.55,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.473,
+          0.6195,
+          0.2253,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_20",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3524,
+        -1.5821,
+        0.7653
+      ],
+      "rotation_deg": [
+        -0.23,
+        -4.51,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.432,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4286,
+          0.5613,
+          0.2041,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_21",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.4811,
+        -1.6146,
+        0.7483
+      ],
+      "rotation_deg": [
+        -1.15,
+        -10.69,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.404,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4539,
+          0.5944,
+          0.2161,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_22",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.4878,
+        -1.6321,
+        0.8188
+      ],
+      "rotation_deg": [
+        -9.09,
+        9.32,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.545,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.419,
+          0.5487,
+          0.1995,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    },
+    {
+      "id": "planter_grass_23",
+      "scope_id": "furniture",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "grass_blade",
+      "critical": false,
+      "evidence": {
+        "status": "inferred",
+        "note": "Representative grass blade (count and lean are artistic)."
+      },
+      "location": [
+        2.3771,
+        -1.7925,
+        0.7694
+      ],
+      "rotation_deg": [
+        10.55,
+        -4.07,
+        0.0
+      ],
+      "params": {
+        "radius": 0.011,
+        "height": 0.446,
+        "segments": 12
+      },
+      "material": {
+        "color": [
+          0.4526,
+          0.5928,
+          0.2155,
+          1.0
+        ],
+        "color_space": "srgb",
+        "roughness": 0.7,
+        "metallic": 0.0
+      },
+      "group": "planter"
+    }
+  ],
+  "camera": {
+    "projection": "perspective",
+    "position": [
+      7.5,
+      -9.0,
+      4.8
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.2
+    ],
+    "lens_mm": 36.0,
+    "sensor_width_mm": 36.0,
+    "principal_point": [
+      0.5,
+      0.5
+    ],
+    "pixel_aspect": [
+      1,
+      1
+    ],
+    "fit_status": "unfitted",
+    "roll_deg": 0.0
+  },
+  "requirements": [
+    {
+      "id": "keep_floor",
+      "component_id": "floor",
+      "kind": "box",
+      "must_be_critical": true
+    },
+    {
+      "id": "keep_back_wall",
+      "component_id": "back_wall",
+      "kind": "box",
+      "must_be_critical": true
+    }
+  ],
+  "landmarks": [],
+  "uncertainties": [
+    {
+      "id": "synthetic_demo",
+      "critical": false,
+      "status": "open",
+      "description": "Everything in this file is synthetic test content."
+    }
+  ],
+  "quality": {
+    "silhouette_iou_min": 0.9,
+    "part_iou_min": 0.85,
+    "landmark_median_max": 0.025,
+    "landmark_p90_max": 0.05,
+    "boundary_distance_max": 0.012,
+    "threshold_basis": "Heuristic defaults; no reviewed masks or pixel acceptance are claimed."
+  }
+}

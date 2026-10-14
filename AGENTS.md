@@ -10,7 +10,7 @@ This project (GitHub repository still named Booth2CAD) turns one booth photo or 
 
 ## Environment
 
-- Windows 10, CPU-only laptop (Intel i7-8550U, UHD 620, 16 GB). Blender 5.2.2 at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe`; Python 3.12 with numpy, Pillow, scipy, jsonschema, trimesh.
+- Windows 10, CPU-only laptop (Intel i7-8550U, UHD 620, 16 GB). Blender 5.2.2 at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe`; Python 3.12 with numpy, Pillow, scipy, jsonschema, trimesh; Node 24 for the web editor tests; Chrome or Edge for the web smoke test.
 - Run only one Blender process at a time (timings and memory). Headless Workbench can crash on the integrated GPU; `boothctl.py preview` falls back to Cycles by itself.
 - HD frames are capped at 5 MP (`--hd-max-mp`): 4.9 MP rendered, 6.9 MP made the denoiser run out of memory and killed Blender.
 - No installs or downloads (OpenCV, onnxruntime, MoGe, asset packs, LFS) without the user's approval. No third-party image-model route (AI comparison) without approval.
@@ -37,8 +37,16 @@ Follow the fast route in `booth-image-to-model/SKILL.md` (corner fit, spec scrip
 
 For timed benchmarks use `output/_benchmarks/<run>/protocol.md` (fresh observation, one final build, an independent subagent per image). Say plainly when a run is not blind.
 
+## Web editor (`web/`)
+
+- `web/app/` is the deployable static site and nothing else (page, `js/`, `css/`, vendored `vendor/three/`, synthetic `demo/`). `web/tests/` and `web/tools/` stay outside it so they are never served. Specs never leave the browser: no network calls except loading the demo from the same origin.
+- `js/geometry.js` and `js/camera.js` are ports of `scripts/geometry.py` and `scripts/camera_math.py`. After changing either Python file, run `python web/tests/make_geometry_reference.py` and fix any parity failure. `spec.js` `PARAM_KEYS` must match `validate_spec.PARAM_KEYS` (a test checks).
+- Checks: `cd web && npm test` (Node, no browser) and `npm run smoke` (headless Chrome drives the real page; also runs the Python validator and trimesh on the results). Try it by hand with `python web/tools/serve.py`.
+- three.js is vendored at a pinned version (`web/app/vendor/three/VERSION.txt`); updating it is a download and needs the owner's approval.
+- Test placement rule: tests live in the repository next to the code they test; the deployable or bundled output never contains them. The skill folder keeps its own `tests/` and `validation/` because the release evidence hashes them; a runtime-only bundle (without tests, validation history and examples) is the way to deploy the skill elsewhere, and is not built yet.
+
 ## Planned work and open decisions
 
-- Next features, in order: a static web editor for the spec (runs entirely in the browser, no server, vendored three.js, specs never uploaded; designers move, recolour, resize and swap furniture; an optional `group` field in the spec is part of it), then drawings (plan and elevations, SVG and DXF) from the same spec. A furniture library will arrive later as prefab JSON built only from existing primitives.
+- Done: first version of the web editor (move, turn, scale, recolour, resize, duplicate, delete, groups, undo, match source view, GLB export, bilingual UI). Next: drawings (plan and elevations, SVG and DXF) from the same spec. A furniture library will arrive later as prefab JSON built only from existing primitives.
 - Waiting for the owner: renaming the GitHub repository, where and when to publish the web editor, and what to do about the two client-branded images tracked under `booth-image-to-model/examples/legacy-case/` (public; the tests use them, so replace them with synthetic images before removing them from tracking).
 - Never publish, enable hosting, rename the repository or change repository visibility without the owner's explicit go-ahead.

@@ -1,0 +1,11 @@
+{
+  "name": "booth-spec-editor",
+  "private": true,
+  "type": "module",
+  "description": "Static, client-side editor for a booth-image-to-model spec. The deployable site is app/; tests/ and tools/ are not served.",
+  "scripts": {
+    "test": "node --import ./tests/register-three.mjs --test",
+    "serve": "python tools/serve.py",
+    "smoke": "node tests/smoke.mjs"
+  }
+}
