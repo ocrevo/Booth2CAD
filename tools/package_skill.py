@@ -44,6 +44,15 @@ def metadata_version(skill):
     return matched.group(1).split(' #', 1)[0].strip().strip('\"\'')
 
 
+def metadata_name(skill):
+    text = (skill / 'SKILL.md').read_text(encoding='utf-8-sig')
+    frontmatter = re.match(r'\A---\r?\n(.*?)\r?\n---(?:\r?\n|$)', text, re.S)
+    matched = re.search(r'^name:\s*([^\r\n]+)$', frontmatter.group(1), re.M) if frontmatter else None
+    if not matched:
+        raise ValueError('SKILL.md name is missing')
+    return matched.group(1).strip().strip('"\'')
+
+
 def current_builder_hash(skill):
     path = skill / 'scripts/common.py'
     loader = importlib.util.spec_from_file_location('_package_skill_common', path)
@@ -174,7 +183,7 @@ def package(skill, test_run, explicit_version=None):
     provenance = {'source_test_run': str(test_run), 'summary': 'validation/test_results.json',
                   'summary_sha256': sha(summary_bytes), 'transcript': 'validation/test_transcript.txt',
                   'transcript_sha256': sha(transcript_bytes)}
-    release.update(version=version, builder_sha256=builder, regression_inputs_sha256=inputs_hash, python_tests=summary,
+    release.update(skill_name=metadata_name(skill), version=version, builder_sha256=builder, regression_inputs_sha256=inputs_hash, python_tests=summary,
                    test_run_evidence=provenance)
     release['native_blender_integration'] = 'passed_' + blender_version.lower().replace(' ', '_')
     iteration.update(version=version, builder_sha256=builder, regression_inputs_sha256=inputs_hash, tests=summary,
@@ -224,7 +233,7 @@ def main(argv=None):
         if hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--skill', type=Path, default=Path(__file__).resolve().parents[1] / 'rebuild-booth-blender')
+    parser.add_argument('--skill', type=Path, default=Path(__file__).resolve().parents[1] / 'booth-image-to-model')
     parser.add_argument('--test-run', type=Path, required=True, help='Actual completed runner result directory')
     parser.add_argument('--version', help='Release version; defaults to SKILL.md metadata.version')
     args = parser.parse_args(argv)

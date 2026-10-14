@@ -1,16 +1,16 @@
 ---
-name: rebuild-booth-blender
-description: 从展台照片或效果图重建分件可编辑 Blender 展台，生成无展厅、无品牌、无人物的客户展示渲染；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
+name: booth-image-to-model
+description: 从一张展台图片生成分件可编辑的参数化三维模型（Blender 场景）和无展厅、无品牌、无人物的客户渲染图；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.4.0-rc4"
+  version: "2.5.0-rc1"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
 ---
 
-# 展台效果图重建 Blender
+# 展台图转模型（booth-image-to-model）
 
-默认交付纯展台客户图、可编辑 `.blend` 和第二视角。视觉 Agent 决定范围与造型，代码负责相机拟合、确定性几何、参数校验、渲染和文件证据；AI 图片是视觉对照，不是测量来源。
+默认交付纯展台客户图、可编辑 `.blend` 和第二视角；模型以参数化 spec 为唯一真源（图纸和网页编辑器属于后续功能，尚未提供）。视觉 Agent 决定范围与造型，代码负责相机拟合、确定性几何、参数校验、渲染和文件证据；AI 图片是视觉对照，不是测量来源。
 以下命令从包含本 skill 的项目根目录执行；原始输入放在 `input/`，每次结果写入新的 `output/` 子目录。生产包只保留通用规则与构件，不依赖某个机器的绝对路径。
 首次使用查看 `validation/test_results.json` 与 `validation/runtime_probe.json` 的环境/日期和实际状态，再以本次 doctor 核实能力。
 
@@ -26,13 +26,13 @@ metadata:
 6. **终版**：一次 `blender_build.py --render --hd-scale 3` 同进程出匹配图、第二视角、客户图和高清图，再用 `blender_verify.py` 独立重开。
 
 ```powershell
-python rebuild-booth-blender/scripts/benchmark.py prepare --image input/new.jpg --out output/new-booth/benchmark
-python rebuild-booth-blender/scripts/boothctl.py doctor --blender $blenderExe --output output/new-booth/runtime_probe.json
-python rebuild-booth-blender/scripts/box_fit.py --points output/new-booth/points.json --output output/new-booth/box_fit.json
+python booth-image-to-model/scripts/benchmark.py prepare --image input/new.jpg --out output/new-booth/benchmark
+python booth-image-to-model/scripts/boothctl.py doctor --blender $blenderExe --output output/new-booth/runtime_probe.json
+python booth-image-to-model/scripts/box_fit.py --points output/new-booth/points.json --output output/new-booth/box_fit.json
 python output/new-booth/build_spec.py output/new-booth/spec_work
-python rebuild-booth-blender/scripts/boothctl.py preview --spec output/new-booth/spec_work/spec.json --out-root output/new-booth/previews --blender $blenderExe
-& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python rebuild-booth-blender/scripts/blender_build.py -- --spec output/new-booth/spec_work/spec.json --out output/new-booth/native --render --samples 32 --hd-scale 3
-& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python rebuild-booth-blender/scripts/blender_verify.py -- --spec output/new-booth/native/spec.json --blend output/new-booth/native/booth.blend --report output/new-booth/native/native_verification.json
+python booth-image-to-model/scripts/boothctl.py preview --spec output/new-booth/spec_work/spec.json --out-root output/new-booth/previews --blender $blenderExe
+& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_build.py -- --spec output/new-booth/spec_work/spec.json --out output/new-booth/native --render --samples 32 --hd-scale 3
+& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_verify.py -- --spec output/new-booth/native/spec.json --blend output/new-booth/native/booth.blend --report output/new-booth/native/native_verification.json
 ```
 
 建议性设计检查：`boothctl.py design-check --spec spec.json [--context context.json]`。context 提供 spec 没有的事实（限高、是否允许吊挂、开口方向、LED 箱体尺寸）；缺哪项就把对应检查标为 not_checked，不套默认值。结果只说"超出常用范围"或"没有建模的支撑路径"，不是合规结论；原图本身可以偏离常见做法。数值来自 `schemas/design-priors.v1.json`（reviewed=false）。
@@ -80,7 +80,7 @@ AI 对照以原始图片为 edit target，附本图结构不变量及同一清�
 修改代码、schema 或测试后，在新目录运行回归：
 
 ```powershell
-python rebuild-booth-blender/tests/run_tests.py --blender $blenderExe --require-native --output output/_validation/release-check
+python booth-image-to-model/tests/run_tests.py --blender $blenderExe --require-native --output output/_validation/release-check
 ```
 
 runner 保存真实日志、通过/失败/跳过项与代码/schema/测试来源 hash，不覆盖 `validation/` 的发布证据；执行期间来源改变会阻止发布。缺少原生环境时明确阻止原生验证；针对性检查可使用 `--pattern`，但不能当成完整回归。发布前确认本次记录对应当前代码，再归档旧记录、更新发布证据与文件清单；项目维护命令见 [README_CN.md](README_CN.md)。

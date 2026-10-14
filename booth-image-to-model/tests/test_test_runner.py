@@ -151,7 +151,7 @@ class TestRunnerTests(unittest.TestCase):
             runner.main(['--output', str(runs[0])], tests_dir=self.tests)
         self.assertEqual(error.exception.code, 2)
         self.assertEqual((runs[0] / 'test_results.json').read_bytes(), original)
-        self.assertFalse((self.area / 'rebuild-booth-blender/validation').exists())
+        self.assertFalse((self.area / 'booth-image-to-model/validation').exists())
 
 
 if __name__ == '__main__':

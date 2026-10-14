@@ -1,8 +1,8 @@
 {
-  "date": "2026-10-14",
-  "version": "2.4.0-rc4",
-  "blender": "5.2.2 LTS",
-  "tests": {
+  "skill_name": "booth-image-to-model",
+  "version": "2.5.0-rc1",
+  "baseline": "Frozen independent AI audits of 2.2.0-rc1 repository source, followed by generic fixes and source-bound native regression.",
+  "python_tests": {
     "tests_run": 200,
     "passed": 200,
     "failures": [],
@@ -12,15 +12,15 @@
     "unexpected_successes": [],
     "all_executed_tests_passed": true,
     "python": "3.12.3",
-    "started_at_utc": "2026-10-14T13:41:26.566964+00:00",
+    "started_at_utc": "2026-10-14T14:00:02.375280+00:00",
     "require_native": true,
     "discovery_pattern": "test_*.py",
-    "output_directory": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a",
-    "artifact_root": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a\\artifacts",
+    "output_directory": "<repo>\\output\\_validation\\release-check-2.5.0-rc1a",
+    "artifact_root": "<repo>\\output\\_validation\\release-check-2.5.0-rc1a\\artifacts",
     "scope": "Regression evidence only; does not certify source-image fidelity.",
     "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
     "builder_sha256": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
-    "regression_inputs_sha256": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
+    "regression_inputs_sha256": "738ef4c401d5a3c48b1d5ce1c90adaf2cd1266c75205f062fe62e9f3b11cb66b",
     "native_blender": {
       "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
       "available": true,
@@ -31,47 +31,35 @@
     },
     "native_skipped": [],
     "status": "passed",
-    "executed_at_utc": "2026-10-14T13:44:32.267827+00:00",
+    "executed_at_utc": "2026-10-14T14:02:41.565736+00:00",
     "builder_sha256_after": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
-    "regression_inputs_sha256_after": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
+    "regression_inputs_sha256_after": "738ef4c401d5a3c48b1d5ce1c90adaf2cd1266c75205f062fe62e9f3b11cb66b",
     "exit_code": 0,
     "transcript": {
       "path": "test_transcript.txt",
-      "sha256": "56b22e10ec0be3319a76a180f5db413b3cab9e4bac9413ec1f2a2a8686159c94"
+      "sha256": "a0d60fc736bd0666fb03c8a4a7941b3314924db9f8af318832360b4d8600d9e5"
     }
   },
+  "native_blender_integration": "passed_blender_5.2.2_lts",
+  "legacy_case_end_to_end_visual_match": "review_required",
   "builder_sha256": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
-  "improvements": [
-    "simple concave XZ profile extrusion with real edge notches",
-    "vertical circular arc panels and matching segment boundaries",
-    "metre-based procedural grid with arc-length mapping and native graph verification",
-    "inspection azimuth at least 35 degrees from reference and camera-space bounds fit",
-    "distinguish flat advertising artwork from a physical screen",
-    "runtime/schema nested contracts and actual decoded source-size consistency",
-    "text size/extrusion/alignment checks in independent native reopen",
-    "independent held-out median/P90 acceptance",
-    "seed-centred lens/roll fitting bounds",
-    "immutable input snapshots and Windows cross-drive local report paths",
-    "explicit native runner with caller-selected output and source-bound full transcripts",
-    "validated evidence packaging with immutable historical archives"
-  ],
-  "visual_status": "review_required",
-  "source_masks": "not fabricated; no IoU reported",
-  "remaining": [
-    "unmeasured dimensions",
-    "low-resolution furniture and surface detail",
-    "occluded structure and joints",
-    "surface pattern is not physical perforation"
-  ],
-  "previous_record": "history/2.2.0-rc1/evidence_9f9c04030cb07371/iteration_report.json",
-  "artifact_location": "Local ignored output/; raw inputs in input/ and historical test/ access retained.",
-  "regression_inputs_sha256": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
+  "local_skill_source_read": true,
+  "customer_presentation": "Per-image Blender scenes, client renders and AI comparisons are local output artifacts; each visual reconstruction retains its own review status and estimated dimensions.",
+  "source_assets_and_derived_scenes": "Not committed; input/, output/ and historical test/ contents are ignored.",
+  "bom_status": "component identities and dimension basis retained; single-image inferred dimensions and hidden connections need confirmation before a measured BOM",
+  "regression_inputs_sha256": "738ef4c401d5a3c48b1d5ce1c90adaf2cd1266c75205f062fe62e9f3b11cb66b",
   "test_run_evidence": {
-    "source_test_run": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a",
+    "source_test_run": "<repo>\\output\\_validation\\release-check-2.5.0-rc1a",
     "summary": "validation/test_results.json",
-    "summary_sha256": "7fcb4c72e8741ffc1107f441310e66d8c7d3751f9fd574315c00f32c43be8ea0",
+    "summary_sha256": "6f16b8693acfa4b8849375ce09b587d404b0cd26c17fca8b022c84bd38a3dacf",
     "transcript": "validation/test_transcript.txt",
-    "transcript_sha256": "56b22e10ec0be3319a76a180f5db413b3cab9e4bac9413ec1f2a2a8686159c94"
+    "transcript_sha256": "a0d60fc736bd0666fb03c8a4a7941b3314924db9f8af318832360b4d8600d9e5"
   },
-  "audit_evidence": "audit_report.json"
+  "repository_skill_source": true,
+  "audit_evidence": "validation/audit_report.json",
+  "project_layout": {
+    "input": "original images",
+    "output": "per-task snapshots/scenes/renders/evidence",
+    "test": "historical compatibility access; old links and frozen native files remain valid"
+  }
 }

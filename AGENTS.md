@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Booth2CAD rebuilds exhibition booths from one photo or render into a parametric, editable Blender scene plus clean customer renders. The production skill is `rebuild-booth-blender/` (start with its `SKILL.md`). Knowledge notes live in `knowledge/`. Client images and every result stay in git-ignored `input/` and `output/`.
+This project (GitHub repository still named Booth2CAD) turns one booth photo or render into a parametric, editable 3D model (a Blender scene driven by a spec) plus clean customer renders. It does not produce drawings yet and its dimensions are estimates, so do not call it CAD. The production skill is `booth-image-to-model/` (until 2.4.x it was `rebuild-booth-blender`; see the changelog). Knowledge notes live in `knowledge/`. Client images and every result stay in git-ignored `input/` and `output/`. The repository is public: anything tracked is public.
 
 ## Authorship and git
 
@@ -26,13 +26,19 @@ Booth2CAD rebuilds exhibition booths from one photo or render into a parametric,
 
 1. Make files LF before testing. The Write tool and Python `open(...,'w')` can produce CRLF on this machine; git stores LF, and release evidence hashes the working-copy bytes. Check with `git ls-files -m -o --exclude-standard | xargs grep -l $'\r'`.
 2. Do not edit `scripts/`, `schemas/` or `tests/` while a regression is running (the runner blocks evidence if sources change).
-3. Full regression into a new folder: `python rebuild-booth-blender/tests/run_tests.py --blender "<blender.exe>" --require-native --output output/_validation/<new-name>` (zero failures, zero skips).
+3. Full regression into a new folder: `python booth-image-to-model/tests/run_tests.py --blender "<blender.exe>" --require-native --output output/_validation/<new-name>` (zero failures, zero skips).
 4. `python tools/package_skill.py --test-run output/_validation/<new-name>` updates `release_status.json`, `FILE_MANIFEST.json` and `validation/`. Never edit those by hand.
 5. Read-only check afterwards: `package_skill.validate_run(...)` plus a manifest hash comparison, and `git grep` for client traces.
 6. Update `CHANGELOG.md` and the version in `SKILL.md` and `README_CN.md` for every code batch.
 
 ## Working on a booth
 
-Follow the fast route in `rebuild-booth-blender/SKILL.md` (corner fit, spec script from `templates/build_spec_template.py`, `boothctl.py preview`, one final build, independent reopen with `blender_verify.py`). A reconstruction stays `review_required` unless the strict QA in `references/reconstruction-qa.md` was done: no IoU or restoration percentage without reviewed masks.
+Follow the fast route in `booth-image-to-model/SKILL.md` (corner fit, spec script from `templates/build_spec_template.py`, `boothctl.py preview`, one final build, independent reopen with `blender_verify.py`). A reconstruction stays `review_required` unless the strict QA in `references/reconstruction-qa.md` was done: no IoU or restoration percentage without reviewed masks.
 
 For timed benchmarks use `output/_benchmarks/<run>/protocol.md` (fresh observation, one final build, an independent subagent per image). Say plainly when a run is not blind.
+
+## Planned work and open decisions
+
+- Next features, in order: a static web editor for the spec (runs entirely in the browser, no server, vendored three.js, specs never uploaded; designers move, recolour, resize and swap furniture; an optional `group` field in the spec is part of it), then drawings (plan and elevations, SVG and DXF) from the same spec. A furniture library will arrive later as prefab JSON built only from existing primitives.
+- Waiting for the owner: renaming the GitHub repository, where and when to publish the web editor, and what to do about the two client-branded images tracked under `booth-image-to-model/examples/legacy-case/` (public; the tests use them, so replace them with synthetic images before removing them from tracking).
+- Never publish, enable hosting, rename the repository or change repository visibility without the owner's explicit go-ahead.

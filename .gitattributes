@@ -2,7 +2,7 @@
 * text=auto eol=lf
 
 # Raw regression evidence retains the exact bytes used by its hashes.
-rebuild-booth-blender/validation/test_results.json -text whitespace=cr-at-eol
-rebuild-booth-blender/validation/test_output.txt -text whitespace=cr-at-eol
-rebuild-booth-blender/validation/test_transcript.txt -text whitespace=cr-at-eol
-rebuild-booth-blender/validation/history/** -text whitespace=cr-at-eol
+booth-image-to-model/validation/test_results.json -text whitespace=cr-at-eol
+booth-image-to-model/validation/test_output.txt -text whitespace=cr-at-eol
+booth-image-to-model/validation/test_transcript.txt -text whitespace=cr-at-eol
+booth-image-to-model/validation/history/** -text whitespace=cr-at-eol

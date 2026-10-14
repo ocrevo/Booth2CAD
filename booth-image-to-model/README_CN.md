@@ -1,15 +1,15 @@
-# rebuild-booth-blender · v2.4.0-rc4
+# booth-image-to-model · v2.5.0-rc1
 
-从展台照片或效果图制作纯展台客户图和分件可编辑 Blender 场景。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
+从一张展台图片生成纯展台客户图和分件可编辑的参数化三维模型（Blender 场景）。原名 rebuild-booth-blender，2.5.0 起改名。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
 
 ## 使用
 
 保留完整包，按 [SKILL.md](SKILL.md) 执行：实际观察与范围裁定 → 参数化建模/AI 对照 → 复核与客户候选交付。命令从包含本包的项目根目录执行；原始输入放在 `input/`，结果使用新的 `output/` 子目录。
 
 ```powershell
-python -m pip install -r rebuild-booth-blender/requirements.txt
-python rebuild-booth-blender/scripts/boothctl.py doctor --output output/new-booth/runtime_probe.json
-python rebuild-booth-blender/scripts/validate_spec.py --spec output/new-booth/spec.json --check-source --report output/new-booth/spec_check.json
+python -m pip install -r booth-image-to-model/requirements.txt
+python booth-image-to-model/scripts/boothctl.py doctor --output output/new-booth/runtime_probe.json
+python booth-image-to-model/scripts/validate_spec.py --spec output/new-booth/spec.json --check-source --report output/new-booth/spec_check.json
 ```
 
 快速路线（默认）：角点拟合相机与比例 → 模板 + 构件宏写 spec → `boothctl.py preview` 迭代 → 一次终版渲染（含高清）。命令见 [SKILL.md](SKILL.md) 第 0 节，默认尺寸与定尺度方法见 [设计先验](references/design-priors.md)。
@@ -30,8 +30,8 @@ python rebuild-booth-blender/scripts/validate_spec.py --spec output/new-booth/sp
 ## 新图实验
 
 ```powershell
-python rebuild-booth-blender/scripts/benchmark.py prepare --image input/new-image.jpg --out output/new-benchmark
-python rebuild-booth-blender/scripts/benchmark.py report --manifest output/new-benchmark/cases.json --out output/new-benchmark/comparison.html
+python booth-image-to-model/scripts/benchmark.py prepare --image input/new-image.jpg --out output/new-benchmark
+python booth-image-to-model/scripts/benchmark.py report --manifest output/new-benchmark/cases.json --out output/new-benchmark/comparison.html
 ```
 
 批量登记用 `--input-dir input` 替代 `--image`，两者互斥。prepare 将原图复制为输出目录中的输入快照，登记实际 hash 与画幅，不调用模型；report 需要四条真实图片路径，可额外附 client 与 inspection 链接。原图留在 `input/`，观察、spec、代码快照、prompt 和派生文件留在 `output/`，不把客户样本写入通用库。
@@ -39,7 +39,7 @@ python rebuild-booth-blender/scripts/benchmark.py report --manifest output/new-b
 ## 维护与边界
 
 ```powershell
-python rebuild-booth-blender/tests/run_tests.py --blender $blenderExe --require-native --output output/_validation/release-check
+python booth-image-to-model/tests/run_tests.py --blender $blenderExe --require-native --output output/_validation/release-check
 ```
 
 先将 `$blenderExe` 设置为实际可执行路径。runner 将完整日志和结果写入独立目录；缺原生 Blender 时 `--require-native` 明确阻止原生验证。默认测试或针对性 `--pattern` 中的 skipped 不得算通过；`validation/` 只保存经核对后归档的发布证据，不由测试自动覆盖。

@@ -1,3 +1,9 @@
+# 2.5.0-rc1 — 2026-10-14
+
+- 改名：skill 与目录由 `rebuild-booth-blender` 改为 `booth-image-to-model`（从一张展台图片生成参数化三维模型和客户渲染图）。新名字不绑定 Blender，也不暗示 CAD 或图纸：当前不输出图纸，尺寸也不是实测值。
+- 同步更新 SKILL.md、README、AGENTS.md、模板中的 skill 查找、打包工具的默认路径、schema `$id` 和 `.gitattributes`；打包工具改为从 SKILL.md 读取 `skill_name` 写入发布状态。
+- `validation/` 里已归档的审计、历史证据保持当时的旧名字，不改写。GitHub 仓库名尚未更改。
+
 # 2.4.0-rc4 — 2026-10-14
 
 - 客户图默认曝光由 −0.5 EV 改为 −1.0 EV（按所有者确认）。依据：全白展台在 −0.5 EV 下 6%–12% 的展台像素被压平，−1.0 EV 后降到 2.4% 以下；曝光对照图显示 −1.0 EV 能分开墙、地面和柜台。降低曝光会同时压暗灰色背景。需要旧效果时传 `--client-exposure -0.5`。预览的曝光建议以 −1.0 EV 为基准。

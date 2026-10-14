@@ -8,7 +8,7 @@
 ## 1. Key findings
 
 1. **CC0 sources cover most soft furnishings and surfaces.** Poly Haven and ambientCG are CC0: commercial use, no credit, and no redistribution limits on the assets. Poly Haven also publishes real-world dimensions per asset.
-2. **Build the booth-specific items in-house.** No CC0 source has good modern truss, LED walls, flat TVs, track spots, lightbox frames or counters. These are simple parametric shapes, and they fit the existing `rebuild-booth-blender` primitives.
+2. **Build the booth-specific items in-house.** No CC0 source has good modern truss, LED walls, flat TVs, track spots, lightbox frames or counters. These are simple parametric shapes, and they fit the existing `booth-image-to-model` primitives.
 3. **Royalty-free marketplaces allow renders but not handing over files.** This covers Blendkit, Fab, CGTrader and TurboSquid. All allow commercial renders. None lets you pass the model files on as standalone files. Delivering `.blend` source files to a client is the main licence trap.
 4. **Avoid CC BY in client-facing renders.** A render is arguably "Adapted Material", so the credit must travel with it, and clients rarely keep credits. Never use NC, ND or SA.
 5. **Manufacturer data is for planning, not marketing images.** This covers Vitra, MillerKnoll, HAY, BIMobject and IKEA. Their terms are restrictive or silent about commercial renders. Use their data only when the client specifies that genuine product, and get written permission.
@@ -170,7 +170,7 @@ Catalogues are identified by UUID, so they can be renamed without editing the as
 - **Front:** faces **−Y**, so it is visible in Front view (Numpad 1). Blendkit's upload rules use the same convention, and so does what the glTF importer produces (glTF front is +Z, which maps to Blender −Y).
 - **Z up**, and the asset sits on the ground (no floating).
 - One top-level collection per model. Mark the collection as the asset, so it can be instanced.
-- **Pipeline note:** `rebuild-booth-blender` places primitives at their *local geometric centre* (data-contract.md). When the builder places a library asset, add `H/2` to the spec's Z, or set the spec placement to the floor point.
+- **Pipeline note:** `booth-image-to-model` places primitives at their *local geometric centre* (data-contract.md). When the builder places a library asset, add `H/2` to the spec's Z, or set the spec placement to the floor point.
 
 ### Metadata
 

@@ -4,12 +4,12 @@
 
 ## 同一输入，两条路线
 
-1. 从项目根目录运行 `python rebuild-booth-blender/scripts/benchmark.py prepare --image input/new-image.jpg --out output/new-benchmark`，复制单张原图为本次输入快照，核对 hash，登记画幅和清洁 prompt。manifest 的 `source` 指向快照，`source_original` 记录原始位置；后续 input 文件改名或移除不会破坏已保存实验。批量时以 `--input-dir input` 替代 `--image`；两者互斥，目录模式只读取直属图片，不把旧渲染当新输入，不覆盖旧实验。
+1. 从项目根目录运行 `python booth-image-to-model/scripts/benchmark.py prepare --image input/new-image.jpg --out output/new-benchmark`，复制单张原图为本次输入快照，核对 hash，登记画幅和清洁 prompt。manifest 的 `source` 指向快照，`source_original` 记录原始位置；后续 input 文件改名或移除不会破坏已保存实验。批量时以 `--input-dir input` 替代 `--image`；两者互斥，目录模式只读取直属图片，不把旧渲染当新输入，不覆盖旧实验。
 2. 实际看原图，记录建筑、家具、开口、范围排除、关键歧义和尺寸依据。为两条路线固定相同的 Logo/文字/人物/产品处理规则。
 3. Skill 路线：冻结本次旧 builder 到该任务输出目录生成基线，修改通用逻辑或本次 spec 后生成新 run。spec 的 source 绑定已登记的输入快照；每次保存 spec、代码和真实文件 hash，独立重新打开 `.blend`。固定尺寸、数量或品牌只能出现在这个样本 spec 中。
 4. AI 路线：使用可用的图像生成工具，以原始图片为 edit target，附清洁规则及从原图观察出的结构不变量。保存实际 prompt、工具来源和输出；若工具未提供准确模型名，不猜测。图像只用作视觉对照，不能反向成为测量、遮挡补全或 BOM 证据。
 5. 实际看原图/基线/优化/AI及第二视角。先排除归属、拓扑和构图问题，再调圆角、厚度、材质与光照。AI图另检查边缘杂点、透明孔洞、家具数量和曲面是否漂移。
-6. 填写 cases.json 的 baseline/blender/ai 路径（相对 manifest 目录）、notes、status，可选 spec/native_verification/blend，以及客户图 client 和第二视角 inspection。运行 `python rebuild-booth-blender/scripts/benchmark.py report --manifest output/new-benchmark/cases.json --out output/new-benchmark/comparison.html` 生成四列对比页及证据清单，页面可切换深浅底检查透明边缘。
+6. 填写 cases.json 的 baseline/blender/ai 路径（相对 manifest 目录）、notes、status，可选 spec/native_verification/blend，以及客户图 client 和第二视角 inspection。运行 `python booth-image-to-model/scripts/benchmark.py report --manifest output/new-benchmark/cases.json --out output/new-benchmark/comparison.html` 生成四列对比页及证据清单，页面可切换深浅底检查透明边缘。
 
 四列 baseline/blender/ai 使用同机位透明匹配图；客户图 client 为中性背景展示，inspection 为第二视角，分开链接。AI 默认要求透明 alpha；需要客户展示时用一致的中性背景，不把透明图与灰底客户图直接计算像素差。
 脚本不自动调用模型，也不自动写视觉 pass。AI 输出尺寸或构图不同会记录到 evidence；缩略图里的 object-fit 仅方便查看。普通客户候选完成实际视觉与原生重开后可交付并保留 review_required；严格量化需求再按 [重建 QA](reconstruction-qa.md) 准备标注。无原图 mask 不报 IoU 或“还原百分比”；有 mask 时明确清洁删除区域的有效比较规则。AI 路线不可独立扭曲各构件来提高指标。

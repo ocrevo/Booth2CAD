@@ -1,6 +1,6 @@
 # Venue and organiser rules for custom-built (space-only) stands
 
-- **Purpose:** collect the hard constraints that venues and organisers publish for custom-built stands, so `rebuild-booth-blender` can pick defensible defaults when the client gives no data.
+- **Purpose:** collect the hard constraints that venues and organisers publish for custom-built stands, so `booth-image-to-model` can pick defensible defaults when the client gives no data.
 - **Access date for every URL below: 2026-10-14.**
 - **Method:** official PDFs were downloaded and read as full text, and web pages were fetched. Where a venue's own regulations were not online, an organiser's exhibitor manual for an event at that venue is used. Those rows are labelled with the event, because they are **event rules, not venue rules**. Quotes are kept under 25 words; everything else is paraphrased. Values are converted to mm, with the original unit in brackets where it was not metric.
 - **Every value in this note is venue-specific, and usually edition- and event-specific.** Organisers can set stricter or looser limits than the venue at the same hall (example: NECC Shanghai allows 6,000 mm at CIIE 2025 but 4,000 mm at CBME 2025). Always re-check the manual for the actual show.

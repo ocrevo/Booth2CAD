@@ -1,6 +1,6 @@
 # Reconstruction tooling for single-image booth rebuilds (CPU-only laptop)
 
-- **Purpose:** pick tools that speed up the slow steps of the single-image workflow (`rebuild-booth-blender`):
+- **Purpose:** pick tools that speed up the slow steps of the single-image workflow (`booth-image-to-model`):
   1. reading corner pixels by eye
   2. deciding which surfaces are walls or floor
   3. finding the depth of interior objects

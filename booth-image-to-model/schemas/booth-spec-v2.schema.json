@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:rebuild-booth-blender:spec:2.0",
+  "$id": "urn:booth-image-to-model:spec:2.0",
   "type": "object",
   "properties": {
     "schema_version": {

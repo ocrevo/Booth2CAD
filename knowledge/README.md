@@ -1,6 +1,6 @@
 # 展台知识库
 
-供 `rebuild-booth-blender` 快速假设参数、选原型和挑资产时查阅。这里放资料和整理稿，不放客户原图（客户原图放 `input/`，结果放 `output/`）。
+供 `booth-image-to-model` 快速假设参数、选原型和挑资产时查阅。这里放资料和整理稿，不放客户原图（客户原图放 `input/`，结果放 `output/`）。
 
 ## 目录
 
@@ -19,7 +19,7 @@
 - `reconstruction-tooling.md`：单图重建可用的直线/消失点、单目深度、分割工具，以及 CPU 渲染提速设置。
 - `asset-sources.md`：模型与材质来源的许可证对比、起步清单、命名规范。
 
-规则：research 里的数值是参考值，不是客户事实；与 `studio/` 或具体项目的场馆手册冲突时，以后者为准。确认可用的条目，再由人整理进 `rebuild-booth-blender/references/design-priors.md`。
+规则：research 里的数值是参考值，不是客户事实；与 `studio/` 或具体项目的场馆手册冲突时，以后者为准。确认可用的条目，再由人整理进 `booth-image-to-model/references/design-priors.md`。
 
 ## 补充材料的格式
 

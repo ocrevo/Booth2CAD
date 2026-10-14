@@ -20,7 +20,7 @@ open critical uncertainty 可进入简模，但阻止严格已验证交付。AI 
 固定几何/尺度，至少 8 个可见拟合点与 2 个不参与拟合的检查点，跨多个深度/高度。圆角包围框的虚拟角未必是真实几何点。
 
 ```powershell
-python rebuild-booth-blender/scripts/camera_fit.py --spec output/new-booth/spec.json --output output/new-booth/camera_candidate.json
+python booth-image-to-model/scripts/camera_fit.py --spec output/new-booth/spec.json --output output/new-booth/camera_candidate.json
 ```
 
 脚本只拟合已有 3D–2D 对应点，不自动看图找点或修复错误几何。搜索范围围绕当前相机种子设置，支持合法长焦、大 roll 和陡俯仰；局部优化仍依赖合理初始机位。缺可靠点、共面退化或正交拟合未支持时，使用视觉审核的相机并记录局限，不编造点。检查拟合与保留点误差后再合入 spec，实际复核后才标 `fit_status=reviewed`。
@@ -32,8 +32,8 @@ part mask 保留其他构件遮挡，不能混用 isolate/amodal 与 visible mas
 标注见 [观察协议](observation-protocol.md)、[data-contract](data-contract.md)；`examples/legacy-case/annotations.template.json` 的路径不代表 masks 已存在。
 
 ```powershell
-& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python rebuild-booth-blender/scripts/blender_build.py -- --spec output/new-booth/spec.json --out output/new-booth/native-qa --render --part-masks
-python rebuild-booth-blender/scripts/compare.py --reference-mask output/new-booth/masks/booth_visible.png --candidate-mask output/new-booth/native-qa/reference_render.png --valid-mask output/new-booth/masks/valid.png --output output/new-booth/native-qa/mask_metrics.json
+& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_build.py -- --spec output/new-booth/spec.json --out output/new-booth/native-qa --render --part-masks
+python booth-image-to-model/scripts/compare.py --reference-mask output/new-booth/masks/booth_visible.png --candidate-mask output/new-booth/native-qa/reference_render.png --valid-mask output/new-booth/masks/valid.png --output output/new-booth/native-qa/mask_metrics.json
 ```
 
 RGBA alpha 是整台候选 mask，part_masks 是可见构件黑白图；脚本不自动缩放/对齐。总 silhouette IoU 不代替拓扑、负空间和局部检查，不生成掩盖问题的综合“95 分”。
@@ -44,7 +44,7 @@ RGBA alpha 是整台候选 mask，part_masks 是可见构件黑白图；脚本�
 共同偏差改相机，局部比例改构件，结构类型错返回拆解，最后调材质。先做约 3 轮低采样对拍，连续两轮无改善时记录停滞并重审关键区域。
 
 ```powershell
-python rebuild-booth-blender/scripts/boothctl.py patch --spec output/new-booth/spec.json --component top_ring --field params.outer_radius --value 0.8 --output output/new-booth/spec_r2.json
+python booth-image-to-model/scripts/boothctl.py patch --spec output/new-booth/spec.json --component top_ring --field params.outer_radius --value 0.8 --output output/new-booth/spec_r2.json
 ```
 
 此例只适用于已有 top_ring，值由本图决定。几何修改使相机复核和下游验收失效，颜色修改不使几何指纹失效。builder 仍完整重建，未实现对象级增量更新；旧结果绑定旧 spec/代码快照，不能用新 hash 冒充旧文件已重建。
@@ -52,8 +52,8 @@ python rebuild-booth-blender/scripts/boothctl.py patch --spec output/new-booth/s
 ## 原生重开与严格验收
 
 ```powershell
-& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python rebuild-booth-blender/scripts/blender_verify.py -- --spec output/new-booth/spec.json --blend output/new-booth/native-qa/booth.blend --report output/new-booth/native-qa/native_verification.json
-python rebuild-booth-blender/scripts/assess.py --spec output/new-booth/spec.json --run output/new-booth/native-qa --annotations output/new-booth/annotations.json --review output/new-booth/native-qa/visual_review.json
+& $blenderExe --background --factory-startup --disable-autoexec --python-exit-code 1 --python booth-image-to-model/scripts/blender_verify.py -- --spec output/new-booth/spec.json --blend output/new-booth/native-qa/booth.blend --report output/new-booth/native-qa/native_verification.json
+python booth-image-to-model/scripts/assess.py --spec output/new-booth/spec.json --run output/new-booth/native-qa --annotations output/new-booth/annotations.json --review output/new-booth/native-qa/visual_review.json
 ```
 
 实际查看原图/匹配渲染/第二视角后填 [visual_review.template.json](visual_review.template.json)，绑定真实图像/spec/代码 hash，禁止自动填所有 pass。
