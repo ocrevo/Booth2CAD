@@ -186,7 +186,7 @@ def main():
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
     s.add_argument('--context',help='Optional design-check context JSON (height limit, hanging allowed, open sides, LED module)')
     s.add_argument('--client-look',action='store_true',help='Also render the customer look (Cycles) and report clipping with a suggested --client-exposure')
-    s.add_argument('--client-exposure',type=float,help='Exposure offset in EV for the customer look (default -0.5), to try the suggested value')
+    s.add_argument('--client-exposure',type=float,help='Exposure offset in EV for the customer look (default -1.0), to try the suggested value')
     a=p.parse_args()
     try:
         if a.command=='design-check':

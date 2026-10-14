@@ -2,7 +2,7 @@
 name: rebuild-booth-blender
 description: 从展台照片或效果图重建分件可编辑 Blender 展台，生成无展厅、无品牌、无人物的客户展示渲染；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.4.0-rc3"
+  version: "2.4.0-rc4"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
   compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
@@ -38,7 +38,7 @@ python rebuild-booth-blender/scripts/boothctl.py preview --spec output/new-booth
 建议性设计检查：`boothctl.py design-check --spec spec.json [--context context.json]`。context 提供 spec 没有的事实（限高、是否允许吊挂、开口方向、LED 箱体尺寸）；缺哪项就把对应检查标为 not_checked，不套默认值。结果只说"超出常用范围"或"没有建模的支撑路径"，不是合规结论；原图本身可以偏离常见做法。数值来自 `schemas/design-priors.v1.json`（reviewed=false）。
 
 `points.json` 格式见 `scripts/box_fit.py` 文件头：坐标用 `W/2`、`-D/2`、`H`、`F`（地面高）、数值或 `?名称`（共享未知量，例如右墙前沿 y）。尺度锚点优先用客户尺寸，其次是标准件，例如前台台面点写 `["?cx", "?cy", 1.05]`。只有假设值时写进 `assumed` 或用 `--assume D=4.5`，结果会标成 assumed。
-没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。Workbench 是平光，看不出自发光和曝光；高调（全白）展台默认曝光（−0.5 EV）会让墙、地面和柜台糊成一片：用 `boothctl.py preview --client-look` 同时渲出终版的客户画面（Cycles，灰底，同样的显示变换），报告会给出高光被压平的像素比例和建议的 `--client-exposure`；换成建议值再预览一次确认（降低曝光会同时压暗灰色背景）。预览对照报告里的 landmark 中位数分 fit（参与拟合，循环）和 check（独立检查，fit=false）两类，以 check 为准；至少留 2–4 个 fit=false 的角点。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。高清帧默认不超过 5 MP（`--hd-max-mp`），超过时自动降低 `--hd-scale` 并在 build_report 的 `hd` 里记录；实测 4.9 MP 能渲出，6.9 MP 会让降噪器内存不足并使 Blender 崩溃。build_report 会在高清阶段之前先写一份（`partial: true`），崩溃时仍有记录。
+没有独立显卡时 Workbench 预览可能因核显驱动崩溃，`preview` 会自动改用 Cycles 低采样重试。Workbench 是平光，看不出自发光和曝光；客户图默认曝光是 −1.0 EV（2.4.0-rc3 及更早为 −0.5，全白展台下墙、地面和柜台会糊成一片）；用 `boothctl.py preview --client-look` 同时渲出终版的客户画面（Cycles，灰底，同样的显示变换），报告会给出高光被压平的像素比例和建议的 `--client-exposure`；换成建议值再预览一次确认（降低曝光会同时压暗灰色背景）。预览对照报告里的 landmark 中位数分 fit（参与拟合，循环）和 check（独立检查，fit=false）两类，以 check 为准；至少留 2–4 个 fit=false 的角点。CPU 终版用 32 采样加降噪即可；高清图只在终版渲一次。高清帧默认不超过 5 MP（`--hd-max-mp`），超过时自动降低 `--hd-scale` 并在 build_report 的 `hd` 里记录；实测 4.9 MP 能渲出，6.9 MP 会让降噪器内存不足并使 Blender 崩溃。build_report 会在高清阶段之前先写一份（`partial: true`），崩溃时仍有记录。
 
 ## 1. 实际观察原图，裁定范围
 

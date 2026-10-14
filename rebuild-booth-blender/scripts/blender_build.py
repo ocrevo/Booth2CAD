@@ -27,7 +27,7 @@ def arguments():
     argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
     p=argparse.ArgumentParser();p.add_argument('--spec',required=True);p.add_argument('--out',required=True)
     p.add_argument('--render',action='store_true');p.add_argument('--part-masks',action='store_true');p.add_argument('--samples',type=int,default=16)
-    p.add_argument('--client-exposure',type=float,default=-.5,help='Exposure offset in EV, applied only to client_render.png')
+    p.add_argument('--client-exposure',type=float,default=-1.0,help='Exposure offset in EV, applied only to the customer images (default -1.0; 2.4.0-rc3 and earlier used -0.5)')
     p.add_argument('--preview',action='store_true',help='Fast iteration: render only the source camera to preview_render.png')
     p.add_argument('--preview-engine',choices=('workbench','cycles'),default='workbench')
     p.add_argument('--preview-client-look',action='store_true',help='With --preview: also render the customer look (gray backdrop, display transform, client exposure) to preview_client_look.png; uses Cycles')

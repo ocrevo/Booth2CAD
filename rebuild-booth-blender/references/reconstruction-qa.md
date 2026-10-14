@@ -5,7 +5,7 @@
 ## 客户展示复核
 
 普通客户候选需要真实渲染、原图与匹配机位对照、第二视角检查及独立进程重开 `.blend`。先归属/拓扑，再投影、关键比例、家具/材质；确认清洁范围与屏幕中性化，记录估计尺寸、隐藏连接及未决结构。
-`client_render.png` 使用中性浅灰 World 和可用 PBR Neutral 显示，`--client-exposure` 默认 -0.5 EV；透明 `reference_render.png` 用于结构对照。客户图背景不能充当 silhouette。
+`client_render.png` 使用中性浅灰 World 和可用 PBR Neutral 显示，`--client-exposure` 默认 -1.0 EV（2.4.0-rc3 及更早为 -0.5；全白展台在 -0.5 下高光会被压平）；透明 `reference_render.png` 用于结构对照。客户图背景不能充当 silhouette。
 普通客户图无需先制作完整 masks；没有严格量化证据时交付客户候选，保留 `review_required`，不把未调用 assess 当成全项通过。
 
 ## 启用严格 QA 的条件

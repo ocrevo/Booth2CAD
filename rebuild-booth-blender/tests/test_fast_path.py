@@ -522,6 +522,7 @@ class NativeFastPathTests(unittest.TestCase):
             report = json.loads((out / 'build_report.json').read_text(encoding='utf-8'))
             self.assertEqual(report['status'], 'preview_only')
             self.assertFalse((out / 'client_render.png').exists())
+            self.assertEqual(report['client_exposure_ev'], -1.0)                     # default customer exposure
             stages = report['stage_seconds']
             self.assertIn('scene_and_first_save', stages)
             self.assertIn('render:preview_render.png', stages)

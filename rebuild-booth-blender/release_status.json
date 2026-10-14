@@ -1,6 +1,6 @@
 {
   "skill_name": "rebuild-booth-blender",
-  "version": "2.4.0-rc3",
+  "version": "2.4.0-rc4",
   "baseline": "Frozen independent AI audits of 2.2.0-rc1 repository source, followed by generic fixes and source-bound native regression.",
   "python_tests": {
     "tests_run": 200,
@@ -12,15 +12,15 @@
     "unexpected_successes": [],
     "all_executed_tests_passed": true,
     "python": "3.12.3",
-    "started_at_utc": "2026-10-14T13:30:59.872612+00:00",
+    "started_at_utc": "2026-10-14T13:41:26.566964+00:00",
     "require_native": true,
     "discovery_pattern": "test_*.py",
-    "output_directory": "<repo>\\output\\_validation\\release-check-2.4.0-rc3a",
-    "artifact_root": "<repo>\\output\\_validation\\release-check-2.4.0-rc3a\\artifacts",
+    "output_directory": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a",
+    "artifact_root": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a\\artifacts",
     "scope": "Regression evidence only; does not certify source-image fidelity.",
     "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
-    "builder_sha256": "93e240f13082e220b4c0c1f3e34ac0db1fd2b17cd72509a8520685ba026a37c5",
-    "regression_inputs_sha256": "abec3236d12627b142220a956e122159b71705bf9366fb601d150777959ba5e8",
+    "builder_sha256": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
+    "regression_inputs_sha256": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
     "native_blender": {
       "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
       "available": true,
@@ -31,29 +31,29 @@
     },
     "native_skipped": [],
     "status": "passed",
-    "executed_at_utc": "2026-10-14T13:33:35.230430+00:00",
-    "builder_sha256_after": "93e240f13082e220b4c0c1f3e34ac0db1fd2b17cd72509a8520685ba026a37c5",
-    "regression_inputs_sha256_after": "abec3236d12627b142220a956e122159b71705bf9366fb601d150777959ba5e8",
+    "executed_at_utc": "2026-10-14T13:44:32.267827+00:00",
+    "builder_sha256_after": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
+    "regression_inputs_sha256_after": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
     "exit_code": 0,
     "transcript": {
       "path": "test_transcript.txt",
-      "sha256": "824733fc072239c67d0ec58767c6801c2af0b02c4e762a5470c1540d0c6131db"
+      "sha256": "56b22e10ec0be3319a76a180f5db413b3cab9e4bac9413ec1f2a2a8686159c94"
     }
   },
   "native_blender_integration": "passed_blender_5.2.2_lts",
   "legacy_case_end_to_end_visual_match": "review_required",
-  "builder_sha256": "93e240f13082e220b4c0c1f3e34ac0db1fd2b17cd72509a8520685ba026a37c5",
+  "builder_sha256": "ec694760dd4bb3de33b7bb8dc1bbfff585c48e0e6f17dbf9d56a3ef57dc2663e",
   "local_skill_source_read": true,
   "customer_presentation": "Per-image Blender scenes, client renders and AI comparisons are local output artifacts; each visual reconstruction retains its own review status and estimated dimensions.",
   "source_assets_and_derived_scenes": "Not committed; input/, output/ and historical test/ contents are ignored.",
   "bom_status": "component identities and dimension basis retained; single-image inferred dimensions and hidden connections need confirmation before a measured BOM",
-  "regression_inputs_sha256": "abec3236d12627b142220a956e122159b71705bf9366fb601d150777959ba5e8",
+  "regression_inputs_sha256": "8eb2dc083d6a32912409bad8b4f056631018ee47b7526ea605ee5135033b1dfa",
   "test_run_evidence": {
-    "source_test_run": "<repo>\\output\\_validation\\release-check-2.4.0-rc3a",
+    "source_test_run": "<repo>\\output\\_validation\\release-check-2.4.0-rc4a",
     "summary": "validation/test_results.json",
-    "summary_sha256": "cce79111f5cc38d0f9c5de27028b40e6444e484af215c8c6d15cfc6bb93663cb",
+    "summary_sha256": "7fcb4c72e8741ffc1107f441310e66d8c7d3751f9fd574315c00f32c43be8ea0",
     "transcript": "validation/test_transcript.txt",
-    "transcript_sha256": "824733fc072239c67d0ec58767c6801c2af0b02c4e762a5470c1540d0c6131db"
+    "transcript_sha256": "56b22e10ec0be3319a76a180f5db413b3cab9e4bac9413ec1f2a2a8686159c94"
   },
   "repository_skill_source": true,
   "audit_evidence": "validation/audit_report.json",

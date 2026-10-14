@@ -69,9 +69,9 @@ def client_look_stats(run, alpha, size):
     p95 = float(np.percentile(inside, 95))
     report = run / 'build_report.json'
     try:
-        current = float(read_json(report).get('client_exposure_ev', -0.5)) if report.is_file() else -0.5
+        current = float(read_json(report).get('client_exposure_ev', -1.0)) if report.is_file() else -1.0
     except (ValueError, OSError):
-        current = -0.5
+        current = -1.0
     return {'clipped_fraction': round(clipped, 4), 'luma_p95': round(p95, 3), 'mean_luma': round(float(inside.mean()), 3),
             'advice': exposure_advice(luma, clipped, p95, current),
             'note': 'Measured on booth pixels of preview_client_look.png. Highlights clip above 5% of booth pixels; '
