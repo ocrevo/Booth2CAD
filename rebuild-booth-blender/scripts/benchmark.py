@@ -60,7 +60,11 @@ def prepare(input_dir,out,image_path=None):
         # Direct children only: previous run outputs cannot become fresh cases.
         sources=sorted(p for p in input_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS)
     if not sources:raise ValueError('No input images found; place source images directly in input-dir')
-    if (out/'cases.json').exists():raise FileExistsError('Use a fresh output directory; previous cases are retained')
+    if (out/'cases.json').exists():
+        try:held=[c['id'] for c in json.loads((out/'cases.json').read_text(encoding='utf-8'))['cases']]
+        except (ValueError,KeyError,OSError):held=[]
+        raise FileExistsError('Use a fresh output directory; previous cases are retained. '+str(out)+' already holds '+(', '.join(held) or 'a cases.json')+
+                              ': keep working from it for the same image, or choose a new output directory.')
     out.mkdir(parents=True,exist_ok=True);cases=[]
     for source in sources:
         digest=sha(source);case_id='case_'+digest[:12];folder=out/case_id;folder.mkdir(exist_ok=True)

@@ -126,16 +126,21 @@ def run(spec, context=None, priors=None):
     floors = [c for c in comps.values() if c.get('role') == 'floor']
     floor_top = bounds[floors[0]['id']][1][2] if floors else 0.0
 
-    # ---- parts outside the footprint
+    # ---- parts outside the footprint (the floor part defines it; it need not be centred on the origin)
     W, D = spec['scale']['footprint_m']
+    if floors:
+        fx0, fy0 = bounds[floors[0]['id']][0][0], bounds[floors[0]['id']][0][1]
+        fx1, fy1 = bounds[floors[0]['id']][1][0], bounds[floors[0]['id']][1][1]
+    else:
+        fx0, fx1, fy0, fy1 = -W / 2, W / 2, -D / 2, D / 2
     tol = ctx.get('footprint_tolerance_m', 0.02)
     ran.append('inside_footprint')
     for i, (lo, hi) in sorted(bounds.items()):
-        if comps[i].get('role') in EDGE_TRIM_ROLES:
+        if comps[i].get('role') in EDGE_TRIM_ROLES or comps[i].get('role') == 'floor':
             continue
-        over = max(-W / 2 - lo[0], hi[0] - W / 2, -D / 2 - lo[1], hi[1] - D / 2)
+        over = max(fx0 - lo[0], hi[0] - fx1, fy0 - lo[1], hi[1] - fy1)
         if over > tol:
-            finding('inside_footprint', 'advisory', [i], f'part reaches {over:.3f} m outside the footprint rectangle', round(over, 3), tol)
+            finding('inside_footprint', 'advisory', [i], f'part reaches {over:.3f} m outside the floor rectangle', round(over, 3), tol)
 
     # ---- height limit
     if ctx.get('height_limit_m') is None:
@@ -215,7 +220,7 @@ def run(spec, context=None, priors=None):
                 if not any(n['check'] == 'counter_edge_clearance' for n in not_checked):
                     not_checked.append({'check': 'counter_edge_clearance', 'reason': 'context open_sides is missing'})
             else:
-                edge = {'front': lo[1] + D / 2, 'back': D / 2 - hi[1], 'left': lo[0] + W / 2, 'right': W / 2 - hi[0]}
+                edge = {'front': lo[1] - fy0, 'back': fy1 - hi[1], 'left': lo[0] - fx0, 'right': fx1 - hi[0]}
                 need = priors['counter_edge_clearance_min']['value']
                 for side in ctx['open_sides']:
                     if edge[side] < need - 1e-6:

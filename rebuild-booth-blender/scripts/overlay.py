@@ -55,7 +55,7 @@ def _frange(lo, hi, step):
 
 def grid_segments(dims, floor_z):
     """3D segments of the floor grid and the back/left wall grids (+ the box edges)."""
-    W, D, H = dims['W'], dims['D'], dims['H']
+    W, D, H = dims['W'], dims['D'], dims.get('H')
     x0, x1, y0, y1 = -W / 2, W / 2, -D / 2, D / 2
     z0 = floor_z
     grid = []
@@ -63,15 +63,16 @@ def grid_segments(dims, floor_z):
         grid.append(((x, y0, z0), (x, y1, z0)))
     for y in _frange(y0, y1, STEP_M):                       # floor, lines parallel to X
         grid.append(((x0, y, z0), (x1, y, z0)))
-    for x in _frange(x0, x1, STEP_M):                       # back wall verticals
-        grid.append(((x, y1, z0), (x, y1, H)))
-    for z in _frange(z0, H, STEP_M):                        # back wall horizontals
-        grid.append(((x0, y1, z), (x1, y1, z)))
-    for y in _frange(y0, y1, STEP_M):                       # left wall verticals
-        grid.append(((x0, y, z0), (x0, y, H)))
-    for z in _frange(z0, H, STEP_M):                        # left wall horizontals
-        grid.append(((x0, y0, z), (x0, y1, z)))
-    corners = [(x, y, z) for x in (x0, x1) for y in (y0, y1) for z in (z0, H)]
+    if H is not None:                                       # walls and the top need a fitted height
+        for x in _frange(x0, x1, STEP_M):                   # back wall verticals
+            grid.append(((x, y1, z0), (x, y1, H)))
+        for z in _frange(z0, H, STEP_M):                    # back wall horizontals
+            grid.append(((x0, y1, z), (x1, y1, z)))
+        for y in _frange(y0, y1, STEP_M):                   # left wall verticals
+            grid.append(((x0, y, z0), (x0, y, H)))
+        for z in _frange(z0, H, STEP_M):                    # left wall horizontals
+            grid.append(((x0, y0, z), (x0, y1, z)))
+    corners = [(x, y, z) for x in (x0, x1) for y in (y0, y1) for z in ((z0, H) if H is not None else (z0,))]
     edges = []
     for a in corners:
         for b in corners:
@@ -82,6 +83,9 @@ def grid_segments(dims, floor_z):
 
 def draw_overlay(fit, image_path, out_path):
     missing = [k for k in ('camera', 'image', 'dims_m', 'points', 'status', 'rms_px') if k not in fit]
+    for k in ('W', 'D'):
+        if k not in fit.get('dims_m', {}):
+            missing.append('dims_m.' + k)
     if missing:
         raise ValueError('box_fit result lacks ' + ', '.join(missing) + '; re-run box_fit.py from 2.3.0-rc2 or later (older results carry no image size)')
     camera = fit['camera']
@@ -107,7 +111,8 @@ def draw_overlay(fit, image_path, out_path):
         d.line([(fx - 4, fy - 4), (fx + 4, fy + 4)], fill=(255, 0, 0), width=1)
         d.line([(fx - 4, fy + 4), (fx + 4, fy - 4)], fill=(255, 0, 0), width=1)
         errs.append(p['err_px'])
-    label = f"fit {fit['status']}  rms {fit['rms_px']} px  W {dims['W']} D {dims['D']} H {dims['H']} m  grid {STEP_M} m"
+    height = f"H {dims['H']}" if 'H' in dims else 'H not fitted (floor only)'
+    label = f"fit {fit['status']}  rms {fit['rms_px']} px  W {dims['W']} D {dims['D']} {height} m  grid {STEP_M} m"
     d.rectangle([0, 0, min(w, 8 * len(label) + 8), 16], fill=(0, 0, 0))
     d.text((4, 2), label, fill=(255, 255, 255))
     out_path = Path(out_path)

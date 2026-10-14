@@ -24,7 +24,7 @@ class BenchmarkTests(unittest.TestCase):
             manifest=prepare(root,root/'runs/new')
             self.assertEqual(len(manifest['cases']),1)
             self.assertEqual(manifest['cases'][0]['source_size'],[30,20])
-            with self.assertRaises(FileExistsError):prepare(root,root/'runs/new')
+            with self.assertRaisesRegex(FileExistsError,'already holds case_.*choose a new output directory'):prepare(root,root/'runs/new')
 
     def test_report_binds_bytes_and_records_different_ai_size(self):
         with tempfile.TemporaryDirectory() as tmp:

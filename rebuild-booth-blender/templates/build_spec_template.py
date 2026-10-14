@@ -87,8 +87,9 @@ cm.wall_screens(b, 'screens', 'media', Y1 - 0.1, (fx, fz), [((fx[0] + 0.05, fx[1
 # ---- camera, landmarks (fit corners double as reprojection checks), assumptions
 b.camera(CAM)
 b.landmark('top_back_left', 'back_wall', [X0, Y1, H], pt(0.3, 0.05))
-b.scale((W, D), 'Proportions from box_fit.json corner fit; absolute size from '
-        + ', '.join(f'{k}={v}' for k, v in DIMS.items() if FIT['dim_source'].get(k) != 'fitted') + '. Not measured.')
+anchors = ', '.join(f'{k}={v}' for k, v in DIMS.items() if FIT['dim_source'].get(k) != 'fitted') or 'numeric point anchors'
+assumed = ', '.join(FIT.get('assumed') or []) or 'none listed'
+b.scale((W, D), f'Proportions from box_fit.json corner fit; absolute size from {anchors}. Assumed items: {assumed}. Not measured.')
 b.uncertain('metric_dimensions', 'Single-image estimate; confirm before any BOM or construction use.')
 
 if __name__ == '__main__':

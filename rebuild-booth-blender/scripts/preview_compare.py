@@ -37,6 +37,47 @@ def landmark_errors(run, width, height):
     return rows
 
 
+CLIP_LEVEL = 0.98
+CLIP_TOLERANCE = 0.05          # share of booth pixels allowed at the top of the range
+EV_STEP = 0.5
+EV_FLOOR = -2.0
+
+
+def exposure_advice(luma, clipped_fraction, p95, current_ev):
+    """First-order exposure suggestion for the customer image; the display transform is not linear, so preview again."""
+    delta = 0.0
+    if clipped_fraction > CLIP_TOLERANCE:
+        delta = -min(-EV_FLOOR, EV_STEP * math.ceil((clipped_fraction - CLIP_TOLERANCE) / 0.10))
+    elif p95 < 0.55:
+        delta = EV_STEP
+    return {'current_ev': current_ev, 'suggested_delta_ev': delta, 'suggested_client_exposure_ev': round(current_ev + delta, 2)}
+
+
+def client_look_stats(run, alpha, size):
+    path = run / 'preview_client_look.png'
+    if not path.is_file():
+        return None
+    img = Image.open(path).convert('RGB')
+    if img.size != size:
+        raise ValueError(f'IMAGE_SHAPE_MISMATCH: customer-look preview {img.size} vs source {size}')
+    arr = np.asarray(img, dtype=float) / 255.0
+    luma = 0.2126 * arr[..., 0] + 0.7152 * arr[..., 1] + 0.0722 * arr[..., 2]
+    inside = luma[alpha]
+    if inside.size == 0:
+        return None
+    clipped = float((inside >= CLIP_LEVEL).mean())
+    p95 = float(np.percentile(inside, 95))
+    report = run / 'build_report.json'
+    try:
+        current = float(read_json(report).get('client_exposure_ev', -0.5)) if report.is_file() else -0.5
+    except (ValueError, OSError):
+        current = -0.5
+    return {'clipped_fraction': round(clipped, 4), 'luma_p95': round(p95, 3), 'mean_luma': round(float(inside.mean()), 3),
+            'advice': exposure_advice(luma, clipped, p95, current),
+            'note': 'Measured on booth pixels of preview_client_look.png. Highlights clip above 5% of booth pixels; '
+                    'change --client-exposure and preview again, the display transform is not linear.'}
+
+
 def sheet(run, render_name=None, out=None):
     run = Path(run).resolve()
     render_name = render_name or _render_name(run)
@@ -73,6 +114,7 @@ def sheet(run, render_name=None, out=None):
         canvas.paste(im, xy)
     out = Path(out) if out else run / 'compare_sheet.png'
     canvas.save(out)
+    look = client_look_stats(run, alpha, src.size)
     errs = [r['err_px'] for r in rows]
     fit_errs = [r['err_px'] for r in rows if r['fit']]
     check_errs = [r['err_px'] for r in rows if not r['fit']]
@@ -83,7 +125,7 @@ def sheet(run, render_name=None, out=None):
                'landmark_median_check_px': float(np.median(check_errs)) if check_errs else None,
                'landmark_check_count': len(check_errs),
                'landmark_note': 'Fit landmarks drive the camera, so their error is circular; judge the render by the independent check landmarks (fit=false).',
-               'booth_pixel_fraction': round(float(alpha.mean()), 4),
+               'booth_pixel_fraction': round(float(alpha.mean()), 4), 'client_look': look,
                'note': 'Panels: source | render on gray | 50% blend | source with render outline (cyan), inner edges (yellow), '
                        'landmark target (green) vs render (red). Visual aid only, no fidelity score.'}
     write_json(run / 'compare.json', summary)

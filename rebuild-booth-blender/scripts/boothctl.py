@@ -125,19 +125,20 @@ def resolve_preview_engine(out_root,engine):
     return engine,False
 
 
-def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600,context=None):
+def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600,context=None,client_look=False,client_exposure=None):
     """Validate -> fresh numbered run -> one matched-camera render -> comparison sheet.
     Iteration aid only; the final delivery still uses a full --render build and blender_verify."""
     spec_path=Path(spec_path).resolve();spec=read_json(spec_path)
     check=validate(spec,spec_path.parent)
     if not check['valid']:return {'status':'invalid_spec','errors':check['errors'][:10]}
     out_root=Path(out_root).resolve();out_root.mkdir(parents=True,exist_ok=True)
+    if client_look:engine='cycles'      # the customer look needs the path tracer
     engine,sticky_used=resolve_preview_engine(out_root,engine)
     n=1+max([int(p.name.split('_')[-1]) for p in out_root.glob('preview_*') if p.name.split('_')[-1].isdigit()]+[0])
     run=out_root/f'preview_{n:03d}'
     cmd=[find_blender(blender),'--background','--factory-startup','--disable-autoexec','--python-exit-code','1',
          '--python',str(Path(__file__).resolve().parent/'blender_build.py'),'--','--spec',str(spec_path),'--out',str(run),
-         '--preview','--preview-engine',engine,'--samples',str(samples)]
+         '--preview','--preview-engine',engine,'--samples',str(samples)]+(['--preview-client-look'] if client_look else [])+(['--client-exposure',str(client_exposure)] if client_exposure is not None else [])
     started=time.time()
     proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
     fallback=None
@@ -163,7 +164,7 @@ def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout
     except (ValueError,KeyError,OSError) as ex:design={'status':'unavailable','reason':str(ex)[:200]}
     inside=stages.get('total_in_script')
     return {'status':'preview_ready','run':str(run),'seconds':seconds,'fallback':fallback,'engine_used':'cycles' if (fallback or sticky_used) else engine,
-            'stage_seconds':stages,'design_findings':design,'startup_overhead_s':round(seconds-inside,1) if isinstance(inside,(int,float)) else None,
+            'stage_seconds':stages,'design_findings':design,'client_look':summary.get('client_look'),'startup_overhead_s':round(seconds-inside,1) if isinstance(inside,(int,float)) else None,
             'sheet':summary['sheet'],
             'landmark_median_px':summary['landmark_median_px'],'landmark_max_px':summary['landmark_max_px'],
             'worst_landmarks':sorted(summary['landmarks'],key=lambda r:-r['err_px'])[:5],
@@ -184,6 +185,8 @@ def main():
     s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
     s.add_argument('--context',help='Optional design-check context JSON (height limit, hanging allowed, open sides, LED module)')
+    s.add_argument('--client-look',action='store_true',help='Also render the customer look (Cycles) and report clipping with a suggested --client-exposure')
+    s.add_argument('--client-exposure',type=float,help='Exposure offset in EV for the customer look (default -0.5), to try the suggested value')
     a=p.parse_args()
     try:
         if a.command=='design-check':
@@ -195,7 +198,7 @@ def main():
             from overlay import draw_overlay  # Pillow only for this optional step
             result=draw_overlay(read_json(a.fit),a.image,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return 0
         if a.command=='preview':
-            result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples,context=a.context)
+            result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples,context=a.context,client_look=a.client_look,client_exposure=a.client_exposure)
             print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if result['status']=='preview_ready' else 2
         if a.command=='doctor':result=doctor(a.blender)
         elif a.command=='fingerprint':result=fingerprints(read_json(a.spec))

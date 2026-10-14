@@ -1,3 +1,12 @@
+# 2.4.0-rc3 — 2026-10-14
+
+- 依据 orange、legacy-case、wx 三张图的新流程计时（20–27 分钟；工具计算只占 2–7 分钟，其余是读图和写 spec）：
+- 预览新增 `--client-look`（`boothctl preview --client-look`、`blender_build --preview-client-look`）：同时渲出终版客户画面，报告高光被压平的像素比例，并给出建议的 `--client-exposure`；`--client-exposure` 可传给预览以验证。实测全白展台在默认 −0.5 EV 下 6%–12% 的像素被压平，建议值 −1.0 EV 后降到 2.4% 以下。默认曝光不变。
+- box_fit 新增 `scale_checks`（用图中直立标准件的底、顶像素和期望高度核对尺度假设，不参与拟合），结果带 `assumed` 列表，模板把它写进 `scale.notes`。
+- 修复：overlay 在没有任何点用到高度时不再 KeyError（只画地面）；宽、深缺失时给出明确提示。
+- design_check 以地台构件自己的矩形为基准判断出界和到开口边的距离，不再假定地台以原点为中心。
+- `benchmark.py prepare` 的重复目录报错会说明已有的 case 和该怎么做（仍然拒绝覆盖）。
+
 # 2.4.0-rc2 — 2026-10-14
 
 - 修复：`--hd-scale 3` 在 938×816 的图上（6.9 MP）让 OIDN 降噪器内存不足，Blender 崩溃，高清图损坏且没有 build_report。现在高清帧默认限制在 5 MP（`--hd-max-mp`，4.9 MP 实测可渲出），超出时降低有效倍数，必要时跳过高清；高清阶段前先写一份 `partial` 报告，渲染高清前释放持久数据；build_report 的 `hd` 记录请求倍数、有效倍数和是否被限制。

@@ -205,6 +205,21 @@ class DesignCheckTests(unittest.TestCase):
         self.assertNotIn('header_band_depth', names)
         self.assertIn('header_band_depth', {n['check'] for n in result['not_checked']})
 
+    def test_footprint_is_the_floor_rectangle_even_when_it_is_not_centred(self):
+        d = Path(self._tmp.name)
+        b = cm.SpecBuilder(str(d / 'source.png'), 64, 48, 'offset_floor')
+        b.scope('s', 'Synthetic fixture.')
+        b.box('floor', 's', 'floor', (-3, 3), (-1.0, 3.0), (0, ZF), cm.WOOD, critical=True, px=(0, 20, 64, 48))
+        b.box('inside', 's', 'wall_panel', (-1, 1), (2.0, 2.9), (ZF, 2.0), cm.WHITE, px=(1, 1, 5, 5))   # outside a centred 6 x 4 footprint
+        b.scale((6, 4), 'Synthetic fixture.')
+        b.camera(CAM)
+        b.uncertain('fixture', 'Synthetic only.')
+        result = run(b.build(), FULL)
+        self.assertNotIn('inside_footprint', {f['check'] for f in result['findings']})
+        b.box('outside', 's', 'wall_panel', (-1, 1), (3.3, 3.6), (ZF, 2.0), cm.WHITE, px=(1, 1, 5, 5))
+        result = run(b.build(), FULL)
+        self.assertEqual([f['ids'] for f in result['findings'] if f['check'] == 'inside_footprint'], [['outside']])
+
     def test_clean_booth_reports_no_findings(self):
         cm.counter(self.b, 'c', 's', (-1.0, 0.8), (-1.5, -0.95), floor_z=ZF, px=(1, 1, 5, 5))
         result, _ = checks(self.b)

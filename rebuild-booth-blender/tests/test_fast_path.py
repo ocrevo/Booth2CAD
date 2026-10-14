@@ -26,6 +26,7 @@ from preview_compare import sheet
 from overlay import draw_overlay, grid_segments
 from boothctl import resolve_preview_engine
 from common import hd_scale_for
+from preview_compare import exposure_advice
 
 CAM = {'projection': 'perspective', 'position': [7.0, -11.0, 6.5], 'target': [0.2, 0.3, 1.2], 'lens_mm': 42.0,
        'sensor_width_mm': 36.0, 'principal_point': [0.5, 0.5], 'pixel_aspect': [1, 1], 'fit_status': 'unfitted', 'roll_deg': 3.0}
@@ -300,6 +301,94 @@ class FitOverlayTests(unittest.TestCase):
                 draw_overlay(res, src, Path(d) / 'o.png')
 
 
+class Batch5Tests(unittest.TestCase):
+    """Overlay without a fitted height, scale cross-checks, exposure advice."""
+
+    def test_overlay_works_when_no_point_fixed_the_height(self):
+        grid, edges = grid_segments({'W': 3.0, 'D': 2.0}, 0.0)
+        self.assertEqual(len(edges), 4)                                  # floor outline only
+        self.assertTrue(all(a[2] == 0 and b[2] == 0 for a, b in grid + edges))
+        fit = {'camera': FitOverlayTests.CAM2, 'image': {'width': 738, 'height': 415}, 'dims_m': {'W': 6.4, 'D': 3.2}, 'floor_z': 0.0,
+               'status': 'ambiguous', 'rms_px': 1.0, 'points': [{'uv_px': [10, 10], 'fitted_px': [12, 11], 'err_px': 2.2}]}
+        with tempfile.TemporaryDirectory() as d:
+            src = Path(d) / 's.png'
+            Image.new('RGB', (738, 415), (80, 80, 80)).save(src)
+            summary = draw_overlay(fit, src, Path(d) / 'o.png')
+            self.assertEqual(summary['box_edges'], 4)
+
+    def test_overlay_without_width_or_depth_is_explained(self):
+        fit = {'camera': FitOverlayTests.CAM2, 'image': {'width': 64, 'height': 48}, 'dims_m': {'H': 3.0}, 'status': 'ambiguous',
+               'rms_px': 1.0, 'points': []}
+        with tempfile.TemporaryDirectory() as d:
+            src = Path(d) / 's.png'
+            Image.new('RGB', (64, 48), (80, 80, 80)).save(src)
+            with self.assertRaisesRegex(ValueError, 'lacks .*dims_m.W'):
+                draw_overlay(fit, src, Path(d) / 'o.png')
+
+    def checks_data(self, expected):
+        cam = FitOverlayTests.CAM2
+        base, top = [1.0, -0.5, 0.0], [1.0, -0.5, 0.9]
+        bu, bv, _ = camera_math.project(base, cam, 738, 415)
+        tu, tv, _ = camera_math.project(top, cam, 738, 415)
+        data = BoxFitTests().clicks(cam)
+        data['assumed'] = ['D']
+        data['scale_checks'] = [{'id': 'stool', 'base_px': [bu, bv], 'top_px': [tu, tv], 'expected_height_m': expected}]
+        return data
+
+    def test_scale_check_agrees_when_the_object_has_its_expected_height(self):
+        res = solve(self.checks_data(0.9), seeds=16)
+        check = res['scale_checks'][0]
+        self.assertTrue(check['ok'], check)
+        self.assertAlmostEqual(check['measured_height_m'], 0.9, delta=0.02)
+        self.assertEqual(res['warnings'], [])
+        self.assertEqual(res['assumed'], ['D'])
+
+    def test_scale_check_flags_a_wrong_scale_assumption(self):
+        res = solve(self.checks_data(0.6), seeds=16)           # the booth was fitted at its true size, so 0.6 m is the wrong expectation
+        self.assertFalse(res['scale_checks'][0]['ok'])
+        self.assertTrue(any('scale check stool' in w for w in res['warnings']))
+        self.assertGreater(res['scale_checks'][0]['ratio'], 1.4)
+
+    def test_scale_check_entries_are_validated(self):
+        data = self.checks_data(0.9)
+        del data['scale_checks'][0]['top_px']
+        with self.assertRaisesRegex(ValueError, "needs 'top_px'"):
+            solve(data, seeds=2)
+        data = self.checks_data(0.9)
+        data['scale_checks'][0]['expected_height_m'] = -1
+        with self.assertRaisesRegex(ValueError, 'expected_height_m must be positive'):
+            solve(data, seeds=2)
+
+    def test_exposure_advice_steps_down_for_clipped_highlights_and_up_for_dark_images(self):
+        self.assertEqual(exposure_advice(None, 0.02, 0.8, -0.5)['suggested_delta_ev'], 0.0)
+        self.assertEqual(exposure_advice(None, 0.12, 0.99, -0.5)['suggested_delta_ev'], -0.5)
+        self.assertEqual(exposure_advice(None, 0.40, 1.0, -0.5)['suggested_client_exposure_ev'], -2.5)
+        self.assertEqual(exposure_advice(None, 1.0, 1.0, -0.5)['suggested_delta_ev'], -2.0)          # floor
+        self.assertEqual(exposure_advice(None, 0.0, 0.3, -0.5)['suggested_delta_ev'], 0.5)
+
+    def test_sheet_reports_clipping_of_the_customer_look_preview(self):
+        with tempfile.TemporaryDirectory() as d:
+            run = Path(d)
+            Image.new('RGB', (40, 30), (90, 90, 90)).save(run / 'source_reference.png')
+            Image.new('RGBA', (40, 30), (200, 50, 50, 255)).save(run / 'preview_render.png')
+            Image.new('RGB', (40, 30), (255, 255, 255)).save(run / 'preview_client_look.png')
+            (run / 'spec.json').write_text(json.dumps({'landmarks': []}))
+            (run / 'projected_landmarks.json').write_text('[]')
+            (run / 'build_report.json').write_text(json.dumps({'client_exposure_ev': -0.5}))
+            look = sheet(run)['client_look']
+            self.assertEqual(look['clipped_fraction'], 1.0)
+            self.assertEqual(look['advice']['suggested_client_exposure_ev'], -2.5)
+
+    def test_sheet_without_a_customer_look_preview_reports_none(self):
+        with tempfile.TemporaryDirectory() as d:
+            run = Path(d)
+            Image.new('RGB', (40, 30), (90, 90, 90)).save(run / 'source_reference.png')
+            Image.new('RGBA', (40, 30), (200, 50, 50, 255)).save(run / 'preview_render.png')
+            (run / 'spec.json').write_text(json.dumps({'landmarks': []}))
+            (run / 'projected_landmarks.json').write_text('[]')
+            self.assertIsNone(sheet(run)['client_look'])
+
+
 class HdCapTests(unittest.TestCase):
     def test_cap_follows_the_measured_memory_bracket(self):
         self.assertEqual(hd_scale_for(736, 736, 3), 3)        # 4.9 MP rendered on a 16 GB machine
@@ -449,6 +538,20 @@ class NativeFastPathTests(unittest.TestCase):
             report = json.loads((out / 'build_report.json').read_text(encoding='utf-8'))
             self.assertIn('client_render_hd.png', {a['path'] for a in report['artifacts']})
             self.assertEqual(report['hd_scale'], 2)
+
+    def test_client_look_preview_is_opaque_and_matches_the_canvas(self):
+        with tempfile.TemporaryDirectory() as d:
+            spec = self.fixture(d)
+            out = Path(d) / 'p'
+            r = self.run_build(spec, out, '--preview', '--preview-client-look', '--samples', '2')
+            self.assertEqual(r.returncode, 0, (r.stdout + r.stderr)[-1500:])
+            with Image.open(out / 'preview_client_look.png') as im:
+                self.assertEqual(im.size, (64, 48))
+                self.assertEqual(im.convert('RGBA').getchannel('A').getextrema(), (255, 255))
+            with Image.open(out / 'preview_render.png') as im:
+                self.assertEqual(im.convert('RGBA').getchannel('A').getextrema()[0], 0)       # the matched image stays transparent
+            r3 = self.run_build(spec, Path(d) / 'p3', '--render', '--preview-client-look')
+            self.assertNotEqual(r3.returncode, 0)
 
     def test_hd_scale_is_capped_and_the_report_says_so(self):
         with tempfile.TemporaryDirectory() as d:

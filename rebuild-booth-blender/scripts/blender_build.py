@@ -30,6 +30,7 @@ def arguments():
     p.add_argument('--client-exposure',type=float,default=-.5,help='Exposure offset in EV, applied only to client_render.png')
     p.add_argument('--preview',action='store_true',help='Fast iteration: render only the source camera to preview_render.png')
     p.add_argument('--preview-engine',choices=('workbench','cycles'),default='workbench')
+    p.add_argument('--preview-client-look',action='store_true',help='With --preview: also render the customer look (gray backdrop, display transform, client exposure) to preview_client_look.png; uses Cycles')
     p.add_argument('--hd-scale',type=int,default=1,help='With --render, also write client/inspection *_hd.png at this integer scale (>1)')
     p.add_argument('--hd-samples',type=int,help='Cycles samples for the HD renders (default: --samples)')
     p.add_argument('--hd-max-mp',type=float,default=5.0,help='Cap for an HD frame in megapixels; the HD scale is lowered to fit (default 5)')
@@ -38,6 +39,7 @@ def arguments():
     if a.hd_scale<1 or a.hd_scale>8:raise ValueError('hd-scale must be an integer from 1 to 8')
     if not a.hd_max_mp>0:raise ValueError('hd-max-mp must be positive')
     if a.preview and (a.render or a.part_masks):raise ValueError('--preview replaces --render/--part-masks; run them in a separate final build')
+    if a.preview_client_look and not a.preview:raise ValueError('--preview-client-look needs --preview')
     return a
 
 
@@ -203,7 +205,8 @@ def main():
                        'preview_engine':a.preview_engine if a.preview else None,
                        'render_purposes':{'reference_render.png':'transparent_acceptance','inspection_render.png':'transparent_secondary_view',
                                           'client_render.png':'neutral_customer_display','client_render_hd.png':'neutral_customer_display_hd',
-                                          'inspection_render_hd.png':'neutral_secondary_view_hd','preview_render.png':'transparent_iteration_preview'},
+                                          'inspection_render_hd.png':'neutral_secondary_view_hd','preview_render.png':'transparent_iteration_preview',
+                                          'preview_client_look.png':'customer_look_iteration_preview'},
                        'notes':check['warnings']})
         background=world.node_tree.nodes.get('Background')
         def client_look(on,saved={}):
@@ -224,7 +227,7 @@ def main():
             scene.camera=cam;scene.render.filepath=str(out/name);bpy.ops.render.render(write_still=True);renders.append(name);stage('render:'+name)
         if a.preview:
             # Iteration only: one matched-camera image, transparent so it can be laid over the source.
-            if a.preview_engine=='workbench':
+            if a.preview_engine=='workbench' and not a.preview_client_look:
                 scene.render.engine='BLENDER_WORKBENCH'
                 shading=scene.display.shading
                 shading.light='STUDIO';shading.color_type='MATERIAL';shading.show_shadows=False;shading.show_cavity=False
@@ -232,6 +235,8 @@ def main():
             else:
                 scene.cycles.samples=min(max(1,a.samples),8)
             shoot(hero,'preview_render.png')
+            if a.preview_client_look:
+                client_look(True);shoot(hero,'preview_client_look.png');client_look(False)
             scene.render.engine='CYCLES';scene.cycles.samples=max(1,a.samples)
         if a.render:
             for cam,name in ((hero,'reference_render.png'),(inspection,'inspection_render.png')):shoot(cam,name)

@@ -16,6 +16,10 @@ points.json:
     {"id": "counter_top", "uv_px": [420, 380], "xyz": ["?cx", "?cy", 1.05]}
   ]
 }
+Optional "scale_checks": upright standard objects (a cafe table, a chair seat, a counter) used only to
+cross-check the scale assumption, never in the fit:
+  "scale_checks": [{"id": "table", "base_px": [420, 400], "top_px": [420, 360], "expected_height_m": 0.74, "tolerance": 0.15}]
+Each is measured with the fitted camera and reported with its ratio to the expected height.
 Coordinate tokens: a number; 0; W/2, -W/2, D/2, -D/2; H; F (floor_z); ?name for
 a free unknown shared by every point that uses it. Origin is the footprint
 centre, X right, Y back, Z up, metres (the v2 spec convention). Pixel corners
@@ -35,6 +39,25 @@ DIMS = ('W', 'D', 'H')
 TOKEN = re.compile(r'^\s*([+-]?)\s*(W|D)\s*/\s*2\s*$|^\s*(H|F)\s*$|^\s*\?([A-Za-z_][A-Za-z0-9_]*)\s*$')
 SENSOR_MM = 36.0
 RMS_LIMIT_PX = 4.0          # above this the clicks disagree with a pinhole box; the fit is reported as high_residual
+
+
+def parse_scale_checks(items):
+    out = []
+    for c in items or []:
+        for key in ('id', 'base_px', 'top_px', 'expected_height_m'):
+            if key not in c:
+                raise ValueError(f"scale_checks entry needs {key!r}: {c}")
+        for key in ('base_px', 'top_px'):
+            if not (isinstance(c[key], list) and len(c[key]) == 2 and all(isinstance(v, (int, float)) and math.isfinite(v) for v in c[key])):
+                raise ValueError(f"scale_checks {c['id']}: {key} must be [u, v] pixels")
+        if not (isinstance(c['expected_height_m'], (int, float)) and c['expected_height_m'] > 0):
+            raise ValueError(f"scale_checks {c['id']}: expected_height_m must be positive")
+        tol = c.get('tolerance', 0.15)
+        if not (isinstance(tol, (int, float)) and 0 < tol <= 1):
+            raise ValueError(f"scale_checks {c['id']}: tolerance must be in (0, 1]")
+        out.append({'id': c['id'], 'base_px': list(c['base_px']), 'top_px': list(c['top_px']),
+                    'expected_height_m': float(c['expected_height_m']), 'tolerance': float(tol)})
+    return out
 
 
 def parse_token(token):
@@ -91,6 +114,7 @@ class Problem:
                 raise ValueError(f'known {k} must be a positive number')
         self.known = {k: float(v) for k, v in known.items()}
         self.assumed = list(data.get('assumed') or [])
+        self.scale_checks = parse_scale_checks(data.get('scale_checks'))
         pts = data.get('points') or []
         if len(pts) < 4:
             raise ValueError('need at least 4 points; 6-10 spread over near/far and top/bottom is better')
@@ -231,6 +255,21 @@ def solve(data, seeds=40, rng_seed=1):
     rms = float(math.sqrt(np.mean(np.square(errs))))
     worst = sorted(per_point, key=lambda r: -r['err_px'])[:3]
     warnings = []
+    scale_checks = []
+    for c in pb.scale_checks:
+        try:
+            height, miss = camera_math.height_above(c['top_px'], c['base_px'], camera, pb.width, pb.height, pb.floor_z)
+        except ValueError as ex:
+            scale_checks.append({'id': c['id'], 'ok': False, 'error': str(ex)})
+            warnings.append(f"scale check {c['id']} could not be measured: {ex}")
+            continue
+        ratio = height / c['expected_height_m']
+        ok = abs(ratio - 1) <= c['tolerance']
+        scale_checks.append({'id': c['id'], 'measured_height_m': round(height, 3), 'expected_height_m': c['expected_height_m'],
+                             'ratio': round(ratio, 3), 'tolerance': c['tolerance'], 'miss_m': round(miss, 3), 'ok': ok})
+        if not ok:
+            warnings.append(f"scale check {c['id']}: measured {height:.2f} m against an expected {c['expected_height_m']} m (ratio {ratio:.2f}); "
+                            'the scale assumption, the clicks or the expected size is wrong')
     if rms > RMS_LIMIT_PX:
         warnings.append(f"rms {rms:.1f} px is above {RMS_LIMIT_PX} px; check the worst points "
                         + ', '.join(f"{w['id']} ({w['err_px']} px)" for w in worst)
@@ -243,6 +282,7 @@ def solve(data, seeds=40, rng_seed=1):
         'dim_source': {d: ('assumed' if d in pb.assumed else 'given') if d in pb.known else 'fitted' for d in DIMS if d in dims},
         'free': {k: round(float(v), 4) for k, v in free.items()},
         'image': {'width': pb.width, 'height': pb.height}, 'floor_z': pb.floor_z,
+        'assumed': list(pb.assumed), 'scale_checks': scale_checks,
         'ambiguous_dims': ambiguous_dims(spread, dims, pb.free_dims), 'ambiguity_hint': ambiguity_hint(ambiguous_dims(spread, dims, pb.free_dims)),
         'camera': camera, 'points': per_point,
         'solution_spread': spread, 'converged_seeds': len(good), 'seeds': seeds,
