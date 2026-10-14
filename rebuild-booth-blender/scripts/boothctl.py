@@ -125,7 +125,7 @@ def resolve_preview_engine(out_root,engine):
     return engine,False
 
 
-def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600):
+def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout=600,context=None):
     """Validate -> fresh numbered run -> one matched-camera render -> comparison sheet.
     Iteration aid only; the final delivery still uses a full --render build and blender_verify."""
     spec_path=Path(spec_path).resolve();spec=read_json(spec_path)
@@ -155,9 +155,15 @@ def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout
     summary=sheet(run)
     report=read_json(run/'build_report.json')
     stages=report.get('stage_seconds') or {}
+    design=None
+    try:
+        from design_check import run as design_run  # advisory findings only; never blocks the preview
+        full=design_run(spec,read_json(context) if context else {})
+        design={'status':full['status'],'counts':full['counts'],'findings':full['findings'][:12],'not_checked':full['not_checked'],'note':full['note']}
+    except (ValueError,KeyError,OSError) as ex:design={'status':'unavailable','reason':str(ex)[:200]}
     inside=stages.get('total_in_script')
     return {'status':'preview_ready','run':str(run),'seconds':seconds,'fallback':fallback,'engine_used':'cycles' if (fallback or sticky_used) else engine,
-            'stage_seconds':stages,'startup_overhead_s':round(seconds-inside,1) if isinstance(inside,(int,float)) else None,
+            'stage_seconds':stages,'design_findings':design,'startup_overhead_s':round(seconds-inside,1) if isinstance(inside,(int,float)) else None,
             'sheet':summary['sheet'],
             'landmark_median_px':summary['landmark_median_px'],'landmark_max_px':summary['landmark_max_px'],
             'worst_landmarks':sorted(summary['landmarks'],key=lambda r:-r['err_px'])[:5],
@@ -172,16 +178,24 @@ def main():
     s=sp.add_parser('gate');s.add_argument('--spec',required=True);s.add_argument('--evidence',required=True);s.add_argument('--root',required=True);s.add_argument('--output',required=True)
     s=sp.add_parser('overlay',help='Draw the fitted box and 0.5 m grids over the source image (check the fit before modelling)')
     s.add_argument('--fit',required=True);s.add_argument('--image',required=True);s.add_argument('--out',required=True)
+    s=sp.add_parser('design-check',help='Advisory design checks on a spec (no verdicts; missing context is reported as not checked)')
+    s.add_argument('--spec',required=True);s.add_argument('--context');s.add_argument('--output')
     s=sp.add_parser('preview',help='Fast iteration render + comparison sheet in a fresh numbered folder')
     s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
+    s.add_argument('--context',help='Optional design-check context JSON (height limit, hanging allowed, open sides, LED module)')
     a=p.parse_args()
     try:
+        if a.command=='design-check':
+            from design_check import run as design_run
+            result=design_run(read_json(a.spec),read_json(a.context) if a.context else {})
+            if a.output:write_json(a.output,result)
+            print(json.dumps(result,ensure_ascii=False,indent=2));return 0
         if a.command=='overlay':
             from overlay import draw_overlay  # Pillow only for this optional step
             result=draw_overlay(read_json(a.fit),a.image,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return 0
         if a.command=='preview':
-            result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples)
+            result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples,context=a.context)
             print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if result['status']=='preview_ready' else 2
         if a.command=='doctor':result=doctor(a.blender)
         elif a.command=='fingerprint':result=fingerprints(read_json(a.spec))

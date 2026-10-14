@@ -1,6 +1,6 @@
 {
-  "tests_run": 139,
-  "passed": 139,
+  "tests_run": 181,
+  "passed": 181,
   "failures": [],
   "errors": [],
   "skipped": [],
@@ -8,15 +8,15 @@
   "unexpected_successes": [],
   "all_executed_tests_passed": true,
   "python": "3.12.3",
-  "started_at_utc": "2026-10-14T11:39:30.997373+00:00",
+  "started_at_utc": "2026-10-14T11:45:00.830712+00:00",
   "require_native": true,
   "discovery_pattern": "test_*.py",
-  "output_directory": "<repo>\\output\\_validation\\release-check-2.3.0-rc2b",
-  "artifact_root": "<repo>\\output\\_validation\\release-check-2.3.0-rc2b\\artifacts",
+  "output_directory": "<repo>\\output\\_validation\\release-check-2.4.0-rc1a",
+  "artifact_root": "<repo>\\output\\_validation\\release-check-2.4.0-rc1a\\artifacts",
   "scope": "Regression evidence only; does not certify source-image fidelity.",
   "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
-  "builder_sha256": "9ec00ccc1363470c75c05450e625a6402e0a4219a0215bbe2ebfb6ebaed551a8",
-  "regression_inputs_sha256": "939f44c54cfc698caa792052f8b6d877648426cca4bb6997da22d36f07601888",
+  "builder_sha256": "1629eec599804c88a853f79907e157e9d466ca925bf4b4666d077b8eea243282",
+  "regression_inputs_sha256": "f7d9b488c336c917e196e1b66eb09afe1706f8649fe121075ad654cd48dbc627",
   "native_blender": {
     "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
     "available": true,
@@ -27,12 +27,12 @@
   },
   "native_skipped": [],
   "status": "passed",
-  "executed_at_utc": "2026-10-14T11:41:52.682114+00:00",
-  "builder_sha256_after": "9ec00ccc1363470c75c05450e625a6402e0a4219a0215bbe2ebfb6ebaed551a8",
-  "regression_inputs_sha256_after": "939f44c54cfc698caa792052f8b6d877648426cca4bb6997da22d36f07601888",
+  "executed_at_utc": "2026-10-14T11:47:25.199104+00:00",
+  "builder_sha256_after": "1629eec599804c88a853f79907e157e9d466ca925bf4b4666d077b8eea243282",
+  "regression_inputs_sha256_after": "f7d9b488c336c917e196e1b66eb09afe1706f8649fe121075ad654cd48dbc627",
   "exit_code": 0,
   "transcript": {
     "path": "test_transcript.txt",
-    "sha256": "1b8cac56ef7272738841658b60a8c7b7cffde3c00dc10e933d174f8d208fe6c4"
+    "sha256": "a355ef2f9a22b697d485e55cb62ffc14651ff6384f811b762faf06a3d0e707b9"
   }
 }

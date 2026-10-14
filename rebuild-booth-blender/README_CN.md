@@ -1,4 +1,4 @@
-# rebuild-booth-blender · v2.3.0-rc2
+# rebuild-booth-blender · v2.4.0-rc1
 
 从展台照片或效果图制作纯展台客户图和分件可编辑 Blender 场景。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
 
@@ -23,7 +23,7 @@ python rebuild-booth-blender/scripts/validate_spec.py --spec output/new-booth/sp
 - [观察协议](references/observation-protocol.md)：ROI、范围、遮挡、负空间与证据。
 - [数据契约](references/data-contract.md) 和 [schema](schemas/booth-spec-v2.schema.json)：坐标、参数与状态。
 - [构件 recipes](references/component-recipes.md)：语义组合与 `components.py` 宏，不是新增 primitive API。
-- [设计先验](references/design-priors.md)：常用尺寸、尺度锚点、展位类型与坐标换算。
+- [设计先验](references/design-priors.md)：常用尺寸、尺度锚点、展位类型与坐标换算；机器可读版本见 `schemas/design-priors.v1.json`，建议性检查见 `scripts/design_check.py`。
 - [重建 QA](references/reconstruction-qa.md)：量化复原时用 camera-fit、masks、compare、assess。
 - [benchmark 工作流](references/benchmark-workflow.md)：原图、基线、优化及 AI 对照。
 

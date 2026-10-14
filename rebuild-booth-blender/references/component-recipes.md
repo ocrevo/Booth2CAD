@@ -31,6 +31,10 @@
 | `planter` | 种植槽、土面、确定性草叶 | 区间、高度、叶数 |
 | `wall_screens` | 墙面框带 + 中性显示面 | 墙面 y、框和屏的 (x, z) 区间 |
 | `shelves` | 侧墙搁板与可选背衬条 | 墙面 x、y 区间、各层高度 |
+| `header_band` | 轴对齐的直段、L 或 U 形门头楣带（拐角不重叠）和落地立柱 | 路径点、带深、(底, 顶)、立柱位置；角色 `header_band`/`header_post` |
+| `tv` | 标准 16:9 档位的电视：框 + 凸出 3 mm 的中性显示面 | 墙面位置、英寸档、边框宽和厚度（必须给出）；可贴 ±X、±Y 四面墙 |
+| `led_wall` | 整块模组的 LED 墙，接缝为对齐板边的表面格网 | cols、rows、module（0.5 / 0.498 m 或图中所见）、深度（必须给出） |
+| `spotlights` | 自发光小灯体，只建灯体、不建光锥 | 平面位置列表、挂点标高 |
 
 位置优先用 `camera_math.unproject` / `rect_on_plane` / `floor_point` 从原图像素反投影得到，默认尺寸来自 [设计先验](design-priors.md)。宏的默认值都要按本图覆盖。
 

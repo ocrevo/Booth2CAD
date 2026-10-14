@@ -1,4 +1,4 @@
-Test results directory: <repo>\output\_validation\release-check-2.3.0-rc2b
+Test results directory: <repo>\output\_validation\release-check-2.4.0-rc1a
 Native preflight: {"requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe", "available": true, "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe", "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n", "probe_stderr": "", "returncode": 0}
 test_builder_checks_real_source_size_before_writing_scene (test_audit_contract.NativeSourceContractTests.test_builder_checks_real_source_size_before_writing_scene) ... ok
 test_camera_projection_requires_its_parameters (test_audit_contract.SyntheticContractTests.test_camera_projection_requires_its_parameters) ... ok
@@ -26,6 +26,36 @@ test_prepared_source_survives_input_removal (test_benchmark.BenchmarkTests.test_
 test_previous_outputs_are_not_new_inputs (test_benchmark.BenchmarkTests.test_previous_outputs_are_not_new_inputs) ... ok
 test_report_binds_bytes_and_records_different_ai_size (test_benchmark.BenchmarkTests.test_report_binds_bytes_and_records_different_ai_size) ... ok
 test_single_image_does_not_read_other_sources (test_benchmark.BenchmarkTests.test_single_image_does_not_read_other_sources) ... ok
+test_clean_booth_reports_no_findings (test_design_check.DesignCheckTests.test_clean_booth_reports_no_findings) ... ok
+test_cli_round_trip_and_invalid_input_exit_codes (test_design_check.DesignCheckTests.test_cli_round_trip_and_invalid_input_exit_codes) ... ok
+test_counter_in_range_passes (test_design_check.DesignCheckTests.test_counter_in_range_passes) ... ok
+test_counter_too_long_too_low_and_on_the_open_edge (test_design_check.DesignCheckTests.test_counter_too_long_too_low_and_on_the_open_edge) ... ok
+test_display_ratio_and_centre_height (test_design_check.DesignCheckTests.test_display_ratio_and_centre_height) ... ok
+test_edge_trim_outside_is_not_flagged_and_inside_parts_pass (test_design_check.DesignCheckTests.test_edge_trim_outside_is_not_flagged_and_inside_parts_pass) ... ok
+test_floating_part_has_no_support_path (test_design_check.DesignCheckTests.test_floating_part_has_no_support_path) ... ok
+test_floating_part_is_information_when_hanging_is_allowed (test_design_check.DesignCheckTests.test_floating_part_is_information_when_hanging_is_allowed) ... ok
+test_graphic_bottom (test_design_check.DesignCheckTests.test_graphic_bottom) ... ok
+test_header_band_in_range_has_no_findings (test_design_check.DesignCheckTests.test_header_band_in_range_has_no_findings) ... ok
+test_header_band_too_low_or_too_tall (test_design_check.DesignCheckTests.test_header_band_too_low_or_too_tall) ... ok
+test_header_band_top_margin_needs_the_limit (test_design_check.DesignCheckTests.test_header_band_top_margin_needs_the_limit) ... ok
+test_height_limit (test_design_check.DesignCheckTests.test_height_limit) ... ok
+test_invalid_spec_is_refused (test_design_check.DesignCheckTests.test_invalid_spec_is_refused) ... ok
+test_led_modules (test_design_check.DesignCheckTests.test_led_modules) ... ok
+test_missing_context_is_not_checked_rather_than_assumed (test_design_check.DesignCheckTests.test_missing_context_is_not_checked_rather_than_assumed) ... ok
+test_narrow_gap_is_information_only (test_design_check.DesignCheckTests.test_narrow_gap_is_information_only) ... ok
+test_part_outside_footprint (test_design_check.DesignCheckTests.test_part_outside_footprint) ... ok
+test_part_resting_on_a_supported_part_is_supported (test_design_check.DesignCheckTests.test_part_resting_on_a_supported_part_is_supported) ... ok
+test_ramp_slope (test_design_check.DesignCheckTests.test_ramp_slope) ... ok
+test_seated_counter_height_is_accepted (test_design_check.DesignCheckTests.test_seated_counter_height_is_accepted) ... ok
+test_standard_tv_has_no_display_findings (test_design_check.DesignCheckTests.test_standard_tv_has_no_display_findings) ... ok
+test_unknown_or_badly_typed_context_is_refused (test_design_check.DesignCheckTests.test_unknown_or_badly_typed_context_is_refused) ... ok
+test_wording_never_claims_compliance (test_design_check.DesignCheckTests.test_wording_never_claims_compliance) ... ok
+test_design_check_imports_only_the_standard_library (test_design_priors.DesignPriorsTests.test_design_check_imports_only_the_standard_library) ... ok
+test_each_source_points_at_an_existing_heading (test_design_priors.DesignPriorsTests.test_each_source_points_at_an_existing_heading) ... ok
+test_entries_are_well_formed_and_unreviewed (test_design_priors.DesignPriorsTests.test_entries_are_well_formed_and_unreviewed) ... ok
+test_macro_defaults_agree_with_the_priors (test_design_priors.DesignPriorsTests.test_macro_defaults_agree_with_the_priors) ... ok
+test_no_internal_rule_identifiers (test_design_priors.DesignPriorsTests.test_no_internal_rule_identifiers) ... ok
+test_tv_table_agrees_with_listed_sizes (test_design_priors.DesignPriorsTests.test_tv_table_agrees_with_listed_sizes) ... ok
 test_recovers_proportions_free_variable_and_camera (test_fast_path.BoxFitTests.test_recovers_proportions_free_variable_and_camera) ... ok
 test_scale_must_be_anchored (test_fast_path.BoxFitTests.test_scale_must_be_anchored) ... ok
 test_token_grammar (test_fast_path.BoxFitTests.test_token_grammar) ... ok
@@ -132,6 +162,18 @@ test_unknown_ownership_cannot_be_included (test_skill.SpecTests.test_unknown_own
 test_unused_visual_radius_parameter_rejected (test_skill.SpecTests.test_unused_visual_radius_parameter_rejected) ... ok
 test_venue_cannot_be_included (test_skill.SpecTests.test_venue_cannot_be_included) ... ok
 test_wrong_primitive_for_critical_ring (test_skill.SpecTests.test_wrong_primitive_for_critical_ring) ... ok
+test_studio_booth_builds_a_preview (test_studio_macros.NativeStudioMacroTests.test_studio_booth_builds_a_preview) ... ok
+test_design_check_flags_a_half_module_led_wall (test_studio_macros.StudioMacroTests.test_design_check_flags_a_half_module_led_wall) ... ok
+test_existing_macro_output_is_byte_identical (test_studio_macros.StudioMacroTests.test_existing_macro_output_is_byte_identical) ... ok
+test_header_band_rejects_diagonal_and_degenerate_paths (test_studio_macros.StudioMacroTests.test_header_band_rejects_diagonal_and_degenerate_paths) ... ok
+test_header_band_u_shape_has_three_runs_and_touching_posts (test_studio_macros.StudioMacroTests.test_header_band_u_shape_has_three_runs_and_touching_posts) ... ok
+test_led_wall_is_whole_modules_with_aligned_seams (test_studio_macros.StudioMacroTests.test_led_wall_is_whole_modules_with_aligned_seams) ... ok
+test_led_wall_rejects_fractional_or_missing_modules (test_studio_macros.StudioMacroTests.test_led_wall_rejects_fractional_or_missing_modules) ... ok
+test_spotlights_are_emissive_bodies_without_a_cone (test_studio_macros.StudioMacroTests.test_spotlights_are_emissive_bodies_without_a_cone) ... ok
+test_studio_booth_is_valid_without_overlaps_or_advisory_findings (test_studio_macros.StudioMacroTests.test_studio_booth_is_valid_without_overlaps_or_advisory_findings) ... ok
+test_tv_on_a_side_wall_faces_along_x (test_studio_macros.StudioMacroTests.test_tv_on_a_side_wall_faces_along_x) ... ok
+test_tv_rejects_unknown_class_and_needs_bezel_and_depth (test_studio_macros.StudioMacroTests.test_tv_rejects_unknown_class_and_needs_bezel_and_depth) ... ok
+test_tv_uses_the_standard_picture_size_and_sits_proud (test_studio_macros.StudioMacroTests.test_tv_uses_the_standard_picture_size_and_sits_proud) ... ok
 test_default_run_is_under_repository_output_and_old_results_are_preserved (test_test_runner.TestRunnerTests.test_default_run_is_under_repository_output_and_old_results_are_preserved) ... ok
 test_empty_discovery_is_not_a_success_record (test_test_runner.TestRunnerTests.test_empty_discovery_is_not_a_success_record) ... ok
 test_failures_skips_and_expected_failures_are_not_passes (test_test_runner.TestRunnerTests.test_failures_skips_and_expected_failures_are_not_passes) ... ok
@@ -141,7 +183,7 @@ test_source_change_during_execution_blocks_release_evidence (test_test_runner.Te
 test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details (test_test_runner.TestRunnerTests.test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details) ... ok
 
 ----------------------------------------------------------------------
-Ran 139 tests in 138.051s
+Ran 181 tests in 141.545s
 
 OK
 Final status: passed

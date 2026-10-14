@@ -24,7 +24,7 @@ PRIOR = {
 }
 # 16:9 picture sizes (width, height) in metres for common TV diagonals.
 TV = {inch: (round(inch * 0.0254 * 16 / math.hypot(16, 9), 3), round(inch * 0.0254 * 9 / math.hypot(16, 9), 3))
-      for inch in (43, 50, 55, 65, 75, 85)}
+      for inch in (43, 50, 55, 60, 65, 75, 85)}
 
 WHITE = [0.95, 0.94, 0.93, 1]
 WOOD = [0.62, 0.47, 0.35, 1]
@@ -305,3 +305,110 @@ def shelves(b, prefix, scope, wall_x, y, levels, color=WHITE, depth=0.35, thickn
             br = sorted((wall_x, wall_x + sgn * 0.03))
             b.box(f'{prefix}_back_{i}', scope, 'wall_panel', br, y, (z + thickness / 2, z + thickness / 2 + 0.14), backing_color,
                   px=px, inferred=inferred)
+
+
+def header_band(b, prefix, scope, path, depth, z_range, posts=(), post_size=0.2, floor_z=0.0, color=WHITE,
+                critical=False, px=None, inferred=False):
+    """Connected header band along an axis-aligned plan path (straight, L or U), with floor posts.
+
+    path: plan points (x, y) of the band centre line; consecutive points must differ in x or y only.
+    depth: band width across the path. z_range: (bottom, top) of the band.
+    posts: plan (x, y) centres; each post runs from floor_z up to the band bottom (touching, not overlapping).
+    Corners are built without overlapping faces: runs along X reach the outer corner, runs along Y stop at its inner side.
+    """
+    pts = [tuple(map(float, p)) for p in path]
+    if len(pts) < 2:
+        raise ValueError('header_band needs at least two path points')
+    if depth <= 0 or z_range[1] <= z_range[0]:
+        raise ValueError('header_band needs a positive depth and z_range=(bottom, top)')
+    runs = []
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        if abs(x1 - x0) > 1e-9 and abs(y1 - y0) > 1e-9:
+            raise ValueError('header_band path segments must be axis-aligned')
+        if abs(x1 - x0) + abs(y1 - y0) <= 1e-9:
+            raise ValueError('header_band path has a zero-length segment')
+        runs.append(('x', x0, x1, y0) if abs(y1 - y0) < 1e-9 else ('y', y0, y1, x0))
+    h = depth / 2
+    for i, (axis, a, c, at) in enumerate(runs):
+        lo, hi = (a, c) if a <= c else (c, a)
+        corner_lo = (i > 0 and a <= c) or (i < len(runs) - 1 and a > c)     # which end meets a turn
+        corner_hi = (i < len(runs) - 1 and a <= c) or (i > 0 and a > c)
+        if axis == 'x':
+            lo, hi = lo - (h if corner_lo else 0), hi + (h if corner_hi else 0)
+            xr, yr = (lo, hi), (at - h, at + h)
+        else:
+            lo, hi = lo + (h if corner_lo else 0), hi - (h if corner_hi else 0)
+            if hi <= lo:
+                raise ValueError('header_band segment is shorter than the band depth at a corner')
+            xr, yr = (at - h, at + h), (lo, hi)
+        b.box(f'{prefix}_{i}', scope, 'header_band', xr, yr, z_range, color, critical=critical, px=px, inferred=inferred,
+              note='Connected header band segment.')
+    half = post_size / 2
+    for j, (x, y) in enumerate(posts):
+        b.box(f'{prefix}_post_{j}', scope, 'header_post', (x - half, x + half), (y - half, y + half), (floor_z, z_range[0]),
+              color, px=px, inferred=inferred, note='Header post from the floor to the band.')
+
+
+def tv(b, prefix, scope, wall_y, centre_x, inch, *, bezel, depth, centre_z=None, face='-y', frame_color=METAL_DARK,
+       screen_color=DARK_SCREEN, px=None, inferred=False):
+    """Wall TV at a standard 16:9 size class: frame plus a neutral display 3 mm proud of the frame.
+
+    wall_y is the wall face the TV hangs on; face '-y' means the screen looks towards -Y (use '+y', '-x', '+x' for other walls).
+    The picture size comes from TV[inch]; bezel and depth must be given for this product (nothing is guessed).
+    """
+    if inch not in TV:
+        raise ValueError(f'unknown TV size class {inch}; choose one of {sorted(TV)}')
+    if bezel <= 0 or depth <= 0:
+        raise ValueError('tv needs a positive bezel and depth')
+    w, h = TV[inch]
+    cz = PRIOR['tv_centre'] if centre_z is None else centre_z
+    u_pic, u_frame = (centre_x - w / 2, centre_x + w / 2), (centre_x - w / 2 - bezel, centre_x + w / 2 + bezel)
+    z_pic, z_frame = (cz - h / 2, cz + h / 2), (cz - h / 2 - bezel, cz + h / 2 + bezel)
+    sign = -1 if face in ('-y', '-x') else 1
+    back = wall_y
+    front_frame = back + sign * depth
+    front_pic = front_frame + sign * 0.003
+    n_frame = tuple(sorted((back, front_frame)))
+    n_pic = tuple(sorted((front_frame, front_pic)))
+    along_y = face in ('-x', '+x')
+
+    def mk(u, n):
+        return (n, u) if along_y else (u, n)
+    xr, yr = mk(u_frame, n_frame)
+    b.box(f'{prefix}_frame', scope, 'screen_frame', xr, yr, z_frame, frame_color, px=px, inferred=inferred)
+    xr, yr = mk(u_pic, n_pic)
+    b.box(f'{prefix}_display', scope, 'display', xr, yr, z_pic, screen_color, px=px, inferred=inferred,
+          roughness=0.2, emission=0.35, note=f'{inch}-inch class display; content neutralised.')
+
+
+def led_wall(b, prefix, scope, wall_y, x_left, z_bottom, *, cols, rows, module, depth, face_color=DARK_SCREEN,
+             seam_color=(0.32, 0.32, 0.35), px=None, inferred=False):
+    """LED wall made of whole standard modules on a wall face at y=wall_y (looking towards -Y).
+
+    cols, rows, module (metres: 0.5 China, 0.498 Europe/US, or the cabinet size seen) and depth are required.
+    The seams are a surface grid aligned to the panel edges, not separate parts.
+    """
+    if cols < 1 or rows < 1 or int(cols) != cols or int(rows) != rows:
+        raise ValueError('led_wall needs whole numbers of modules (cols, rows >= 1)')
+    if module <= 0 or depth <= 0:
+        raise ValueError('led_wall needs a positive module size and depth')
+    w, h = cols * module, rows * module
+    pattern = {'type': 'grid', 'spacing': [module, module], 'line_width': min(0.003, module / 10),
+               'line_color': list(seam_color), 'coordinates': 'xz',
+               'offset': [round((w / 2) % module, 9), round((h / 2) % module, 9)]}
+    b.box(f'{prefix}_panel', scope, 'led_wall', (x_left, x_left + w), (wall_y - depth, wall_y), (z_bottom, z_bottom + h), face_color,
+          px=px, inferred=inferred, roughness=0.25, emission=0.35, pattern=pattern,
+          note=f'LED wall of {cols} x {rows} modules of {module} m; media content neutralised.')
+
+
+def spotlights(b, prefix, scope, positions, z_top, *, radius=0.04, length=0.12, color=(1.0, 1.0, 0.95, 1), emission=4.0,
+               px=None, inferred=False):
+    """Small emissive light bodies hanging from z_top at plan positions [(x, y), ...].
+
+    They model the fixture only; the renderer's own lights do the lighting, and no light cone is built.
+    """
+    if radius <= 0 or length <= 0:
+        raise ValueError('spotlights need a positive radius and length')
+    for i, (x, y) in enumerate(positions):
+        b.cylinder(f'{prefix}_{i}', scope, 'spotlight', x, y, (z_top - length, z_top), radius, list(color), segments=24,
+                   px=px, inferred=inferred, emission=emission, roughness=0.4, note='Fixture body only; no light cone modelled.')

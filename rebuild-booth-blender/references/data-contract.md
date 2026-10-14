@@ -23,6 +23,10 @@ material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入
 
 `validate` 的 warnings 包含 `COPLANAR_OVERLAP`：两个构件同向的外露面落在同一平面且有重叠面积（凸面精确求交；被第三个构件反向面贴住而看不见的情况不报）。它不阻止构建，但渲染会出现黑面或闪烁，交付前应清零。
 
+## 建议性设计检查
+
+`design_check.py`（仅标准库，不改 `validate()`）读取已通过校验的 spec 与可选 context，输出 findings（level 为 advisory 或 info）、not_checked、checks_run。context 键严格校验：`height_limit_m`、`hanging_allowed`、`open_sides`、`led_module_m`、`footprint_tolerance_m`，未知键直接拒绝。检查项：部件是否超出地台、是否超限高、有无建模的支撑路径（由地面出发的接触关系）、门头楣带尺寸与标高、前台尺寸与距开口边距离、显示面比例/档位/中心高、LED 是否整块模组、坡道坡度与宽度、画面底边、家具组间的窄间隙（仅提示）。按构件角色识别（如 `header_band`、`counter`、`display`、`led_wall`、`ramp`）；自行命名角色的旧 spec 只会得到与角色无关的检查。限值读自 `schemas/design-priors.v1.json`，每条带出处且 `reviewed=false`，直到设计师签认。
+
 ## 快速路线的输入与输出
 
 - `box_fit.py`：输入为像素角点和带符号的坐标表达式，输出 `camera`（`fit_status=landmark_fitted`）、W/D/H、自由量、逐点误差和多起点解的离散度；`dim_source` 区分 given、assumed、fitted。它与 `camera_fit.py` 不同：后者在固定几何上精修相机，前者同时求比例，用于建模前。
