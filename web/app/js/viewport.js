@@ -17,7 +17,8 @@ const deg = (r) => (r * 180) / Math.PI;
 export class Viewport {
   /**
    * hooks: onPick(id | null, { additive, partOnly }), onGizmoStart(info), onGizmoChange(info), onGizmoEnd(),
-   *        onViewChange() (the user moved the camera, so "match source view" no longer holds)
+   *        onViewChange() (the user moved the camera, so "match source view" no longer holds),
+   *        onMatchFrame(rect | null) (the source picture's rectangle in the viewport; null when the camera left the source view)
    */
   constructor(container, hooks = {}) {
     this.container = container;
@@ -30,14 +31,17 @@ export class Viewport {
     this.errors = [];
     this._dirty = false;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });      // alpha: the model can sit over the photo
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
+    container.tabIndex = -1;                                 // clicking the stage gives it the keyboard focus (shortcuts can be scoped to it)
+    this.renderer.domElement.addEventListener('pointerdown', () => container.focus({ preventScroll: true }));
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xe9edf1);
+    this._bg = new THREE.Color(0xe9edf1);
+    this.scene.background = this._bg;
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.05, 500);
     this.camera.position.set(8, -10, 6);
 
@@ -51,19 +55,23 @@ export class Viewport {
     sun.shadow.normalBias = 0.04;                           // stops the speckle (shadow acne) on large flat walls
     this.scene.add(sun);
 
+    this.helpers = [];                                       // ground shadow, grid and axes: hidden while the model is compared with the photo
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.22 }));
     ground.position.z = -0.002;
     ground.receiveShadow = true;
     ground.userData.noPick = true;
     this.scene.add(ground);
+    this.helpers.push(ground);
     const grid = new THREE.GridHelper(20, 20, 0x9aa3ad, 0xc3c9d0);
     grid.rotation.x = Math.PI / 2;                          // GridHelper lies in XZ; the spec's floor plane is XY
     grid.position.z = -0.004;
     grid.userData.noPick = true;
     this.scene.add(grid);
+    this.helpers.push(grid);
     const axes = new THREE.AxesHelper(0.6);
     axes.userData.noPick = true;
     this.scene.add(axes);
+    this.helpers.push(axes);
 
     this.partsGroup = new THREE.Group();
     this.scene.add(this.partsGroup);
@@ -76,6 +84,8 @@ export class Viewport {
     this.orbit.addEventListener('start', () => {
       if (this.matching) {
         this.matching = null;
+        this._syncPhoto();
+        this.hooks.onMatchFrame?.(null);
         this.hooks.onViewChange?.();
       }
     });
@@ -110,6 +120,16 @@ export class Viewport {
     this.frameBox.className = 'source-frame';
     this.frameBox.hidden = true;
     container.appendChild(this.frameBox);
+
+    this.photo = document.createElement('img');              // the source picture, pinned to the same rectangle as frameBox
+    this.photo.className = 'source-photo';
+    this.photo.alt = '';
+    this.photo.draggable = false;
+    this.photo.hidden = true;
+    container.appendChild(this.photo);
+    this._photoUrl = null;
+    this._frameRect = null;
+    this.compare = { mode: 'model', split: 50 };
 
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
@@ -344,6 +364,8 @@ export class Viewport {
     const dir = new THREE.Vector3(0.55, -0.75, 0.55).normalize();
     this.matching = null;
     this.frameBox.hidden = true;
+    this._syncPhoto();
+    this.hooks.onMatchFrame?.(null);
     this.camera.clearViewOffset();
     this.camera.up.set(0, 0, 1);
     this.camera.fov = 40;
@@ -363,17 +385,56 @@ export class Viewport {
       const { frame } = applySpecCamera(this.camera, spec.camera, spec.source, viewport);
       this.orbit.target.set(...spec.camera.target);
       this.matching = { spec };
+      this._frameRect = frame;
       Object.assign(this.frameBox.style, { left: `${frame.x}px`, top: `${frame.y}px`, width: `${frame.width}px`, height: `${frame.height}px` });
       this.frameBox.hidden = false;
       this.orbit.update();
+      this._syncPhoto();
+      this.hooks.onMatchFrame?.(frame);
       this.invalidate();
       return true;
     } catch (e) {
       this.matching = null;
       this.frameBox.hidden = true;
       this.lastCameraError = e.message;
+      this._syncPhoto();
+      this.hooks.onMatchFrame?.(null);
       return false;
     }
+  }
+
+  // ------------------------------------------------------------ before / after
+  /** The source picture to draw at the matched camera (null for none). It shows only while the view matches the source. */
+  setPhoto(url) {
+    if (url !== this._photoUrl) {
+      this._photoUrl = url || null;
+      if (this._photoUrl) this.photo.src = this._photoUrl;
+      else this.photo.removeAttribute('src');
+    }
+    this._syncPhoto();
+  }
+
+  /** mode: 'model' (just the model), 'photo' (just the picture), 'wipe' (picture left of the split line, model right of it),
+   *  'overlay' (the model drawn over the picture). split: percent of the picture's width, for 'wipe'. */
+  setCompare(mode, split = 50) {
+    this.compare = { mode, split };
+    this._syncPhoto();
+  }
+
+  _syncPhoto() {
+    const { mode, split } = this.compare;
+    const show = Boolean(this._photoUrl && this.matching && this._frameRect && mode !== 'model');
+    this.photo.hidden = !show;
+    if (show) {
+      const r = this._frameRect;
+      Object.assign(this.photo.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${r.width}px`, height: `${r.height}px` });
+    }
+    this.photo.classList.toggle('under', show && mode === 'overlay');
+    this.photo.style.clipPath = show && mode === 'wipe' ? `inset(0 ${100 - split}% 0 0)` : '';
+    this.frameBox.classList.toggle('quiet', show);
+    for (const o of this.helpers) o.visible = !show;
+    this.scene.background = show && mode === 'overlay' ? null : this._bg;
+    this.invalidate();
   }
 
   // ------------------------------------------------------------ export

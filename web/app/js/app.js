@@ -1,11 +1,25 @@
 // Booth spec editor: UI, selection, edits and history. The spec object is the single source of truth;
 // every change goes through spec.js (tryEdit), then the viewport is refreshed and a history step is stored.
+//
+// createEditor(root, options) starts it inside a page. The standalone page (index.html) starts it on <body>; the studio page
+// (studio.html, <body data-editor="embedded">) starts it itself and hands in its own hooks. One editor per page.
+//   options.standalone      the page is the editor: it sets the title and language, catches errors, takes dropped files
+//   options.job             standalone only: load /api/jobs/<job>/spec instead of the demo
+//   options.loadDemo        load the demo booth when there is no job (default true)
+//   options.hotkeyTargets   elements (or window) whose keydown drives the shortcuts (default: window)
+//   options.dropFiles       accept a dropped spec.json (default: standalone only)
+//   options.photoUrl(spec)  url of the source picture, drawn at the matched camera for before/after
+//   options.onCommit(spec)  every time the spec changed (edit, undo, redo)
+//   options.onMatchFrame(rect|null)  the camera entered (rect of the source picture in the stage) or left (null) the source view
 
 import { Viewport } from './viewport.js';
 import * as S from './spec.js';
 import { getLang, setLang, t } from './i18n.js';
 
-const $ = (id) => document.getElementById(id);
+let root = document.body;
+let opts = {};
+/** Element by id inside the editor's root. Markup without a control (the studio has no "open file" button) gets a harmless stand-in. */
+const $ = (id) => root.querySelector(`#${id}`) || document.createElement('span');
 const fmt = (v) => (v === undefined || v === null ? '' : String(+Number(v).toFixed(4)));
 const HISTORY_LIMIT = 100;
 const DEMO_URL = 'demo/demo-booth.spec.json';
@@ -82,6 +96,7 @@ function commit() {
   state.dirty = true;
   runChecks();
   updateToolbar();
+  opts.onCommit?.(state.spec);
 }
 
 function restore(index) {
@@ -95,6 +110,7 @@ function restore(index) {
   renderInspector();
   runChecks();
   updateToolbar();
+  opts.onCommit?.(state.spec);
 }
 
 const undo = () => state.at > 0 && restore(state.at - 1);
@@ -112,13 +128,14 @@ function loadSpec(spec, name, isDemo = false) {
   state.collapsed = new Set(S.groupNames(spec));
   viewport.loadSpec(spec);
   viewport.setSelection(spec, []);
+  viewport.setPhoto(opts.photoUrl?.(spec) ?? null);
   viewport.frame(spec);
   renderOutline();
   renderInspector();
   runChecks();
   updateToolbar();
   say(t('loaded', { name: isDemo ? t('demoName') : name, n: spec.components.length }), state.issues.length ? 'error' : 'ok');
-  document.body.dataset.parts = String(spec.components.length);
+  root.dataset.parts = String(spec.components.length);
 }
 
 async function loadDemo() {
@@ -127,10 +144,10 @@ async function loadDemo() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.job = null;                                  // a demo is not the job's spec: stop offering to save it to the workspace
     loadSpec(await res.json(), 'demo-booth.spec.json', true);
-    document.body.dataset.ready = 'true';
+    root.dataset.ready = 'true';
   } catch (e) {
     say(t('serveHint'), 'error');
-    document.body.dataset.ready = 'failed';
+    root.dataset.ready = 'failed';
   }
 }
 
@@ -140,10 +157,10 @@ async function loadJob(job) {
     const res = await fetch(`/api/jobs/${encodeURIComponent(job)}/spec`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     loadSpec(await res.json(), `${job}.spec.json`, false);
-    document.body.dataset.ready = 'true';
+    root.dataset.ready = 'true';
   } catch (e) {
     say(t('jobFailed', { job, msg: e.message }), 'error');
-    document.body.dataset.ready = 'failed';
+    root.dataset.ready = 'failed';
   }
 }
 
@@ -579,9 +596,11 @@ function renderMulti(root, ids) {
 
 // ---------------------------------------------------------------- chrome: language, guide, events
 function applyLang() {
-  document.documentElement.lang = getLang() === 'zh' ? 'zh-CN' : 'en';
-  document.title = t('title');
-  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  if (opts.standalone) {
+    document.documentElement.lang = getLang() === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('title');
+  }
+  root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   $('btnLang').textContent = t('lang');
   $('filter').placeholder = t('filter');
   $('guideTitle').textContent = t('guideTitle');
@@ -634,12 +653,14 @@ function wire() {
   $('btnIssues').addEventListener('click', () => { if (state.issues.length) $('issueList').hidden = !$('issueList').hidden; });
   $('filter').addEventListener('input', (e) => { state.filter = e.target.value; renderOutline(); });
 
-  window.addEventListener('dragover', (e) => { e.preventDefault(); $('dropHint').hidden = false; });
-  window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) $('dropHint').hidden = true; });
-  window.addEventListener('drop', (e) => { e.preventDefault(); $('dropHint').hidden = true; if (e.dataTransfer.files[0]) openFile(e.dataTransfer.files[0]); });
+  if (opts.dropFiles ?? opts.standalone) {
+    window.addEventListener('dragover', (e) => { e.preventDefault(); $('dropHint').hidden = false; });
+    window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) $('dropHint').hidden = true; });
+    window.addEventListener('drop', (e) => { e.preventDefault(); $('dropHint').hidden = true; if (e.dataTransfer.files[0]) openFile(e.dataTransfer.files[0]); });
+  }
   window.addEventListener('beforeunload', (e) => { if (state.dirty) { e.preventDefault(); e.returnValue = t('dirty'); } });
 
-  window.addEventListener('keydown', (e) => {
+  const onKey = (e) => {
     if (e.target.closest?.('dialog') || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
@@ -658,22 +679,46 @@ function wire() {
     else if (!mod && e.key === 'ArrowDown') { e.preventDefault(); nudge([0, -step, 0]); }
     else if (!mod && e.key === 'PageUp') { e.preventDefault(); nudge([0, 0, step]); }
     else if (!mod && e.key === 'PageDown') { e.preventDefault(); nudge([0, 0, -step]); }
-  });
+  };
+  for (const target of opts.hotkeyTargets ?? [window]) target.addEventListener('keydown', onKey);
 }
 
-function boot() {
-  window.addEventListener('error', (e) => { document.body.dataset.error = e.message; say(e.message, 'error'); });
-  window.addEventListener('unhandledrejection', (e) => { document.body.dataset.error = String(e.reason); say(String(e.reason), 'error'); });
+/** Before/after: show the source picture at the matched camera. mode: 'model' | 'photo' | 'wipe' | 'overlay'. Returns the mode that
+ *  took effect: 'model' when the spec has no usable camera. */
+function setCompare(mode, split = 50) {
+  if (mode !== 'model' && !viewport.matching && !viewport.matchSourceView(state.spec)) mode = 'model';
+  viewport.setCompare(mode, split);
+  updateToolbar();
+  return mode;
+}
+
+export function createEditor(rootEl = document.body, options = {}) {
+  root = rootEl;
+  opts = options;
+  if (opts.standalone) {
+    window.addEventListener('error', (e) => { root.dataset.error = e.message; say(e.message, 'error'); });
+    window.addEventListener('unhandledrejection', (e) => { root.dataset.error = String(e.reason); say(String(e.reason), 'error'); });
+  }
   viewport = new Viewport($('stage'), {
     ...gizmoHooks,
     onPick,
     onViewChange: updateToolbar,
+    onMatchFrame: (rect) => opts.onMatchFrame?.(rect),
   });
   wire();
   applyLang();
-  state.job = new URLSearchParams(window.location.search).get('job');
-  if (state.job) loadJob(state.job); else loadDemo();
-  window.boothEditor = { state, viewport, S, select, edit, undo, redo, duplicateSelection, deleteSelection, toggleMatch };
+  state.job = opts.job || null;
+  if (state.job) loadJob(state.job);
+  else if (opts.loadDemo !== false) loadDemo();
+  return {
+    state, viewport, S, select, edit, undo, redo, duplicateSelection, deleteSelection, toggleMatch,
+    loadSpec: (spec, name = 'booth.spec.json') => loadSpec(spec, name, false),
+    setCompare, say,
+    isDirty: () => state.dirty,
+    markClean: () => { state.dirty = false; updateToolbar(); },
+  };
 }
 
-boot();
+if (document.body.dataset.editor !== 'embedded') {
+  window.boothEditor = createEditor(document.body, { standalone: true, job: new URLSearchParams(window.location.search).get('job') });
+}

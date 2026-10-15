@@ -55,8 +55,12 @@ button.toggle[aria-pressed="true"] { background: var(--accent-soft); border-colo
 .filter { width: 100%; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); margin-bottom: 8px; }
 
 .stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
-.stage canvas { display: block; }
-.source-frame { position: absolute; border: 2px dashed var(--select); pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.12); }
+.stage canvas { display: block; position: relative; z-index: 1; }
+.stage:focus { outline: none; }
+.source-frame { position: absolute; z-index: 3; border: 2px dashed var(--select); pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.12); }
+.source-frame.quiet { border-color: transparent; box-shadow: none; }
+.source-photo { position: absolute; z-index: 2; pointer-events: none; user-select: none; }
+.source-photo.under { z-index: 0; }
 .drop { position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: rgba(31, 111, 235, 0.08); z-index: 5; }
 
 .outline { display: grid; gap: 1px; }
