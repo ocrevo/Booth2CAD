@@ -1,3 +1,13 @@
+# 2.7.0-rc1 — 2026-10-15
+
+- 新增场景描述契约 `schemas/scene-description.v1.json`：图上读到的东西（尺寸标注、角点、构件落点像素、颜色、证据）写成纯数字 JSON。所有键必填、可空用 null，只用 `$schema/title/description/type/enum/properties/required/items/additionalProperties` 这几个各家结构化输出都支持的关键字（测试强制白名单），方便任何看图模型或人填写。
+- 新增 `scripts/draft_compile.py` 与 `boothctl.py compile`：场景描述加原图编译成 spec，不调用任何模型。流程：结构校验和语义校验（逐条给出错位置）→ box_fit 拟合相机（给定 fit 时核对图像尺寸、W/D/H、floor_z 和相机）→ 用 camera_math 把像素反投影到地面或展台边 → 用构件宏和 SpecBuilder 建模 → 钳进占地、聚光灯去重、同向共面的盒子拉开 2 mm（地面从不被移动）→ validate → 写 spec.json、box_fit.json、compile_report.json。支持 counter、round_table、shell_chair、planter、box、cylinder、louvre_wall、wall、wall_panel、tv、led_wall、spotlights、roof_frame。
+- 编译跑完才写输出目录：被拒绝、拟合失败或读不了图时目录保持原样；同一目录可反复编译，也可用输出目录里的 source.* 作为输入；换扩展名时旧的 source.* 会被清掉。单个构件失败（矩形在墙外、构建器拒绝参数、排不下）整件跳过，连同它的假设、调整和警告一起撤销，状态为 partial。所有代填的先验值（厚度、台面深高、桌半径和高、椅座高、聚光灯体、LED 模组等）都记入 `assumed` 并完整汇总到 spec 的 `compile_assumed_values`。场景里填了而类型不读的字段会在报告里列出，不会悄悄吞掉。拟合警告和歧义提示进入报告与摘要。
+- 一轮独立对抗性审查（三个视角，每条发现由另一个 agent 复现）发现并已修复：带关键不确定项的场景会崩溃（KeyError）；box/cylinder 几何被拒绝时整个编译中断；高度未知时抛 KeyError；`size_m` 太短时 IndexError；整数字段接受 2.5 之类；旋转盒子按外接圆钳位被误移数米；共面修复会缩小地面使 spec 失效；louvre 排不下、斜排、单片偏心、超出展台；电视和 LED 墙只修剪位置却照常超出墙边；浅展台的默认屋顶框被丢弃；先验值未记录；丢弃的构件仍留下假设记录；`--fit` 与场景不一致时被静默采用；重新编译时 SameFileError 和旧文件残留；地面角点地标按 W/2 取值而不看记号；两个入口失败输出通道不一致、I/O 错误是栈回溯；jsonschema 被写成仅测试依赖。
+- 测试：`tests/test_draft_compile.py`（22 项，含 1 项原生预览）和 `tests/test_draft_compile_rules.py`（34 项，每项对应一个审查发现，另含四个展台边的 wall/wall_panel/tv 位置与朝向、schema 白名单和 schema/处理器/文档一致性）。对编译器副本做了 23 种故障注入的变异检查（翻转各边内向符号、去掉去重、跳过共面修复、忽略证据、允许移动地面、取消回滚等）：22 种首轮即被测试发现，剩下的“编译途中先写文件”补了一条晚期失败测试后也被发现。
+- 新增 `references/scene-description.md`，SKILL.md 快速路线第 4 步增加这条路径，兼容性说明加入 jsonschema（GLB 导出需 trimesh）。
+- 用橙色测试图实测（只在 output/）：同一份读数写成场景描述后编译，99 个构件、校验通过、无警告，与手写 spec 逐件对比位置中位差 0.4 mm、最大尺寸差 4 mm，分组一致；原生预览角点中位误差 2.14 px。
+
 # 2.6.0-rc2 — 2026-10-14
 
 - 仅文档：SKILL.md 与 README_CN.md 不再说网页编辑器“尚未提供”，改为说明仓库根目录 `web/` 的静态编辑器（不属于本 skill 包）及“编辑 spec”的流程：载入、编辑、保存、再校验、再生成；写明改动只回写 spec，改过的零件标为 inferred，相机标为 unfitted。图纸仍未提供。

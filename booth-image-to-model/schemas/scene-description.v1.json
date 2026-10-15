@@ -1,0 +1,549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Booth scene description v1",
+  "description": "What a reader (person, script or model) sees in one booth image, in pixels and plain numbers. draft_compile.py turns it into a booth-spec-v2 spec; nothing here is trusted geometry.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "scene-description.v1"
+      ]
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Lowercase identifier for the job."
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        }
+      }
+    },
+    "floor_z": {
+      "type": "number",
+      "description": "Height of the walking surface in metres (0 for a carpet on the slab)."
+    },
+    "known": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "W",
+        "D",
+        "H"
+      ],
+      "description": "Booth width (X), depth (Y) and top height (Z) in metres, stated on the image or assumed; null = unknown.",
+      "properties": {
+        "W": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "D": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "H": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "assumed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "W",
+          "D",
+          "H"
+        ]
+      },
+      "description": "Names in `known` that are assumptions, not stated facts."
+    },
+    "corner_points": {
+      "type": "array",
+      "description": "6-10 clicked corners for the camera fit (see box_fit.py).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "uv_px",
+          "xyz"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "uv_px": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "[u, v] source pixels."
+          },
+          "xyz": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Three tokens: a number, W/2, -W/2, D/2, -D/2, H, F (floor) or ?name (shared unknown)."
+          }
+        }
+      }
+    },
+    "scale_checks": {
+      "type": "array",
+      "description": "Upright standard parts used only to cross-check the scale.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "base_px",
+          "top_px",
+          "expected_height_m",
+          "tolerance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "base_px": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "top_px": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected_height_m": {
+            "type": "number"
+          },
+          "tolerance": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "scopes": {
+      "type": "array",
+      "description": "What is built and what is removed.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "decision",
+          "owner",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "include",
+              "exclude"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "enum": [
+              "booth",
+              "venue",
+              "neighbor",
+              "unknown"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Lowercase identifier [a-z][a-z0-9_]*, unique. Macro types use it as the prefix of their parts."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "counter",
+              "round_table",
+              "shell_chair",
+              "planter",
+              "box",
+              "cylinder",
+              "louvre_wall",
+              "wall",
+              "wall_panel",
+              "tv",
+              "led_wall",
+              "spotlights",
+              "roof_frame"
+            ],
+            "description": "Building block; see references/scene-description.md for the inputs each type needs."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Id of an included scope."
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Editing group for box/cylinder/wall/wall_panel/roof_frame; macro types always group by id."
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Role name; null uses the default of the type."
+          },
+          "evidence": {
+            "type": "string",
+            "enum": [
+              "observed",
+              "inferred"
+            ],
+            "description": "observed = visible in the image (needs roi_px); inferred = hidden or assumed."
+          },
+          "roi_px": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[x0, y0, x1, y1] source-image pixels of the part."
+          },
+          "color_hex": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Main colour as #rrggbb read from the image (sRGB); null uses the type default."
+          },
+          "accent_hex": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Second colour: counter top, chair legs, table stem, tv screen."
+          },
+          "base_px": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[u, v] pixel where the part meets the floor (its centre), or one end of a wall/louvre row."
+          },
+          "base_px_2": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[u, v] floor pixel at the other end (louvre_wall; wall together with base_px); null for a whole wall edge."
+          },
+          "plane": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "back",
+              "front",
+              "left",
+              "right",
+              null
+            ],
+            "description": "Booth edge the part stands on or hangs on: back (+Y), front (-Y), left (-X), right (+X)."
+          },
+          "wall_rect_px": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[u0, v0, u1, v1] top-left and bottom-right pixels of a flat part on `plane` (tv, led_wall, wall_panel)."
+          },
+          "points_px": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "description": "spotlights: list of [u, v] pixels on the underside plane."
+          },
+          "size_m": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "[width along X, depth along Y, height], metres before yaw; null entries use design priors where one exists."
+          },
+          "radius_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Radius: round_table, cylinder, roof_frame outer corner."
+          },
+          "height_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Height; for spotlights the z of the hang point; for roof_frame the frame height."
+          },
+          "width_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "louvre fin width, roof_frame band width."
+          },
+          "thickness_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Wall, panel or fin thickness."
+          },
+          "depth_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Mounted depth of tv and led_wall."
+          },
+          "z_range_m": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[bottom, top] heights in metres above z = 0 (not above the floor)."
+          },
+          "yaw_deg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Turn about the vertical axis; shell_chair 0 faces -Y; counter accepts multiples of 90."
+          },
+          "count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "louvre_wall fins (1-200); led_wall columns (1-200)."
+          },
+          "rows": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "led_wall rows (1-100)."
+          },
+          "module_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "led_wall module size in metres."
+          },
+          "inch": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "tv size class: 43, 50, 55, 60, 65, 75 or 85."
+          },
+          "bezel_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "tv bezel width."
+          },
+          "bevel_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Corner/edge radius of a box."
+          },
+          "bevel_mode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "all",
+              "vertical",
+              null
+            ],
+            "description": "all or vertical (only the four vertical edges)."
+          },
+          "inset_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Distance in from a booth edge. wall: the outer face of the wall (default 0). tv, led_wall, wall_panel: the wall face the part hangs on (default 0.1, the inner face of a 0.1 m wall). roof_frame: how far the outline is pulled in (default 0)."
+          },
+          "critical": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Structure that must survive review; null = true for wall and roof_frame."
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Short basis for the part."
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "scope",
+          "group",
+          "role",
+          "evidence",
+          "roi_px",
+          "color_hex",
+          "accent_hex",
+          "base_px",
+          "base_px_2",
+          "plane",
+          "wall_rect_px",
+          "points_px",
+          "size_m",
+          "radius_m",
+          "height_m",
+          "width_m",
+          "thickness_m",
+          "depth_m",
+          "z_range_m",
+          "yaw_deg",
+          "count",
+          "rows",
+          "module_m",
+          "inch",
+          "bezel_m",
+          "bevel_m",
+          "bevel_mode",
+          "inset_m",
+          "critical",
+          "note"
+        ]
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "critical"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "critical": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "scale_notes": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Where the dimensions come from, in one or two sentences."
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "image",
+    "floor_z",
+    "known",
+    "assumed",
+    "corner_points",
+    "scale_checks",
+    "scopes",
+    "components",
+    "uncertainties",
+    "scale_notes"
+  ]
+}

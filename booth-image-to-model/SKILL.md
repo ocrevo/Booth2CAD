@@ -2,10 +2,10 @@
 name: booth-image-to-model
 description: 从一张展台图片生成分件可编辑的参数化三维模型（Blender 场景）和无展厅、无品牌、无人物的客户渲染图；角点拟合相机与比例、构件宏和快速预览迭代，保留建筑、开口与展具，支持 AI 图像对照和参数化构件迭代。
 metadata:
-  version: "2.6.0-rc2"
+  version: "2.7.0-rc1"
   release-status: "native-tested-visual-refinement-required"
   language: "zh-CN"
-  compatibility: "Python 3.10+, numpy/Pillow/scipy, 原生 Blender；AI 对照需图像生成工具"
+  compatibility: "Python 3.10+, numpy/Pillow/scipy/jsonschema, 原生 Blender；GLB 导出需 trimesh；AI 对照需图像生成工具"
 ---
 
 # 展台图转模型（booth-image-to-model）
@@ -21,7 +21,7 @@ metadata:
 1. **登记与探测**：`benchmark.py prepare` 保存输入快照，`boothctl.py doctor` 确认 Blender。
 2. **事实与假设**：读出展位类型、开口、剖切表现和可见的标准件（电视、LED、椅、桌、前台）。缺的参数按 [设计先验](references/design-priors.md) 直接假设并记录，不为非关键项提问。
 3. **角点拟合**：点 6–10 个可见外角（远近、上下都要有），写 `points.json`，至少一个尺度锚点，运行 `box_fit.py`。要求 `status=fitted`（RMS 在 4 px 以内）；`high_residual` 时按 `worst_points` 检查最差的几个点（坏点会被拟合摊开，不一定排第一）；`ambiguous` 时按 `ambiguity_hint` 补点（例如给屋顶高度一个数值约束）。再用 `boothctl.py overlay` 把拟合出的外框和 0.5 m 网格叠到原图上检查机位（没有任何点用到高度时只画地面）。尺度只靠一个假设时，在 `points.json` 里加 `scale_checks`：图中直立的标准件（咖啡桌、椅座、前台）的底部和顶部像素加上期望高度，box_fit 用拟合出的相机量一遍，不符就在 `warnings` 里报出，不用等到建模后才发现尺度错了。
-4. **写 spec 脚本**：复制 `templates/build_spec_template.py`，用 `components.py` 的 SpecBuilder 和宏（柜台、圆桌、壳椅、百叶、格栅、种植槽、壁挂屏、搁板）。墙面件和落地件用 `camera_math` 从像素反投影定位，不要逐个试位置。
+4. **写 spec**：两条路。一是把读到的东西写成场景描述（像素加普通数字，格式见 [场景描述](references/scene-description.md) 和 `schemas/scene-description.v1.json`），`boothctl.py compile --scene scene.json --image <原图> --out <目录>` 一步完成拟合、反投影、钳位、去重、分组和校验，结果和报告在 `<目录>`；二是复制 `templates/build_spec_template.py` 手写脚本，用 `components.py` 的 SpecBuilder 和宏（柜台、圆桌、壳椅、百叶、格栅、种植槽、壁挂屏、搁板）。墙面件和落地件用 `camera_math` 从像素反投影定位，不要逐个试位置。
 5. **预览迭代（不超过 3 轮）**：`boothctl.py preview` 每轮约 10–25 秒，输出原图、渲染、叠加、轮廓与角点误差四宫格；同时报告共面重叠（会渲染出黑面或闪烁）。传 `--context` 还会给出建议性设计检查结果。先修拓扑和位置，再修颜色。
 6. **终版**：一次 `blender_build.py --render --hd-scale 3` 同进程出匹配图、第二视角、客户图和高清图，再用 `blender_verify.py` 独立重开。
 

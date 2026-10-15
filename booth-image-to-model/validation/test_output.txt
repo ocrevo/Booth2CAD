@@ -1,4 +1,4 @@
-Test results directory: <repo>\output\_validation\release-check-2.6.0-rc1a
+Test results directory: <repo>\output\_validation\release-check-2.7.0-rc1a
 Native preflight: {"requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe", "available": true, "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe", "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n", "probe_stderr": "", "returncode": 0}
 test_builder_checks_real_source_size_before_writing_scene (test_audit_contract.NativeSourceContractTests.test_builder_checks_real_source_size_before_writing_scene) ... ok
 test_camera_projection_requires_its_parameters (test_audit_contract.SyntheticContractTests.test_camera_projection_requires_its_parameters) ... ok
@@ -60,6 +60,63 @@ test_entries_are_well_formed_and_unreviewed (test_design_priors.DesignPriorsTest
 test_macro_defaults_agree_with_the_priors (test_design_priors.DesignPriorsTests.test_macro_defaults_agree_with_the_priors) ... ok
 test_no_internal_rule_identifiers (test_design_priors.DesignPriorsTests.test_no_internal_rule_identifiers) ... ok
 test_tv_table_agrees_with_listed_sizes (test_design_priors.DesignPriorsTests.test_tv_table_agrees_with_listed_sizes) ... ok
+test_script_and_boothctl_compile (test_draft_compile.CommandLineTests.test_script_and_boothctl_compile) ... ok
+test_assumed_values_are_recorded_not_hidden (test_draft_compile.CompileTests.test_assumed_values_are_recorded_not_hidden) ... ok
+test_compiler_matches_calling_the_macros_directly (test_draft_compile.CompileTests.test_compiler_matches_calling_the_macros_directly) ... ok
+test_evidence_follows_the_scene (test_draft_compile.CompileTests.test_evidence_follows_the_scene) ... ok
+test_footprint_scope_and_floor (test_draft_compile.CompileTests.test_footprint_scope_and_floor) ... ok
+test_pixels_become_the_world_positions_they_came_from (test_draft_compile.CompileTests.test_pixels_become_the_world_positions_they_came_from) ... ok
+test_rules_clamp_dedupe_and_record (test_draft_compile.CompileTests.test_rules_clamp_dedupe_and_record) ... ok
+test_the_spec_is_valid_and_clean (test_draft_compile.CompileTests.test_the_spec_is_valid_and_clean) ... ok
+test_walls_frame_and_grouping (test_draft_compile.CompileTests.test_walls_frame_and_grouping) ... ok
+test_compiled_spec_builds_a_preview (test_draft_compile.NativeCompileTests.test_compiled_spec_builds_a_preview) ... ok
+test_a_part_that_cannot_be_built_is_dropped_with_its_reason (test_draft_compile.PartialAndRepairTests.test_a_part_that_cannot_be_built_is_dropped_with_its_reason) ... ok
+test_a_scene_without_a_usable_fit_is_refused (test_draft_compile.PartialAndRepairTests.test_a_scene_without_a_usable_fit_is_refused) ... ok
+test_a_scope_left_without_geometry_is_removed (test_draft_compile.PartialAndRepairTests.test_a_scope_left_without_geometry_is_removed) ... ok
+test_coplanar_faces_are_pulled_apart (test_draft_compile.PartialAndRepairTests.test_coplanar_faces_are_pulled_apart) ... ok
+test_the_fit_is_recomputed_when_none_is_given (test_draft_compile.PartialAndRepairTests.test_the_fit_is_recomputed_when_none_is_given) ... ok
+test_assumed_names_need_a_value (test_draft_compile.RuleTests.test_assumed_names_need_a_value) ... ok
+test_image_size_must_match_the_file (test_draft_compile.RuleTests.test_image_size_must_match_the_file) ... ok
+test_macro_prefix_collisions_are_refused (test_draft_compile.RuleTests.test_macro_prefix_collisions_are_refused) ... ok
+test_scope_rules (test_draft_compile.RuleTests.test_scope_rules) ... ok
+test_semantic_rules (test_draft_compile.RuleTests.test_semantic_rules) ... ok
+test_fixture_scene_is_valid_and_the_schema_is_portable (test_draft_compile.SchemaTests.test_fixture_scene_is_valid_and_the_schema_is_portable) ... ok
+test_structural_errors_are_reported_with_a_location (test_draft_compile.SchemaTests.test_structural_errors_are_reported_with_a_location) ... ok
+test_a_critical_uncertainty_compiles_and_is_listed (test_draft_compile_rules.CrashesBecameResults.test_a_critical_uncertainty_compiles_and_is_listed) ... ok
+test_a_dropped_part_leaves_no_notes_behind (test_draft_compile_rules.CrashesBecameResults.test_a_dropped_part_leaves_no_notes_behind) ... ok
+test_a_missing_image_or_a_non_image_is_a_scene_error (test_draft_compile_rules.CrashesBecameResults.test_a_missing_image_or_a_non_image_is_a_scene_error) ... ok
+test_a_short_size_is_a_shape_error_not_an_exception (test_draft_compile_rules.CrashesBecameResults.test_a_short_size_is_a_shape_error_not_an_exception) ... ok
+test_an_unknown_height_is_a_scene_error (test_draft_compile_rules.CrashesBecameResults.test_an_unknown_height_is_a_scene_error) ... ok
+test_geometry_the_builder_refuses_drops_the_part (test_draft_compile_rules.CrashesBecameResults.test_geometry_the_builder_refuses_drops_the_part) ... ok
+test_whole_number_floats_are_accepted_and_the_rest_refused (test_draft_compile_rules.CrashesBecameResults.test_whole_number_floats_are_accepted_and_the_rest_refused) ... ok
+test_a_blocked_or_empty_fit_is_refused (test_draft_compile_rules.GivenFitAndFiles.test_a_blocked_or_empty_fit_is_refused) ... ok
+test_a_failure_late_in_the_compile_writes_nothing (test_draft_compile_rules.GivenFitAndFiles.test_a_failure_late_in_the_compile_writes_nothing) ... ok
+test_a_given_fit_must_agree_with_the_scene (test_draft_compile_rules.GivenFitAndFiles.test_a_given_fit_must_agree_with_the_scene) ... ok
+test_a_refused_scene_leaves_the_folder_exactly_as_it_was (test_draft_compile_rules.GivenFitAndFiles.test_a_refused_scene_leaves_the_folder_exactly_as_it_was) ... ok
+test_compiling_again_from_the_output_folder_works (test_draft_compile_rules.GivenFitAndFiles.test_compiling_again_from_the_output_folder_works) ... ok
+test_run_reports_input_problems_instead_of_tracebacks (test_draft_compile_rules.GivenFitAndFiles.test_run_reports_input_problems_instead_of_tracebacks) ... ok
+test_scale_checks_run_with_a_fresh_fit_and_are_flagged_when_a_fit_is_given (test_draft_compile_rules.GivenFitAndFiles.test_scale_checks_run_with_a_fresh_fit_and_are_flagged_when_a_fit_is_given) ... ok
+test_a_counter_turned_by_90_swaps_width_and_depth_and_odd_angles_warn (test_draft_compile_rules.PlacementDefects.test_a_counter_turned_by_90_swaps_width_and_depth_and_odd_angles_warn) ... ok
+test_a_crooked_louvre_row_is_reported (test_draft_compile_rules.PlacementDefects.test_a_crooked_louvre_row_is_reported) ... ok
+test_a_louvre_row_beyond_the_booth_is_trimmed_and_recorded (test_draft_compile_rules.PlacementDefects.test_a_louvre_row_beyond_the_booth_is_trimmed_and_recorded) ... ok
+test_a_shallow_roof_frame_still_builds (test_draft_compile_rules.PlacementDefects.test_a_shallow_roof_frame_still_builds) ... ok
+test_a_single_fin_is_centred_on_the_marked_row (test_draft_compile_rules.PlacementDefects.test_a_single_fin_is_centred_on_the_marked_row) ... ok
+test_a_turned_box_is_clamped_with_its_turned_extent (test_draft_compile_rules.PlacementDefects.test_a_turned_box_is_clamped_with_its_turned_extent) ... ok
+test_a_tv_and_an_led_wall_slide_back_inside_the_booth_edge (test_draft_compile_rules.PlacementDefects.test_a_tv_and_an_led_wall_slide_back_inside_the_booth_edge) ... ok
+test_a_tv_that_does_not_match_its_class_is_reported (test_draft_compile_rules.PlacementDefects.test_a_tv_that_does_not_match_its_class_is_reported) ... ok
+test_a_wall_marked_beyond_the_edge_is_dropped_with_its_requirement (test_draft_compile_rules.PlacementDefects.test_a_wall_marked_beyond_the_edge_is_dropped_with_its_requirement) ... ok
+test_floor_landmarks_follow_their_own_tokens (test_draft_compile_rules.PlacementDefects.test_floor_landmarks_follow_their_own_tokens) ... ok
+test_the_floor_is_never_moved_by_the_coplanar_fix (test_draft_compile_rules.PlacementDefects.test_the_floor_is_never_moved_by_the_coplanar_fix) ... ok
+test_walls_and_the_other_planes (test_draft_compile_rules.PlacementDefects.test_walls_and_the_other_planes)
+wall, wall_panel and tv on all four booth edges land where the known world points were. ... ok
+test_a_part_outside_the_footprint_is_found (test_draft_compile_rules.RecordKeeping.test_a_part_outside_the_footprint_is_found) ... ok
+test_all_assumed_values_reach_the_spec (test_draft_compile_rules.RecordKeeping.test_all_assumed_values_reach_the_spec) ... ok
+test_every_prior_the_compiler_fills_is_recorded (test_draft_compile_rules.RecordKeeping.test_every_prior_the_compiler_fills_is_recorded) ... ok
+test_fields_a_type_does_not_read_are_reported (test_draft_compile_rules.RecordKeeping.test_fields_a_type_does_not_read_are_reported) ... ok
+test_height_m_is_honoured_for_a_counter_and_not_recorded_as_assumed (test_draft_compile_rules.RecordKeeping.test_height_m_is_honoured_for_a_counter_and_not_recorded_as_assumed) ... ok
+test_each_new_rule_has_a_rejecting_and_an_accepting_case (test_draft_compile_rules.SceneRuleCoverage.test_each_new_rule_has_a_rejecting_and_an_accepting_case) ... ok
+test_the_schema_enum_the_handlers_and_the_docs_agree (test_draft_compile_rules.SceneRuleCoverage.test_the_schema_enum_the_handlers_and_the_docs_agree) ... ok
+test_the_schema_only_uses_keywords_every_strict_provider_accepts (test_draft_compile_rules.SceneRuleCoverage.test_the_schema_only_uses_keywords_every_strict_provider_accepts) ... ok
 test_exposure_advice_steps_down_for_clipped_highlights_and_up_for_dark_images (test_fast_path.Batch5Tests.test_exposure_advice_steps_down_for_clipped_highlights_and_up_for_dark_images) ... ok
 test_overlay_without_width_or_depth_is_explained (test_fast_path.Batch5Tests.test_overlay_without_width_or_depth_is_explained) ... ok
 test_overlay_works_when_no_point_fixed_the_height (test_fast_path.Batch5Tests.test_overlay_works_when_no_point_fixed_the_height) ... ok
@@ -212,7 +269,7 @@ test_source_change_during_execution_blocks_release_evidence (test_test_runner.Te
 test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details (test_test_runner.TestRunnerTests.test_unrelated_cwd_retains_unicode_stdout_stderr_and_test_details) ... ok
 
 ----------------------------------------------------------------------
-Ran 210 tests in 200.499s
+Ran 266 tests in 164.043s
 
 OK
 Final status: passed

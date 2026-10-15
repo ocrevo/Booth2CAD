@@ -1,4 +1,4 @@
-# booth-image-to-model · v2.6.0-rc2
+# booth-image-to-model · v2.7.0-rc1
 
 从一张展台图片生成纯展台客户图和分件可编辑的参数化三维模型（Blender 场景）。原名 rebuild-booth-blender，2.5.0 起改名。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
 
@@ -15,6 +15,8 @@ python booth-image-to-model/scripts/validate_spec.py --spec output/new-booth/spe
 快速路线（默认）：角点拟合相机与比例 → 模板 + 构件宏写 spec → `boothctl.py preview` 迭代 → 一次终版渲染（含高清）。命令见 [SKILL.md](SKILL.md) 第 0 节，默认尺寸与定尺度方法见 [设计先验](references/design-priors.md)。
 
 改 spec：仓库根目录的 `web/` 是静态网页编辑器（不随本包分发），`python web/tools/serve.py` 启动后载入 spec 即可移动、改色、改尺寸、复制；保存的 spec 仍须过 `validate_spec.py`。图纸（平面图、立面图）尚未提供。
+
+场景描述：把“图上看到什么”写成像素加普通数字的 JSON（[说明](references/scene-description.md)），`boothctl.py compile` 编译成 spec；谁来读图（agent、脚本、人或某个模型）都行，编译器不调用任何模型。
 
 外部 Python 用于参数、相机和 QA；原生构建/重开脚本使用 Blender 内置 Python。`doctor --blender` 可传已确认的可执行路径。
 普通客户展示应检查原图机位与第二视角，并以独立进程重新打开 `.blend`；不必先完成像素分割。未做严格量化 QA 的客户候选保留 `review_required`，不声称已严格验证或还原百分比。

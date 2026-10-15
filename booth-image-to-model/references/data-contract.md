@@ -62,6 +62,6 @@ visual_review 不是数字签名，也不是独立审计认证；其意义是记
 ## 依赖
 
 标准库：geometry、common、spec validator 的结构/语义检查、boothctl（除了 doctor 探测外不加载第三方库）。外部 validator 使用 `--check-source` 时通过 Pillow 读取真实像素尺寸；原生 builder 通过 Blender 图像 API 读取，不需要额外 pip 依赖。
-外部 Python：camera_fit/compare/assess 使用 numpy、Pillow、scipy；完整测试另外使用 jsonschema 和 trimesh。
+外部 Python：camera_fit/compare/assess 使用 numpy、Pillow、scipy；场景描述编译（`boothctl.py compile`）另外需要 jsonschema；GLB 导出和完整测试需要 trimesh。
 Blender 内置 Python：blender_build / blender_verify，不需要往 Blender Python 里安装上述数据科学库。
 已锁定测试实际版本在 validation/dependency_versions.json。requirements.txt 是兼容范围，不是对范围内所有组合的测试声明。
