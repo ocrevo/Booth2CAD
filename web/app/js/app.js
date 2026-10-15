@@ -23,7 +23,7 @@ function h(tag, attrs = {}, ...kids) {
 }
 
 const state = {
-  spec: null, fileName: 'booth.spec.json', isDemo: false, selection: [], mode: 'translate', snap: true, partOnly: false,
+  spec: null, job: null, fileName: 'booth.spec.json', isDemo: false, selection: [], mode: 'translate', snap: true, partOnly: false,
   history: [], at: -1, dirty: false, issues: [], gizmo: null, filter: '', collapsed: new Set(), allCollapsed: true,
 };
 let viewport;
@@ -45,7 +45,9 @@ function updateToolbar() {
   $('btnMove').setAttribute('aria-pressed', String(state.mode === 'translate'));
   $('btnRotate').setAttribute('aria-pressed', String(state.mode === 'rotate'));
   $('btnMatch').setAttribute('aria-pressed', String(Boolean(viewport?.matching)));
-  $('fileName').textContent = `${state.isDemo ? t('demoName') : state.fileName}${state.dirty ? ' •' : ''}`;
+  $('btnWorkspace').hidden = !state.job;
+  $('linkFlow').hidden = !state.job;
+  $('fileName').textContent = `${state.job ? t('jobName', { job: state.job }) : state.isDemo ? t('demoName') : state.fileName}${state.dirty ? ' •' : ''}`;
 }
 
 function renderIssues() {
@@ -123,6 +125,7 @@ async function loadDemo() {
   try {
     const res = await fetch(DEMO_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    state.job = null;                                  // a demo is not the job's spec: stop offering to save it to the workspace
     loadSpec(await res.json(), 'demo-booth.spec.json', true);
     document.body.dataset.ready = 'true';
   } catch (e) {
@@ -131,10 +134,43 @@ async function loadDemo() {
   }
 }
 
+/** Workspace mode: the studio server hands the working spec of a job to the editor and takes the edited one back. */
+async function loadJob(job) {
+  try {
+    const res = await fetch(`/api/jobs/${encodeURIComponent(job)}/spec`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    loadSpec(await res.json(), `${job}.spec.json`, false);
+    document.body.dataset.ready = 'true';
+  } catch (e) {
+    say(t('jobFailed', { job, msg: e.message }), 'error');
+    document.body.dataset.ready = 'failed';
+  }
+}
+
+async function saveWorkspace() {
+  try {
+    const res = await fetch(`/api/jobs/${encodeURIComponent(state.job)}/spec?origin=edited`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.spec),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      const first = (body.errors || []).slice(0, 3).map((e) => `${e.code} ${e.path || e.where || ''} ${e.message || ''}`.trim()).join(' | ');
+      say(t('wsRefused', { msg: `${body.error || res.status}${first ? `：${first}` : ''}` }), 'error');
+      return;
+    }
+    state.dirty = false;
+    updateToolbar();
+    say(t('wsSaved'), 'ok');
+  } catch (e) {
+    say(t('wsRefused', { msg: e.message }), 'error');
+  }
+}
+
 async function openFile(file) {
   try {
     const spec = JSON.parse(await file.text());
     if (!spec || !Array.isArray(spec.components)) throw new Error('no components array');
+    state.job = null;                                  // an opened file is not the job's spec any more
     loadSpec(spec, file.name);
   } catch (e) {
     say(t('badFile', { msg: e.message }), 'error');
@@ -581,6 +617,8 @@ function wire() {
   $('fileInput').addEventListener('change', (e) => { if (e.target.files[0]) openFile(e.target.files[0]); e.target.value = ''; });
   $('btnDemo').addEventListener('click', loadDemo);
   $('btnSave').addEventListener('click', saveSpec);
+  $('btnWorkspace').addEventListener('click', saveWorkspace);
+  $('linkFlow').addEventListener('click', () => { window.location.href = `/flow.html?job=${encodeURIComponent(state.job)}`; });
   $('btnGlb').addEventListener('click', exportGlb);
   $('btnUndo').addEventListener('click', undo);
   $('btnRedo').addEventListener('click', redo);
@@ -633,7 +671,8 @@ function boot() {
   });
   wire();
   applyLang();
-  loadDemo();
+  state.job = new URLSearchParams(window.location.search).get('job');
+  if (state.job) loadJob(state.job); else loadDemo();
   window.boothEditor = { state, viewport, S, select, edit, undo, redo, duplicateSelection, deleteSelection, toggleMatch };
 }
 

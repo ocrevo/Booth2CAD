@@ -1,0 +1,205 @@
+"""What each step of the flow does, written against engine.py. Steps return {'message', 'detail'} or raise StepError."""
+from __future__ import annotations
+import json
+import os
+from pathlib import Path
+
+import engine
+from jobs import BadRequest, DOWNSTREAM, StepError, write_json
+
+
+def _rel(base, path):
+    return str(Path(path).resolve().relative_to(Path(base).resolve())).replace('\\', '/')
+
+
+def _read(path):
+    return json.loads(Path(path).read_text(encoding='utf-8'))
+
+
+def _write(path, data):
+    write_json(path, data)                                         # atomic: a reader never sees half a file
+
+
+def _replace_with_copy(src, dst):
+    """dst becomes a copy of src in one atomic step."""
+    tmp = Path(str(dst) + '.tmp')
+    tmp.write_bytes(Path(src).read_bytes())
+    os.replace(tmp, dst)
+
+
+# ------------------------------------------------------------------ inputs that are not steps
+def put_scene(jobs, job_id, scene):
+    """Manual reading: a scene description written by a person, a script or another tool."""
+    status = jobs.status(job_id)
+    errors = engine.validate_scene(scene) if isinstance(scene, dict) else [{'code': 'SCHEMA', 'where': '(root)', 'message': 'a scene description is a JSON object'}]
+    image = status['image']
+    if not errors and (scene['image']['width'], scene['image']['height']) != (image['width'], image['height']):
+        errors = [{'code': 'IMAGE', 'where': 'image', 'message': f"the scene says {scene['image']['width']}x{scene['image']['height']} "
+                                                                 f"but this job's image is {image['width']}x{image['height']}"}]
+    if errors:
+        raise BadRequest('场景描述有错误', {'errors': errors[:40]})
+    with jobs.exclusive(job_id):                                  # not while a step reads or builds from the job
+        _write(jobs.path(job_id) / 'scene.json', scene)
+        jobs.invalidate(job_id, DOWNSTREAM['scene'])
+        jobs.set_step(job_id, 'scene', 'done', message=f"手动上传的场景描述（{len(scene['components'])} 个构件）")
+    return {'components': len(scene['components'])}
+
+
+def put_spec(jobs, job_id, spec, origin):
+    """A spec from outside (origin 'uploaded') or from the editor (origin 'edited'). It must be for this job's image."""
+    if origin not in ('uploaded', 'edited'):
+        raise BadRequest('origin must be "uploaded" or "edited"')
+    status = jobs.status(job_id)
+    image = status['image']
+    d = jobs.path(job_id)
+    if not isinstance(spec, dict) or not isinstance(spec.get('source'), dict) or 'components' not in spec:
+        raise BadRequest('这不是 booth-spec-v2 的 spec（缺少 source 或 components）')
+    if spec['source'].get('sha256') != image['sha256']:
+        raise BadRequest('这份 spec 的源图和本任务的图片不是同一张（sha256 不一致）',
+                         {'spec_sha256': spec['source'].get('sha256'), 'job_sha256': image['sha256']})
+    spec = json.loads(json.dumps(spec))
+    spec['source']['image'] = image['name']
+    check = engine.validate_spec(spec, d, [image['width'], image['height']])
+    if not check['valid']:
+        raise BadRequest('spec 没有通过校验', {'errors': check['errors'][:30]})
+    with jobs.exclusive(job_id):                                  # an editor save must not land in the middle of a build
+        _write(d / 'spec.json', spec)
+        jobs.set_spec(job_id, origin)
+        jobs.invalidate(job_id, DOWNSTREAM['edit'])
+        if origin == 'uploaded':
+            jobs.set_step(job_id, 'scene', 'skipped', message='直接提供了 spec，不需要读图')
+            jobs.set_step(job_id, 'compile', 'skipped', message='直接提供了 spec，不需要编译')
+    return {'components': len(spec['components']), 'warnings': check['warnings'][:20]}
+
+
+# ------------------------------------------------------------------ steps
+def read_step(jobs, job_id, config):
+    import reader_openai
+    d, status = jobs.path(job_id), jobs.status(job_id)
+    try:
+        result = reader_openai.read_scene(d / status['image']['name'], config, d / 'reader')
+    except reader_openai.ReaderError as ex:
+        raise StepError(str(ex), ex.detail) from ex                # a failed reading changes nothing downstream
+    scene = result['scene']
+    _write(d / 'scene.json', scene)
+    jobs.invalidate(job_id, DOWNSTREAM['scene'])
+    usage = result['usage']
+    return {'message': f"{config.model} 读出 {len(scene['components'])} 个构件（{result['attempts']} 次调用，输入 {usage['input_tokens']} / 输出 {usage['output_tokens']} token）",
+            'detail': {'model': config.model, 'attempts': result['attempts'], 'usage': usage, 'seconds': result['seconds']}}
+
+
+def compile_step(jobs, job_id):
+    d, status = jobs.path(job_id), jobs.status(job_id)
+    if not (d / 'scene.json').is_file():
+        raise StepError('先完成“读图”：上传场景描述，或用 OpenAI 读图')
+    scene = _read(d / 'scene.json')
+    image = d / status['image']['name']
+    try:
+        spec, report = engine.compile_scene(scene, image, d / 'compile')
+    except engine.scene_error() as ex:
+        raise StepError('场景描述没有通过编译前检查', {'errors': ex.errors[:40]}) from ex
+    fit = _read(d / 'compile' / 'box_fit.json')
+    overlay_note = None
+    try:
+        engine.draw_overlay(fit, image, d / 'overlay.png')
+    except Exception as ex:                                       # the overlay is a check aid; its failure must not hide the compile
+        overlay_note = f'{type(ex).__name__}: {ex}'
+    detail = {'status': report['status'], 'components': report['components_built'], 'valid': report['valid'],
+              'fit': {k: report['fit'].get(k) for k in ('status', 'rms_px', 'max_px', 'worst_points', 'warnings', 'ambiguity_hint')},
+              'points': [{'id': p['id'], 'err_px': p['err_px']} for p in fit.get('points', [])],
+              'dropped': report['dropped'], 'adjustments': report['adjustments'][:40], 'adjustments_total': len(report['adjustments']),
+              'assumed': report['assumed'][:60], 'assumed_total': len(report['assumed']), 'warnings': report['warnings'][:40],
+              'overlay': 'overlay.png' if (d / 'overlay.png').is_file() else None, 'overlay_error': overlay_note}
+    if not report['valid']:
+        raise StepError('编译出的 spec 没有通过校验', {**detail, 'errors': report['validation_errors']})
+    _replace_with_copy(d / 'compile' / 'spec.json', d / 'spec.json')
+    jobs.set_spec(job_id, 'compiled')
+    jobs.invalidate(job_id, DOWNSTREAM['compile'])               # only now: a failed compile leaves the earlier products valid
+    return {'message': f"{report['components_built']} 个构件；拟合 {report['fit']['status']}（残差 {report['fit']['rms_px']} px）"
+                       + (f"；丢弃 {len(report['dropped'])} 个" if report['dropped'] else ''), 'detail': detail}
+
+
+def _need_spec(d):
+    spec = d / 'spec.json'
+    if not spec.is_file():
+        raise StepError('还没有 spec：先编译场景描述，或上传 spec.json')
+    return spec
+
+
+def preview_step(jobs, job_id):
+    d = jobs.path(job_id)
+    result = engine.preview(_need_spec(d), d / 'preview')
+    if result['status'] != 'preview_ready':
+        raise StepError('预览没有生成', {'status': result['status'], 'errors': result.get('errors'), 'log_tail': result.get('log_tail')})
+    design = result.get('design_findings') or {}
+    return {'message': f"角点误差中位数 {result['landmark_median_px']} px，最大 {result['landmark_max_px']} px",
+            'detail': {'sheet': _rel(d, result['sheet']), 'run': _rel(d, result['run']), 'engine': result.get('engine_used'),
+                       'landmark_median_px': result['landmark_median_px'], 'landmark_max_px': result['landmark_max_px'],
+                       'design_counts': design.get('counts'), 'design_findings': (design.get('findings') or [])[:10], 'seconds': result['seconds']}}
+
+
+def build_step(jobs, job_id, hd=False):
+    hd_requested = bool(hd)
+    d = jobs.path(job_id)
+    spec = _need_spec(d)
+    numbers = [int(p.name.split('_')[-1]) for p in d.glob('build_*') if p.name.split('_')[-1].isdigit()]
+    out = d / f'build_{1 + max(numbers + [0]):03d}'
+    result = engine.build(spec, out, samples=16, hd_scale=2 if hd else 1)
+    if result['returncode'] != 0:
+        raise StepError('Blender 生成失败', {'log_tail': result['log_tail']})
+    names = {'blend': 'booth.blend', 'client': 'client_render.png', 'reference': 'reference_render.png', 'inspection': 'inspection_render.png',
+             'client_hd': 'client_render_hd.png'}
+    files = {key: _rel(d, out / name) for key, name in names.items() if (out / name).is_file()}
+    if 'blend' not in files or 'client' not in files:
+        raise StepError('Blender 结束了，但没有生成 .blend 或客户图', {'log_tail': result['log_tail'], 'files': files})
+    report = result.get('report') or {}
+    hd = report.get('hd') or None
+    note = ''
+    if hd_requested and 'client_hd' not in files:
+        note = f"；高清图没有生成：放大 2 倍会超过 5 MP 上限（实际倍数 {hd.get('effective') if hd else '?'}）"
+    return {'message': f"已生成 .blend 和客户图（{result['seconds']} 秒）{note}",
+            'detail': {'dir': _rel(d, out), 'files': files, 'seconds': result['seconds'], 'stage_seconds': report.get('stage_seconds'), 'hd': hd,
+                       'hd_requested': hd_requested}}
+
+
+def glb_step(jobs, job_id):
+    d = jobs.path(job_id)
+    code, report = engine.export_glb(_need_spec(d), d / 'exports' / 'booth.glb')
+    if code != 0:
+        raise StepError('GLB 导出失败', {'report': report})
+    return {'message': f"{report['exported']} 个零件，{round(report['bytes'] / 1024)} KB",
+            'detail': {'glb': 'exports/booth.glb', 'bytes': report['bytes'], 'exported': report['exported'], 'groups': len(report['groups']),
+                       'skipped_text': report['skipped_text'], 'pattern_omitted': report['pattern_omitted'], 'emission_clamped': report['emission_clamped']}}
+
+
+def open_blender(jobs, job_id):
+    status = jobs.status(job_id)
+    build = status['steps']['build']
+    blend = (build.get('detail') or {}).get('files', {}).get('blend')
+    if build['state'] not in ('done', 'stale') or not blend:
+        raise BadRequest('还没有 .blend：先点“生成”')
+    path = jobs.path(job_id) / blend
+    if not path.is_file():
+        raise BadRequest('.blend 文件不见了，请重新生成')
+    try:
+        return engine.open_in_blender(path)
+    except RuntimeError as ex:
+        raise BadRequest(str(ex)) from ex
+
+
+# ------------------------------------------------------------------ plans
+def auto_names(jobs, job_id, openai):
+    """What "run everything" means from the job's current state. A finished compile is never redone: that would overwrite the
+    spec the user edited in the editor (or uploaded), and a job that has no scene (uploaded spec) has nothing to compile."""
+    state = jobs.status(job_id)['steps']['compile']['state']
+    names = ['scene'] if openai else []
+    if openai or state not in ('done', 'skipped'):
+        names.append('compile')
+    return names + ['preview', 'build', 'glb']
+
+
+def plan(jobs, job_id, names, config=None, hd=False):
+    table = {'scene': lambda: read_step(jobs, job_id, config), 'compile': lambda: compile_step(jobs, job_id),
+             'preview': lambda: preview_step(jobs, job_id), 'build': lambda: build_step(jobs, job_id, hd), 'glb': lambda: glb_step(jobs, job_id)}
+    uses_blender = {'preview', 'build'}
+    return [(name, table[name], name in uses_blender) for name in names]

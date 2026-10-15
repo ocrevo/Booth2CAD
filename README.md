@@ -1,4 +1,4 @@
-# Booth Image to Model（仓库名暂为 Booth2CAD）
+# Booth Image to Model
 
 从展台图片生成去除展厅、品牌和人物的客户渲染，以及分件可编辑的 Blender 场景。图片中的真实尺寸和隐藏结构无法仅凭单图确定，模型保留观察与估计的区分。
 
@@ -13,6 +13,14 @@
 python booth-image-to-model/scripts/benchmark.py prepare --image input/booth.png --out output/new-booth/benchmark
 python booth-image-to-model/scripts/boothctl.py doctor --blender '实际 Blender 可执行文件路径' --output output/new-booth/runtime_probe.json
 ```
+
+**网页工作室（整条流程在一个页面里）**：上传图片 → 读图（手动上传场景描述或 spec，或配置 OpenAI key 自动读图）→ 编译 → 预览 → 在线编辑 → 生成 → 用 Blender 打开。
+
+```powershell
+python web/server/run.py          # 打开 http://127.0.0.1:8800/
+```
+
+只监听本机；key 只放在服务进程内存里，图片只有在页面上勾选同意后才会发给 OpenAI。说明见 [web/README.md](web/README.md)。
 
 AI 负责观察、结构拆分和视觉复核，代码负责生成和验证几何。prepare 只登记并保存原始输入快照；它不会自动调用图像模型，也不会自动判断相似度。
 
