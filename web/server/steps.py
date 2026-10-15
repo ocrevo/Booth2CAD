@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import engine
-from jobs import BadRequest, DOWNSTREAM, StepError, write_json
+from jobs import BadRequest, Busy, DOWNSTREAM, StepError, write_json
 
 
 def _rel(base, path):
@@ -91,7 +91,7 @@ def read_step(jobs, job_id, config):
 def compile_step(jobs, job_id):
     d, status = jobs.path(job_id), jobs.status(job_id)
     if not (d / 'scene.json').is_file():
-        raise StepError('先完成“读图”：上传场景描述，或用 OpenAI 读图')
+        raise StepError('先完成“读图”：上传场景描述，或用大模型读图')
     scene = _read(d / 'scene.json')
     image = d / status['image']['name']
     try:
@@ -190,12 +190,30 @@ def open_blender(jobs, job_id):
 # ------------------------------------------------------------------ plans
 def auto_names(jobs, job_id, openai):
     """What "run everything" means from the job's current state. A finished compile is never redone: that would overwrite the
-    spec the user edited in the editor (or uploaded), and a job that has no scene (uploaded spec) has nothing to compile."""
-    state = jobs.status(job_id)['steps']['compile']['state']
+    spec the user edited in the editor (or uploaded), and a job that has a spec but no scene description (an uploaded spec) has
+    nothing to compile from, whatever state an earlier click left on the compile step."""
+    status = jobs.status(job_id)
+    has_spec = status['spec']['origin'] is not None
+    compile_possible = status['files']['scene'] or not has_spec
     names = ['scene'] if openai else []
-    if openai or state not in ('done', 'skipped'):
+    if openai or (status['steps']['compile']['state'] not in ('done', 'skipped') and compile_possible):
         names.append('compile')
     return names + ['preview', 'build', 'glb']
+
+
+def check_ready(jobs, job_id, names):
+    """The first step of a plan needs its input. Say so before anything starts (HTTP 422) instead of starting a step that is bound
+    to fail and marking it failed: a refused click changes nothing."""
+    status = jobs.status(job_id)
+    if status['busy']:                                           # a running step is the more useful thing to hear about
+        raise Busy(f"这个任务的“{status['busy']}”步骤还在运行，等它结束再操作")
+    first = names[0]
+    if first == 'compile' and not status['files']['scene']:
+        if status['spec']['origin']:
+            raise BadRequest('这个任务的 spec 是直接提供的，没有场景描述可编译；要重新编译，先在第 2 步读图或上传场景描述')
+        raise BadRequest('先完成“读图”：上传场景描述，或用大模型读图')
+    if first in ('preview', 'build', 'glb') and not status['files']['spec']:
+        raise BadRequest('还没有 spec：先编译场景描述，或上传 spec.json')
 
 
 def plan(jobs, job_id, names, config=None, hd=False):

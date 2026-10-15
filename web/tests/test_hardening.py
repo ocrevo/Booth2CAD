@@ -303,6 +303,13 @@ class ServerHardening(StudioCase):
         other = self.new_job()
         self.assertEqual(self.api.call('PUT', f'/api/jobs/{other}/spec?origin=uploaded', self.api.call('GET', f'/api/jobs/{job}/spec')[1])[0], 200)
         self.assertEqual(steps.auto_names(self.studio.jobs, other, False), ['preview', 'build', 'glb'])   # an uploaded spec has nothing to compile
+        status, body = self.api.call('POST', f'/api/jobs/{other}/compile', {})                         # and clicking compile there is refused, not "failed"
+        self.assertEqual(status, 422)
+        self.assertIn('直接提供', body['error'])
+        st = self.api.call('GET', f'/api/jobs/{other}')[1]
+        self.assertEqual((st['steps']['scene']['state'], st['steps']['compile']['state']), ('skipped', 'skipped'))
+        self.studio.jobs.set_step(other, 'compile', 'error', message='left over from an earlier click')
+        self.assertEqual(steps.auto_names(self.studio.jobs, other, False), ['preview', 'build', 'glb'])   # an old failure does not bring compile back
 
     def test_edits_and_uploads_are_refused_while_a_step_runs(self):
         job, _ = self.compiled_job()

@@ -220,14 +220,17 @@ function cardRead() {
 function cardCompile() {
   const s = ui.job.steps.compile;
   const d = s.detail;
-  const free = !busy();
+  const hasScene = Boolean(ui.job.files?.scene);
+  const free = !busy() && hasScene;
   const fit = d?.fit;
+  const why = hasScene ? '拟合相机、把像素反投影成零件、校验。约几秒。'
+    : ui.job.spec.origin ? '这个任务的 spec 是直接提供的，没有场景描述可编译（要重新编译，先在第 2 步读图或上传场景描述）。' : '先完成第 2 步读图。';
   return card(3, '编译（场景描述 → spec）', 'compile',
     h('div', { class: 'row' }, h('button', { id: 'btnCompile', class: 'primary', disabled: !free, onClick: () => {
       if (ui.job.spec.origin === 'edited' && !window.confirm('重新编译会用场景描述重新生成 spec，覆盖你在编辑器里做的修改。继续吗？')) return;
       act('compile', 'compile');
     } }, '编译'),
-      h('span', { class: 'hint' }, '拟合相机、把像素反投影成零件、校验。约几秒。')),
+      h('span', { class: 'hint' }, why)),
     errorBlock(ui.notes.compile), s.state === 'error' ? errorBlock({ errors: d?.errors || d?.detail?.errors }) : null,
     d && fit ? h('div', { class: 'body' },
       h('div', { class: 'metric' }, `拟合 ${fit.status}，残差 ${fit.rms_px} px（最大 ${fit.max_px} px）· ${d.components} 个零件 · 丢弃 ${d.dropped.length} · 调整 ${d.adjustments_total} · 代填假设 ${d.assumed_total}`),
@@ -244,10 +247,11 @@ function cardCompile() {
 function cardPreview() {
   const s = ui.job.steps.preview;
   const d = s.detail;
-  const free = !busy() && Boolean(ui.health?.blender);
+  const hasSpec = Boolean(ui.job.files?.spec);
+  const free = !busy() && Boolean(ui.health?.blender) && hasSpec;
   return card(4, '预览（spec → Blender 对照图）', 'preview',
     h('div', { class: 'row' }, h('button', { id: 'btnPreview', class: 'primary', disabled: !free, onClick: () => act('preview', 'preview') }, '生成预览'),
-      h('span', { class: 'hint' }, ui.health?.blender ? '渲染一张和原图同机位的对照图，约 10–30 秒。' : '没找到 Blender，这一步不可用。')),
+      h('span', { class: 'hint' }, !ui.health?.blender ? '没找到 Blender，这一步不可用。' : !hasSpec ? '还没有 spec：先编译，或在第 2 步直接上传 spec。' : '渲染一张和原图同机位的对照图，约 10–30 秒。')),
     errorBlock(ui.notes.preview), s.state === 'error' ? errorBlock({ log_tail: d?.log_tail, errors: d?.errors }) : null,
     d?.sheet ? h('div', { class: 'body' }, h('div', { class: 'metric' }, `角点误差：中位数 ${d.landmark_median_px} px，最大 ${d.landmark_max_px} px`),
       h('figure', { style: 'margin:0' }, image(d.sheet, '预览对照'), h('figcaption', { class: 'hint' }, '左上原图，右上渲染，左下叠加，右下轮廓与角点')),

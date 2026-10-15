@@ -200,6 +200,9 @@ async function main() {
     jobA = await waitFor(() => jobId(), 'the job');
     await waitFor(() => text('#card-图片').then((t) => /\d+ × \d+ px/.test(t)), 'the picture card');
     assert.match(await text('#card-图片'), custom ? /\d+ × \d+ px/ : /960 × 600 px/);
+    assert.equal(await ev("document.getElementById('btnCompile').disabled"), true);              // nothing to compile yet, and the card says why
+    assert.match(await text('#card-compile .hint'), /先完成第 2 步读图/);
+    assert.equal(await ev("document.getElementById('btnPreview').disabled"), true);
   });
 
   await step('a broken scene description is refused with the reason; a good one is accepted', async () => {
@@ -414,6 +417,8 @@ async function main() {
     await upload('#specInput', good);
     await waitState('scene', 'skipped');
     await waitState('compile', 'skipped');
+    assert.equal(await ev("document.getElementById('btnCompile').disabled"), true);              // an uploaded spec has nothing to compile from
+    assert.match(await text('#card-compile .hint'), /直接提供/);
     assert.equal(await ev("document.getElementById('linkEditor').getAttribute('href').startsWith('index.html?job=')"), true);
     await click('btnGlb');
     await waitState('glb', 'done');

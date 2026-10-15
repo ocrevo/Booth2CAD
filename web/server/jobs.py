@@ -125,6 +125,7 @@ class Jobs:
             d = self.path(job_id)
             data = json.loads((d / 'status.json').read_text(encoding='utf-8'))
             data['busy'] = self._running.get(job_id)
+            data['files'] = {'scene': (d / 'scene.json').is_file(), 'spec': (d / 'spec.json').is_file()}      # the inputs the next steps need
             if job_id not in self._running:
                 _settle(data)                       # never show a step as running when nothing runs it
             return data

@@ -234,6 +234,7 @@ def make_handler():
             if action == 'open-blender':
                 return self.json(HTTPStatus.OK, steps.open_blender(jobs, job_id))
             if action in ('compile', 'preview', 'build', 'glb'):
+                steps.check_ready(jobs, job_id, [action])
                 jobs.start(job_id, steps.plan(jobs, job_id, [action], hd=bool(options.get('hd'))))
                 return self.json(HTTPStatus.ACCEPTED, {'started': [action]})
             if action == 'read':
@@ -247,6 +248,7 @@ def make_handler():
             else:
                 names = None
             if names:
+                steps.check_ready(jobs, job_id, names)
                 jobs.start(job_id, steps.plan(jobs, job_id, names, config=config, hd=bool(options.get('hd'))))
                 return self.json(HTTPStatus.ACCEPTED, {'started': names})
             return self.fail(HTTPStatus.NOT_FOUND, 'unknown action')

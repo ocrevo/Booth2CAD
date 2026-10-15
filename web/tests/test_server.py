@@ -155,13 +155,19 @@ class FlowSteps(StudioCase):
         self.assertEqual((status, overlay[:4]), (200, b'\x89PNG'))
         self.assertTrue(any(p['id'] == 'floor_bl' for p in detail['points']))
 
-    def test_compile_without_a_scene_is_a_clear_error_and_later_steps_are_cleared(self):
+    def test_a_step_without_its_input_is_refused_up_front_and_changes_nothing(self):
         job = self.new_job()
-        self.assertEqual(self.api.call('POST', f'/api/jobs/{job}/auto', {})[0], 202)
-        st = self.wait(job)
-        self.assertEqual(st['steps']['compile']['state'], 'error')
-        self.assertIn('读图', st['steps']['compile']['message'])
-        self.assertEqual({st['steps'][s]['state'] for s in ('preview', 'build', 'glb')}, {'idle'})
+        for action in ('compile', 'auto'):
+            status, body = self.api.call('POST', f'/api/jobs/{job}/{action}', {})
+            self.assertEqual(status, 422, action)
+            self.assertIn('读图', body['error'])
+        for action in ('preview', 'build', 'glb'):
+            status, body = self.api.call('POST', f'/api/jobs/{job}/{action}', {})
+            self.assertEqual(status, 422, action)
+            self.assertIn('spec', body['error'])
+        st = self.api.call('GET', f'/api/jobs/{job}')[1]
+        self.assertEqual({s['state'] for s in st['steps'].values()}, {'idle'})                    # no step was started, none marked failed
+        self.assertEqual(st['files'], {'scene': False, 'spec': False})
 
     def test_an_uploaded_spec_must_be_for_this_image(self):
         job, _ = self.compiled_job()
