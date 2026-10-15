@@ -15,29 +15,38 @@ Opening `index.html` by double-click does not work (browsers refuse ES modules f
 The page loads a synthetic demo booth (invented for testing, no client data). The "测试指引 / Test guide" button lists
 what to try. Use "Open spec" or drop a `spec.json` on the page to edit your own.
 
-## Studio: the whole flow on one page
+## Studio: from picture to render in one window
 
 ```
-python web/server/run.py           # http://127.0.0.1:8800/  (the flow page; opens the browser)
+python web/server/run.py           # http://127.0.0.1:8800/  (opens the browser)
 ```
 
-Picture -> reading -> compile -> preview -> edit -> build -> open in Blender, one card per step, each with its state, result and
-error. Jobs live in `output/studio/<id>/` (git-ignored). Only the Python standard library is needed besides the skill's own
-requirements; Blender is found through `BLENDER_EXE`, `PATH` or the default install path (without it GLB export still works).
+One page, four steps in a bar at the top: **① 选图 → ② 生成模型 → ③ 调整 → ④ 出图**. The stage in the middle is always the same
+place: the empty drop zone, then the picture, then the model drawn over the picture at the picture's own camera. The right-hand card
+always says the one thing to do next (and what is running, how long it has taken and usually takes, or what failed and the one
+button to try again). Nothing opens in another window.
 
-| Step | What happens | Needs |
+| Step | What the person does | What happens underneath |
 |---|---|---|
-| 1 Picture | PNG or JPEG is stored in the job | |
-| 2 Reading | one of: upload a scene description (`references/scene-description.md`), upload a ready spec (its picture hash must match), or let OpenAI read the picture | key + consent for OpenAI |
-| 3 Compile | scene description -> camera fit -> spec, with fit residuals, dropped parts, assumptions and an overlay | |
-| 4 Preview | Blender renders a comparison sheet at the source camera | Blender |
-| 5 Edit | `index.html?job=<id>` loads the job's spec; "保存到工作区" validates it and marks later steps stale | |
-| 6 Build | `.blend`, client render, GLB | Blender (GLB: none) |
-| 7 Open | opens the latest `.blend` in Blender; downloads for every file | Blender |
+| ① 选图 | drops or chooses a PNG or JPEG | the picture is stored in the job (`output/studio/<id>/`, git-ignored) |
+| ② 生成模型 | ticks the consent, clicks "生成模型" (or "生成并直接出图"); "更多方式" holds the uploads and the key | a large model reads the picture, the engine fits the camera and builds the model (steps `scene`, `compile`) |
+| ③ 调整 | clicks, drags, recolours on the stage; compares with the photo (wipe / overlay / photo alone / model; hold Space to peek) | every change is saved by itself 0.8 s later ("已保存 ✓") |
+| ④ 出图 | "出图（1–3 分钟）"; optionally "先快速校对（约 15 秒）" first | Blender renders the client picture and the server writes the `.glb` (steps `build`, `glb`); downloads and "在 Blender 中打开" appear |
+
+The conclusion on the card is in plain words (model ready / may not line up with the photo, by how many pixels / sizes estimated).
+The engineering view is behind **专业视图** (a drawer): the fit overlay, the corner-error table, the Blender check sheet, what was
+dropped or assumed, the design-check hints, every step's record and log. The editor itself (`js/app.js`, `createEditor`) is hosted in
+the stage; the standalone `index.html` still works without a server and uploads nothing.
+
+Before/after never needs another Blender run: the live model is drawn by three.js at the matched camera (labelled as schematic),
+a quick check shows `preview_render.png`, a finished render shows `client_render.png` (wipe) or `reference_render.png` (transparent,
+overlay). A render goes stale when the model changes afterwards and is then said to be stale, never silently shown as current.
+Jobs need only the Python standard library besides the skill's own requirements; Blender is found through `BLENDER_EXE`, `PATH` or the
+default install path (without it the journey stops before the render and the `.glb` can still be exported).
 
 **Reading with a large model (optional).** Any OpenAI-compatible service works; there is no vendor SDK, the call is plain HTTP in
 `server/reader_openai.py`. The key goes in the environment variable `OPENAI_API_KEY` (whichever service it belongs to) before starting,
-or is pasted on the flow page (reading card, tab "大模型自动读图"), where it is kept in the server's memory and never written to disk or
+or is pasted on the page (step ②), where it is kept in the server's memory and never written to disk or
 to a job. The picture is sent only after the consent box is ticked for that job.
 
 ```
@@ -57,7 +66,7 @@ step works.
 ran the denoiser out of memory. A picture with an EXIF rotation tag (common for phone photos) is refused, because the browser shows
 it upright while the pixels are sideways; save it again without the tag. `OPENAI_MAX_OUTPUT_TOKENS` (default 32000) must not exceed
 what the model or service accepts. A job refuses edits and uploads while one of its steps runs. "Run everything" continues from the
-current state: it never recompiles over a spec you edited or uploaded, and the compile button asks before overwriting an edited spec.
+current state: it never rebuilds the model over one you edited or uploaded, and an edit made while a step runs is saved as soon as it ends.
 After a server restart, steps that were running show as errors and queued ones return to their earlier state. A second copy cannot
 start on the same port, and requests from other web pages (wrong Host or Origin) are refused.
 
@@ -69,7 +78,7 @@ bad reading is visible before anything is built.
 
 | Folder | What | Served? |
 |---|---|---|
-| `app/` | the site: `flow.html` (studio), `index.html` (editor), `js/`, `css/`, `vendor/three/`, `demo/` | yes, this is the deploy root |
+| `app/` | the site: `studio.html` (the studio), `index.html` (the standalone editor), `js/`, `css/`, `vendor/three/`, `demo/` | yes, this is the deploy root |
 | `server/` | the local studio server: `run.py`, `server.py` (HTTP), `jobs.py`, `steps.py`, `engine.py` (the only file that touches the skill), `reader_openai.py`, `grid.py`, `prompts/` | no |
 | `tests/` | `node --test` suites, Python server/reader tests, a stand-in for the OpenAI API, end-to-end smoke tests | no |
 | `tools/` | `serve.py` (static preview server), `make_demo.py` (rebuilds the demo spec from the skill's macros) | no |
@@ -99,7 +108,7 @@ npm test            # node --test: geometry/camera parity with Python, edit oper
 npm run smoke       # headless Chrome/Edge drives the editor in static mode (needs Chrome or Edge and Python)
 npm run test:server # Python: every studio step through the real HTTP API, the OpenAI reader against a stand-in server
                     # (set BLENDER_EXE to include the preview/build steps)
-npm run smoke:flow  # headless Chrome drives the flow page end to end, with the stand-in for OpenAI (Blender steps if found)
+npm run smoke:studio # headless Chrome drives the studio end to end in one window, with the stand-in for OpenAI (Blender steps if found)
 python tests/make_geometry_reference.py   # regenerate the Python reference data after changing geometry.py
 python tools/make_demo.py                 # rebuild app/demo after changing the macros
 ```

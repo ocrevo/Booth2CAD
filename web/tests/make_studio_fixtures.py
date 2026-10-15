@@ -1,6 +1,6 @@
-"""Write the synthetic inputs of the flow smoke test: a picture, a good scene description and a broken one.
+"""Write the synthetic inputs of the studio smoke test: a picture, a good scene description and a broken one.
 
-    python web/tests/make_flow_fixtures.py <out_dir>
+    python web/tests/make_studio_fixtures.py <out_dir>
 """
 from __future__ import annotations
 import json

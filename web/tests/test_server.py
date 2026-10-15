@@ -266,8 +266,35 @@ class FlowSteps(StudioCase):
         self.assertEqual(send('POST', '/api/config', {'Host': own, 'Origin': f'http://{own}'}, b'{}'), 200)       # the page's own origin
         self.assertEqual(send('POST', '/api/config', {'Host': f'localhost:{port}'}, b'{}'), 200)                  # no Origin: scripts and tests
 
+    def test_run_takes_the_steps_a_page_asks_for_in_order_and_checks_them(self):
+        job = self.new_job()
+        self.assertEqual(self.api.call('PUT', f'/api/jobs/{job}/scene', fixtures.scene())[0], 200)
+        for bad in (None, 'compile', [], [3], ['nonsense'], ['glb', 'compile'], ['compile', 'compile'], ['compile', 'scene']):
+            status, body = self.api.call('POST', f'/api/jobs/{job}/run', {'steps': bad})
+            self.assertEqual(status, 422, bad)
+        status, body = self.api.call('POST', f'/api/jobs/{job}/run', {'steps': ['scene', 'compile']})                    # reading needs the mode
+        self.assertEqual(status, 422)
+        status, body = self.api.call('POST', f'/api/jobs/{job}/run', {'steps': ['scene', 'compile'], 'mode': 'openai', 'consent': True})
+        self.assertEqual(status, 422)                                                                                       # and a key
+        self.assertIn('OPENAI_API_KEY', body['error'])
+        status, body = self.api.call('POST', f'/api/jobs/{job}/run', {'steps': ['preview']})                                # a step without its input
+        self.assertEqual(status, 422)
+        self.assertIn('spec', body['error'])
+        self.assertEqual({s['state'] for s in self.api.call('GET', f'/api/jobs/{job}')[1]['steps'].values()} - {'done'}, {'idle'})       # refusals changed nothing
+        status, body = self.api.call('POST', f'/api/jobs/{job}/run', {'steps': ['compile', 'glb']})
+        self.assertEqual((status, body['started']), (202, ['compile', 'glb']))
+        st = self.wait(job)
+        self.assertEqual([st['steps'][s]['state'] for s in ('compile', 'glb')], ['done', 'done'])
+
+    def test_the_job_list_names_the_picture_file_for_thumbnails(self):
+        job = self.new_job()
+        entry = next(j for j in self.api.call('GET', '/api/jobs')[1]['jobs'] if j['id'] == job)
+        self.assertEqual(entry['file'], 'source.png')
+        self.assertEqual(self.api.call('GET', f"/api/jobs/{job}/files/{entry['file']}")[0], 200)
+
     def test_the_static_site_is_served(self):
-        for path, marker in (('/', b'flow'), ('/index.html', b'Booth Spec Editor'), ('/js/app.js', b'Viewport')):
+        for path, marker in (('/', b'studio.js'), ('/studio.html', b'studio.js'), ('/index.html', b'Booth Spec Editor'), ('/js/app.js', b'Viewport'),
+                             ('/js/studio.js', b'createEditor'), ('/css/studio.css', b'.st-')):
             status, body = self.api.call('GET', path)
             self.assertEqual(status, 200, path)
             self.assertIn(marker, body, path)
@@ -295,6 +322,9 @@ class BlenderSteps(StudioCase):
         self.assertEqual(st['steps']['preview']['state'], 'done', st['steps']['preview'])
         status, sheet = self.api.call('GET', f"/api/jobs/{job}/files/{st['steps']['preview']['detail']['sheet']}")
         self.assertEqual((status, sheet[:4]), (200, b'\x89PNG'))
+        status, render = self.api.call('GET', f"/api/jobs/{job}/files/{st['steps']['preview']['detail']['render']}")             # the render alone, for before/after
+        self.assertEqual((status, render[:4]), (200, b'\x89PNG'))
+        self.assertIn('not_checked', st['steps']['preview']['detail'])
         self.assertEqual(self.api.call('POST', f'/api/jobs/{job}/open-blender', {})[0], 422)         # nothing built yet
         self.assertEqual(self.api.call('POST', f'/api/jobs/{job}/build', {})[0], 202)
         st = self.wait(job, 1800)

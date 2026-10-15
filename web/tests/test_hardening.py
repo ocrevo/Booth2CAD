@@ -139,6 +139,16 @@ class JobStates(unittest.TestCase):
         self.wait()
         self.assertEqual(self.jobs.status(self.job)['steps']['compile']['state'], 'done')
 
+    def test_a_blender_step_is_timed_from_when_it_gets_blender_not_from_the_queue(self):
+        other = self.jobs.create('b.png', png_bytes())['id']
+        self.jobs.start(self.job, [('build', lambda: (time.sleep(1.0), {'message': 'slow'})[1], True)])
+        time.sleep(0.3)                                                                 # the first one holds Blender now
+        self.jobs.start(other, [('build', lambda: (time.sleep(0.2), {'message': 'fast'})[1], True)])
+        wait_until(lambda: self.jobs.status(other)['busy'] is None and self.jobs.status(self.job)['busy'] is None, 'both builds')
+        seconds = self.jobs.status(other)['steps']['build']['seconds']
+        self.assertGreaterEqual(seconds, 0.2)
+        self.assertLess(seconds, 0.7, 'the 0.7 s queued behind the first build must not count')
+
     def test_a_start_that_fails_does_not_leave_the_job_busy(self):
         real = self.jobs._mutate
         calls = []
@@ -277,6 +287,15 @@ class ServerHardening(StudioCase):
         self.assertEqual((status, body['openai']['configured']), (200, True))
         self.assertEqual(self.studio.config.api_key, 'sk-fine-key-1234567')
         self.api.call('POST', '/api/config', {'openai_api_key': ''})
+
+    def test_a_body_that_is_not_an_object_is_a_refusal_not_a_crash(self):
+        job = self.new_job()
+        for path in ('/api/config', f'/api/jobs/{job}/run', f'/api/jobs/{job}/compile', f'/api/jobs/{job}/auto'):
+            for raw in (b'[1]', b'null', b'"x"', b'7'):
+                status, body = self.api.call('POST', path, raw=raw, headers={'Content-Type': 'application/json'})
+                self.assertEqual(status, 422, (path, raw, body))
+                self.assertIn('JSON', body['error'])
+        self.assertEqual(self.api.call('POST', '/api/config', raw=b'', headers={'Content-Type': 'application/json'})[0], 200)   # an empty body is an empty object
 
     def test_the_environment_key_is_trimmed_and_a_broken_one_is_refused_by_name_only(self):
         self.assertEqual(Config('http://x/v1', 'm', 'sk-from-env-1234\r\n').api_key, 'sk-from-env-1234')

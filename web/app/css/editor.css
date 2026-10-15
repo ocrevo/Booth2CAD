@@ -61,6 +61,8 @@ button.toggle[aria-pressed="true"] { background: var(--accent-soft); border-colo
 .source-frame.quiet { border-color: transparent; box-shadow: none; }
 .source-photo { position: absolute; z-index: 2; pointer-events: none; user-select: none; }
 .source-photo.under { z-index: 0; }
+.source-render { position: absolute; z-index: 1; pointer-events: none; user-select: none; }
+.source-split { position: absolute; z-index: 4; width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); pointer-events: none; }
 .drop { position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: rgba(31, 111, 235, 0.08); z-index: 5; }
 
 .outline { display: grid; gap: 1px; }

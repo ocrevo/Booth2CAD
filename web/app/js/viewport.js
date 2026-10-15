@@ -80,14 +80,15 @@ export class Viewport {
 
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbit.enableDamping = false;
-    this.orbit.addEventListener('change', () => this.invalidate());
-    this.orbit.addEventListener('start', () => {
-      if (this.matching) {
+    this._settingView = false;                              // true while the code itself places the camera (that is not the user moving it)
+    this.orbit.addEventListener('change', () => {
+      if (this.matching && !this._settingView) {            // the camera really moved (a drag, a wheel turn), not just a click on a part
         this.matching = null;
         this._syncPhoto();
         this.hooks.onMatchFrame?.(null);
         this.hooks.onViewChange?.();
       }
+      this.invalidate();
     });
 
     this.pivot = new THREE.Object3D();
@@ -127,6 +128,17 @@ export class Viewport {
     this.photo.draggable = false;
     this.photo.hidden = true;
     container.appendChild(this.photo);
+    this.renderImg = document.createElement('img');          // a finished render (from Blender) shown in place of the live model
+    this.renderImg.className = 'source-render';
+    this.renderImg.alt = '';
+    this.renderImg.draggable = false;
+    this.renderImg.hidden = true;
+    container.appendChild(this.renderImg);
+    this.splitLine = document.createElement('div');          // the line a "wipe" cuts along
+    this.splitLine.className = 'source-split';
+    this.splitLine.hidden = true;
+    container.appendChild(this.splitLine);
+    this._renderUrl = null;
     this._photoUrl = null;
     this._frameRect = null;
     this.compare = { mode: 'model', split: 50 };
@@ -374,13 +386,23 @@ export class Viewport {
     this.orbit.target.set(...b.centre);
     this.camera.position.copy(this.orbit.target).addScaledVector(dir, dist);
     this.camera.lookAt(this.orbit.target);
-    this.orbit.update();
+    this._settingView = true;
+    try { this.orbit.update(); } finally { this._settingView = false; }
     this.invalidate();
+  }
+
+  /** Leave the source view without moving the camera (a host page switching to another job). */
+  leaveSourceView() {
+    this.matching = null;
+    this.frameBox.hidden = true;
+    this._syncPhoto();
+    this.hooks.onMatchFrame?.(null);
   }
 
   /** Look at the booth the way the source picture does (position, target, lens, roll). Returns false for unsupported cameras. */
   matchSourceView(spec) {
     const viewport = { width: this.container.clientWidth, height: this.container.clientHeight };
+    this._settingView = true;
     try {
       const { frame } = applySpecCamera(this.camera, spec.camera, spec.source, viewport);
       this.orbit.target.set(...spec.camera.target);
@@ -400,6 +422,8 @@ export class Viewport {
       this._syncPhoto();
       this.hooks.onMatchFrame?.(null);
       return false;
+    } finally {
+      this._settingView = false;
     }
   }
 
@@ -410,6 +434,17 @@ export class Viewport {
       this._photoUrl = url || null;
       if (this._photoUrl) this.photo.src = this._photoUrl;
       else this.photo.removeAttribute('src');
+    }
+    this._syncPhoto();
+  }
+
+  /** A rendered picture of the booth (same camera and size as the source) to show instead of the live model; null for the live model.
+   *  The live canvas is hidden while it shows, so nothing can be picked until it is cleared. */
+  setRender(url) {
+    if (url !== this._renderUrl) {
+      this._renderUrl = url || null;
+      if (this._renderUrl) this.renderImg.src = this._renderUrl;
+      else this.renderImg.removeAttribute('src');
     }
     this._syncPhoto();
   }
@@ -425,9 +460,17 @@ export class Viewport {
     const { mode, split } = this.compare;
     const show = Boolean(this._photoUrl && this.matching && this._frameRect && mode !== 'model');
     this.photo.hidden = !show;
+    const showRender = show && Boolean(this._renderUrl) && mode !== 'photo';
+    this.renderImg.hidden = !showRender;
+    this.renderer.domElement.style.visibility = showRender ? 'hidden' : '';
+    const wipe = show && mode === 'wipe';
+    this.splitLine.hidden = !wipe;
     if (show) {
       const r = this._frameRect;
-      Object.assign(this.photo.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${r.width}px`, height: `${r.height}px` });
+      const box = { left: `${r.x}px`, top: `${r.y}px`, width: `${r.width}px`, height: `${r.height}px` };
+      Object.assign(this.photo.style, box);
+      Object.assign(this.renderImg.style, box);
+      if (wipe) Object.assign(this.splitLine.style, { left: `${r.x + (r.width * split) / 100}px`, top: `${r.y}px`, height: `${r.height}px` });
     }
     this.photo.classList.toggle('under', show && mode === 'overlay');
     this.photo.style.clipPath = show && mode === 'wipe' ? `inset(0 ${100 - split}% 0 0)` : '';

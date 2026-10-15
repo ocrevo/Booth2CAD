@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import engine
-from jobs import BadRequest, Busy, DOWNSTREAM, StepError, write_json
+from jobs import BadRequest, Busy, DOWNSTREAM, STEPS, StepError, write_json
 
 
 def _rel(base, path):
@@ -132,10 +132,13 @@ def preview_step(jobs, job_id):
     if result['status'] != 'preview_ready':
         raise StepError('预览没有生成', {'status': result['status'], 'errors': result.get('errors'), 'log_tail': result.get('log_tail')})
     design = result.get('design_findings') or {}
+    run = _rel(d, result['run'])
     return {'message': f"角点误差中位数 {result['landmark_median_px']} px，最大 {result['landmark_max_px']} px",
-            'detail': {'sheet': _rel(d, result['sheet']), 'run': _rel(d, result['run']), 'engine': result.get('engine_used'),
+            'detail': {'sheet': _rel(d, result['sheet']), 'run': run, 'engine': result.get('engine_used'),
+                       'render': f'{run}/preview_render.png',                      # the render alone, transparent, at the source camera and size
                        'landmark_median_px': result['landmark_median_px'], 'landmark_max_px': result['landmark_max_px'],
-                       'design_counts': design.get('counts'), 'design_findings': (design.get('findings') or [])[:10], 'seconds': result['seconds']}}
+                       'design_counts': design.get('counts'), 'design_findings': (design.get('findings') or [])[:10],
+                       'not_checked': design.get('not_checked'), 'warnings': (result.get('warnings') or [])[:20], 'seconds': result['seconds']}}
 
 
 def build_step(jobs, job_id, hd=False):
@@ -199,6 +202,19 @@ def auto_names(jobs, job_id, openai):
     if openai or (status['steps']['compile']['state'] not in ('done', 'skipped') and compile_possible):
         names.append('compile')
     return names + ['preview', 'build', 'glb']
+
+
+def run_names(requested):
+    """The steps a page asks for, checked: a non-empty list of known steps in pipeline order, no repeats."""
+    if not isinstance(requested, list) or not requested or not all(isinstance(n, str) for n in requested):
+        raise BadRequest('steps must be a non-empty list of step names')
+    unknown = [n for n in requested if n not in STEPS]
+    if unknown:
+        raise BadRequest(f'unknown steps: {", ".join(unknown)}')
+    order = [STEPS.index(n) for n in requested]
+    if order != sorted(set(order)):
+        raise BadRequest(f'steps must follow the order {", ".join(STEPS)} without repeats')
+    return list(requested)
 
 
 def check_ready(jobs, job_id, names):

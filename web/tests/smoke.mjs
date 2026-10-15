@@ -141,7 +141,7 @@ async function main() {
     assert.equal(await ev('document.body.dataset.error || ""'), '');
     assert.match(await ev("document.getElementById('btnIssues').textContent"), /无问题/);
     assert.equal(await ev(`document.querySelectorAll('#outlineList .row').length > 10`), true);
-    assert.equal(await ev("document.getElementById('btnWorkspace').hidden && document.getElementById('linkFlow').hidden"), true);   // no studio controls in static mode
+    assert.equal(await ev("document.getElementById('btnWorkspace') === null && document.getElementById('linkFlow') === null"), true);   // no studio controls in static mode
     assert.deepEqual(await ev("performance.getEntriesByType('resource').map((r) => new URL(r.name).pathname).filter((p) => p.startsWith('/api'))"), []);   // and no calls to a server API
     await shot('01_start.png');
   });

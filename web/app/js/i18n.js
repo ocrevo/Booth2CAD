@@ -5,8 +5,6 @@ const STRINGS = {
     title: '展台规格编辑器',
     subtitle: '直接编辑 spec：移动、改色、改尺寸、复制。所有操作都在本机浏览器内完成，不上传任何文件。',
     open: '打开 spec', demo: '载入示例', save: '保存 spec', glb: '导出 GLB', undo: '撤销', redo: '重做',
-    workspace: '保存到工作区', backToFlow: '返回流程', wsSaved: '已保存到工作区；预览和生成已标为过期，回到流程页重新运行',
-    wsRefused: '工作区拒绝了这份 spec：{msg}', jobFailed: '无法载入任务 {job}：{msg}', jobName: '任务 {job}',
     move: '移动 (W)', rotate: '旋转 (E)', snap: '吸附', match: '对齐原图视角', frame: '显示全部', dup: '复制 (Ctrl+D)',
     del: '删除 (Del)', guide: '测试指引', lang: 'English', close: '关闭',
     outline: '构件', filter: '搜索 id 或 role', ungrouped: '未分组', parts: '{n} 个零件',
@@ -45,8 +43,6 @@ const STRINGS = {
     title: 'Booth Spec Editor',
     subtitle: 'Edit the spec directly: move, recolour, resize, duplicate. Everything runs in this browser; no file is uploaded.',
     open: 'Open spec', demo: 'Load demo', save: 'Save spec', glb: 'Export GLB', undo: 'Undo', redo: 'Redo',
-    workspace: 'Save to workspace', backToFlow: 'Back to the flow', wsSaved: 'Saved to the workspace; preview and build are marked stale, rerun them on the flow page',
-    wsRefused: 'The workspace refused this spec: {msg}', jobFailed: 'Cannot load job {job}: {msg}', jobName: 'job {job}',
     move: 'Move (W)', rotate: 'Rotate (E)', snap: 'Snap', match: 'Match source view', frame: 'Frame all', dup: 'Duplicate (Ctrl+D)',
     del: 'Delete (Del)', guide: 'Test guide', lang: '中文', close: 'Close',
     outline: 'Parts', filter: 'Search id or role', ungrouped: 'Ungrouped', parts: '{n} parts',
@@ -90,6 +86,11 @@ try {
 } catch { /* storage may be blocked; the default is fine */ }
 
 export const getLang = () => lang;
+
+/** Use a language for this page only (the studio is Chinese); the choice saved by the standalone editor is left alone. */
+export function useLang(next) {
+  lang = next;
+}
 
 export function setLang(next) {
   lang = next;

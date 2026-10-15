@@ -9,6 +9,7 @@
     PUT  /api/jobs/<id>/spec?origin=...   body = a spec: uploaded (from outside) or edited (from the editor)
     GET  /api/jobs/<id>/spec              the working spec
     POST /api/jobs/<id>/read              {"mode": "openai", "consent": true}
+    POST /api/jobs/<id>/run               {"steps": ["scene","compile",...], "mode": "openai", "consent": true, "hd": false}: those steps in order
     POST /api/jobs/<id>/compile | preview | build | glb      {"hd": false} for build
     POST /api/jobs/<id>/auto              run everything that is still to do (read with openai first when asked) -> compile -> preview -> build -> glb
     POST /api/jobs/<id>/open-blender      start Blender with the latest .blend
@@ -39,6 +40,7 @@ SERVABLE = set(MIME) - {'.html', '.js', '.mjs', '.css'}
 JOB_ROUTE = re.compile(r'^/api/jobs/(?P<id>[^/]+)(?:/(?P<rest>.*))?$')
 MAX_JSON = 20 * 1024 * 1024
 MAX_UPLOAD = 30 * 1024 * 1024
+DRAIN_LIMIT = 1024 * 1024              # an unread request body up to this size is read and dropped after an early answer
 
 
 class Config:
@@ -117,6 +119,13 @@ def make_handler():
             except (UnicodeDecodeError, json.JSONDecodeError) as ex:
                 raise BadRequest(f'the body is not valid JSON: {ex}') from ex
 
+        def body_object(self):
+            """The JSON body, which must be an object (an empty body is an empty object)."""
+            value = self.body_json()
+            if not isinstance(value, dict):
+                raise BadRequest('the body must be a JSON object')
+            return value
+
         @property
         def studio(self):
             return self.server.studio
@@ -160,11 +169,22 @@ def make_handler():
                 return self.fail(HTTPStatus.INTERNAL_SERVER_ERROR, redact(f'{type(ex).__name__}: {ex}', self.studio.config.api_key))
             finally:
                 try:
-                    unread = int(self.headers.get('Content-Length') or 0) > 0 and not self._body_read
+                    length = int(self.headers.get('Content-Length') or 0)
                 except ValueError:
-                    unread = True
-                if unread:
-                    self.close_connection = True                      # an answer was sent without reading the body: the connection cannot be reused
+                    length = -1
+                if (length > 0 and not self._body_read) or length < 0:
+                    # An answer went out without the body being read. A small body is read and dropped (closing with unread data
+                    # makes Windows reset the connection, which can wipe the answer the browser has not read yet); a large or
+                    # nonsensical one just ends the connection.
+                    if 0 < length <= DRAIN_LIMIT:
+                        try:
+                            self.connection.settimeout(5)
+                            self.rfile.read(length)
+                            self.connection.settimeout(None)
+                        except OSError:
+                            self.close_connection = True
+                    else:
+                        self.close_connection = True
 
         do_GET = lambda self: self.dispatch('GET')            # noqa: E731
         do_HEAD = lambda self: self.dispatch('HEAD')          # noqa: E731
@@ -173,7 +193,7 @@ def make_handler():
 
         # ------------------------------------------------ static site
         def static(self, path):
-            name = 'flow.html' if path in ('/', '') else clean_relative(path.lstrip('/'))
+            name = 'studio.html' if path in ('/', '') else clean_relative(path.lstrip('/'))
             if name is None:
                 return self.fail(HTTPStatus.NOT_FOUND, 'not found')
             target = (APP / name).resolve()
@@ -189,7 +209,7 @@ def make_handler():
                 return self.json(HTTPStatus.OK, {'studio': True, 'blender': engine.blender_path(), 'openai': config.public()})
             if path == '/api/config' and method == 'POST':
                 try:
-                    config.set_key(str(self.body_json().get('openai_api_key') or ''))
+                    config.set_key(str(self.body_object().get('openai_api_key') or ''))
                 except ValueError as ex:
                     raise BadRequest(str(ex)) from ex
                 return self.json(HTTPStatus.OK, {'openai': config.public()})
@@ -230,14 +250,18 @@ def make_handler():
 
         def post_action(self, job_id, action):
             jobs, config = self.studio.jobs, self.studio.config
-            options = self.body_json()
+            options = self.body_object()
             if action == 'open-blender':
                 return self.json(HTTPStatus.OK, steps.open_blender(jobs, job_id))
             if action in ('compile', 'preview', 'build', 'glb'):
                 steps.check_ready(jobs, job_id, [action])
                 jobs.start(job_id, steps.plan(jobs, job_id, [action], hd=bool(options.get('hd'))))
                 return self.json(HTTPStatus.ACCEPTED, {'started': [action]})
-            if action == 'read':
+            if action == 'run':
+                names = steps.run_names(options.get('steps'))
+                if 'scene' in names:
+                    self.check_openai(options)
+            elif action == 'read':
                 self.check_openai(options)
                 names = ['scene']
             elif action == 'auto':

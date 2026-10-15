@@ -144,7 +144,7 @@ class Jobs:
         for d in sorted(self.root.iterdir(), reverse=True):
             if JOB_ID.fullmatch(d.name) and (d / 'status.json').is_file():
                 s = self.status(d.name)
-                out.append({'id': s['id'], 'created': s['created'], 'image': s['image']['original_name'], 'spec': s['spec']['origin'],
+                out.append({'id': s['id'], 'created': s['created'], 'image': s['image']['original_name'], 'file': s['image']['name'], 'spec': s['spec']['origin'],
                             'states': {k: v['state'] for k, v in s['steps'].items()}})
         return out
 
@@ -254,6 +254,7 @@ class Jobs:
                     if uses_blender:
                         self.set_step(job_id, step, 'running', message='等待 Blender（一次只运行一个）')
                         with self.blender_lock:
+                            started = time.time()                          # the time Blender is used, not the time spent queueing for it
                             self.set_step(job_id, step, 'running', message='运行中')
                             result = fn()
                     else:

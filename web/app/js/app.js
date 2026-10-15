@@ -4,8 +4,8 @@
 // createEditor(root, options) starts it inside a page. The standalone page (index.html) starts it on <body>; the studio page
 // (studio.html, <body data-editor="embedded">) starts it itself and hands in its own hooks. One editor per page.
 //   options.standalone      the page is the editor: it sets the title and language, catches errors, takes dropped files
-//   options.job             standalone only: load /api/jobs/<job>/spec instead of the demo
-//   options.loadDemo        load the demo booth when there is no job (default true)
+//   options.loadDemo        load the demo booth at start (default true)
+//   options.lang            use this language for this page without saving it (the studio passes 'zh')
 //   options.hotkeyTargets   elements (or window) whose keydown drives the shortcuts (default: window)
 //   options.dropFiles       accept a dropped spec.json (default: standalone only)
 //   options.photoUrl(spec)  url of the source picture, drawn at the matched camera for before/after
@@ -14,7 +14,7 @@
 
 import { Viewport } from './viewport.js';
 import * as S from './spec.js';
-import { getLang, setLang, t } from './i18n.js';
+import { getLang, setLang, t, useLang } from './i18n.js';
 
 let root = document.body;
 let opts = {};
@@ -37,7 +37,7 @@ function h(tag, attrs = {}, ...kids) {
 }
 
 const state = {
-  spec: null, job: null, fileName: 'booth.spec.json', isDemo: false, selection: [], mode: 'translate', snap: true, partOnly: false,
+  spec: null, fileName: 'booth.spec.json', isDemo: false, selection: [], mode: 'translate', snap: true, partOnly: false,
   history: [], at: -1, dirty: false, issues: [], gizmo: null, filter: '', collapsed: new Set(), allCollapsed: true,
 };
 let viewport;
@@ -59,9 +59,7 @@ function updateToolbar() {
   $('btnMove').setAttribute('aria-pressed', String(state.mode === 'translate'));
   $('btnRotate').setAttribute('aria-pressed', String(state.mode === 'rotate'));
   $('btnMatch').setAttribute('aria-pressed', String(Boolean(viewport?.matching)));
-  $('btnWorkspace').hidden = !state.job;
-  $('linkFlow').hidden = !state.job;
-  $('fileName').textContent = `${state.job ? t('jobName', { job: state.job }) : state.isDemo ? t('demoName') : state.fileName}${state.dirty ? ' •' : ''}`;
+  $('fileName').textContent = `${state.isDemo ? t('demoName') : state.fileName}${state.dirty ? ' •' : ''}`;
 }
 
 function renderIssues() {
@@ -142,7 +140,6 @@ async function loadDemo() {
   try {
     const res = await fetch(DEMO_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    state.job = null;                                  // a demo is not the job's spec: stop offering to save it to the workspace
     loadSpec(await res.json(), 'demo-booth.spec.json', true);
     root.dataset.ready = 'true';
   } catch (e) {
@@ -151,43 +148,10 @@ async function loadDemo() {
   }
 }
 
-/** Workspace mode: the studio server hands the working spec of a job to the editor and takes the edited one back. */
-async function loadJob(job) {
-  try {
-    const res = await fetch(`/api/jobs/${encodeURIComponent(job)}/spec`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    loadSpec(await res.json(), `${job}.spec.json`, false);
-    root.dataset.ready = 'true';
-  } catch (e) {
-    say(t('jobFailed', { job, msg: e.message }), 'error');
-    root.dataset.ready = 'failed';
-  }
-}
-
-async function saveWorkspace() {
-  try {
-    const res = await fetch(`/api/jobs/${encodeURIComponent(state.job)}/spec?origin=edited`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.spec),
-    });
-    const body = await res.json();
-    if (!res.ok) {
-      const first = (body.errors || []).slice(0, 3).map((e) => `${e.code} ${e.path || e.where || ''} ${e.message || ''}`.trim()).join(' | ');
-      say(t('wsRefused', { msg: `${body.error || res.status}${first ? `：${first}` : ''}` }), 'error');
-      return;
-    }
-    state.dirty = false;
-    updateToolbar();
-    say(t('wsSaved'), 'ok');
-  } catch (e) {
-    say(t('wsRefused', { msg: e.message }), 'error');
-  }
-}
-
 async function openFile(file) {
   try {
     const spec = JSON.parse(await file.text());
     if (!spec || !Array.isArray(spec.components)) throw new Error('no components array');
-    state.job = null;                                  // an opened file is not the job's spec any more
     loadSpec(spec, file.name);
   } catch (e) {
     say(t('badFile', { msg: e.message }), 'error');
@@ -602,7 +566,7 @@ function applyLang() {
   }
   root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   $('btnLang').textContent = t('lang');
-  $('filter').placeholder = t('filter');
+  if (opts.standalone) $('filter').placeholder = t('filter');                // an embedding page words its own controls
   $('guideTitle').textContent = t('guideTitle');
   $('guideSub').textContent = t('subtitle');
   $('guideBody').replaceChildren(...t('guideBody').map(([head, body]) => h('li', {}, h('b', {}, head), body)));
@@ -636,8 +600,6 @@ function wire() {
   $('fileInput').addEventListener('change', (e) => { if (e.target.files[0]) openFile(e.target.files[0]); e.target.value = ''; });
   $('btnDemo').addEventListener('click', loadDemo);
   $('btnSave').addEventListener('click', saveSpec);
-  $('btnWorkspace').addEventListener('click', saveWorkspace);
-  $('linkFlow').addEventListener('click', () => { window.location.href = `/flow.html?job=${encodeURIComponent(state.job)}`; });
   $('btnGlb').addEventListener('click', exportGlb);
   $('btnUndo').addEventListener('click', undo);
   $('btnRedo').addEventListener('click', redo);
@@ -695,6 +657,7 @@ function setCompare(mode, split = 50) {
 export function createEditor(rootEl = document.body, options = {}) {
   root = rootEl;
   opts = options;
+  if (opts.lang) useLang(opts.lang);
   if (opts.standalone) {
     window.addEventListener('error', (e) => { root.dataset.error = e.message; say(e.message, 'error'); });
     window.addEventListener('unhandledrejection', (e) => { root.dataset.error = String(e.reason); say(String(e.reason), 'error'); });
@@ -707,18 +670,16 @@ export function createEditor(rootEl = document.body, options = {}) {
   });
   wire();
   applyLang();
-  state.job = opts.job || null;
-  if (state.job) loadJob(state.job);
-  else if (opts.loadDemo !== false) loadDemo();
+  if (opts.loadDemo !== false) loadDemo();
   return {
     state, viewport, S, select, edit, undo, redo, duplicateSelection, deleteSelection, toggleMatch,
     loadSpec: (spec, name = 'booth.spec.json') => loadSpec(spec, name, false),
-    setCompare, say,
+    setCompare, say, setRender: (url) => viewport.setRender(url),
     isDirty: () => state.dirty,
     markClean: () => { state.dirty = false; updateToolbar(); },
   };
 }
 
 if (document.body.dataset.editor !== 'embedded') {
-  window.boothEditor = createEditor(document.body, { standalone: true, job: new URLSearchParams(window.location.search).get('job') });
+  window.boothEditor = createEditor(document.body, { standalone: true });
 }
