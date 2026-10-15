@@ -3,10 +3,12 @@
     python web/server/run.py                       # opens the browser
     python web/server/run.py --port 8801 --no-browser --jobs-dir D:/somewhere
 
-OpenAI (optional, only for the automatic reading step): set OPENAI_API_KEY (or paste the key on the page; it is kept in memory
-only), and optionally OPENAI_MODEL, OPENAI_BASE_URL, OPENAI_API_STYLE (responses | chat for OpenAI-compatible services),
+Large-model reading (optional, only for the automatic reading step): set OPENAI_API_KEY (the key of whichever OpenAI-compatible
+service you use; or paste it on the page, where it is kept in memory only). Pick the service with --provider openai (default) or
+--provider deepseek, which presets base URL, model and request style; --openai-base-url / --openai-model / --openai-style
+(responses | chat | chat-json) or the environment variables OPENAI_BASE_URL, OPENAI_MODEL, OPENAI_API_STYLE override the preset.
 OPENAI_REASONING_EFFORT (reasoning models only) and OPENAI_MAX_OUTPUT_TOKENS (default 32000; lower it for a model or service
-whose output limit is smaller). Without a key every other step works.
+whose output limit is smaller) tune the request. Without a key every other step works.
 Jobs are written to output/studio/<job>/ (git-ignored). Blender is found through BLENDER_EXE, PATH or the default install path.
 """
 from __future__ import annotations
@@ -23,7 +25,19 @@ import engine  # noqa: E402
 from server import Config, create_server  # noqa: E402
 
 DEFAULT_JOBS = HERE.parents[1] / 'output' / 'studio'
-DEFAULT_MODEL = 'gpt-5.5'          # a current OpenAI model with image input; any model name your account has can be set
+STYLES = ('responses', 'chat', 'chat-json')
+PRESETS = {      # what to talk to; any model name your account has can be set instead
+    'openai': {'base_url': 'https://api.openai.com/v1', 'model': 'gpt-5.5', 'style': 'responses'},
+    'deepseek': {'base_url': 'https://api.deepseek.com', 'model': 'deepseek-flash', 'style': 'chat-json'},
+}
+
+
+def llm_settings(args, env):
+    """base URL, model and request style: an explicit flag, else the environment, else the provider's preset."""
+    preset = PRESETS[args.provider]
+    return {'base_url': args.openai_base_url or env.get('OPENAI_BASE_URL') or preset['base_url'],
+            'model': args.openai_model or env.get('OPENAI_MODEL') or preset['model'],
+            'style': args.openai_style or env.get('OPENAI_API_STYLE') or preset['style']}
 
 
 def main(argv=None):
@@ -32,17 +46,22 @@ def main(argv=None):
     p.add_argument('--jobs-dir', default=str(DEFAULT_JOBS))
     p.add_argument('--no-browser', action='store_true')
     p.add_argument('--verbose', action='store_true')
-    p.add_argument('--openai-base-url', default=os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1'))
-    p.add_argument('--openai-model', default=os.environ.get('OPENAI_MODEL', DEFAULT_MODEL))
-    p.add_argument('--openai-style', choices=('responses', 'chat'), default=os.environ.get('OPENAI_API_STYLE', 'responses'),
-                   help='responses = OpenAI Responses API; chat = Chat Completions (OpenAI-compatible services)')
+    p.add_argument('--provider', choices=sorted(PRESETS), default=os.environ.get('LLM_PROVIDER') or 'openai', help='preset for base URL, model and request style')
+    p.add_argument('--openai-base-url', default=None)
+    p.add_argument('--openai-model', default=None)
+    p.add_argument('--openai-style', choices=STYLES, default=None,
+                   help='responses = OpenAI Responses API; chat = Chat Completions with a strict schema; chat-json = Chat Completions with JSON mode only')
     p.add_argument('--openai-effort', default=os.environ.get('OPENAI_REASONING_EFFORT') or None, help='reasoning effort for reasoning models (omit for others)')
     p.add_argument('--openai-max-output-tokens', type=int, default=int(os.environ.get('OPENAI_MAX_OUTPUT_TOKENS') or 32000),
                    help='output token limit sent with each reading request (lower it when the model or service refuses 32000)')
     a = p.parse_args(argv)
+    llm = llm_settings(a, os.environ)
+    if llm['style'] not in STYLES:
+        print(f"OPENAI_API_STYLE must be one of {', '.join(STYLES)}", file=sys.stderr)
+        return 2
     key = os.environ.pop('OPENAI_API_KEY', None)          # only this process needs it: Blender and other children must not inherit it
     try:
-        config = Config(a.openai_base_url, a.openai_model, key, a.openai_style, a.openai_effort, a.openai_max_output_tokens)
+        config = Config(llm['base_url'], llm['model'], key, llm['style'], a.openai_effort, a.openai_max_output_tokens)
     except ValueError as ex:
         print(f'OPENAI_API_KEY: {ex}', file=sys.stderr)
         return 2
@@ -56,7 +75,8 @@ def main(argv=None):
     print(f'Studio at {url}   (Ctrl+C to stop)')
     print(f'  jobs:    {a.jobs_dir}')
     print(f"  blender: {engine.blender_path() or 'NOT FOUND (previews and builds will fail; GLB export still works)'}")
-    print(f"  openai:  {'key set' if config.api_key else 'no key (automatic reading is off)'}, model {config.model}, {config.style} API at {config.base_url}")
+    print(f"  reading: {'key set' if config.api_key else 'no key (automatic reading is off; paste one on the page)'}, provider {a.provider}, model {config.model}, "
+          f"{config.style} style at {config.base_url}")
     if not a.no_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:

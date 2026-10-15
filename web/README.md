@@ -35,11 +35,23 @@ requirements; Blender is found through `BLENDER_EXE`, `PATH` or the default inst
 | 6 Build | `.blend`, client render, GLB | Blender (GLB: none) |
 | 7 Open | opens the latest `.blend` in Blender; downloads for every file | Blender |
 
-**OpenAI (optional).** Set `OPENAI_API_KEY` before starting, or paste the key on the page (kept in the server's memory, never written
-to disk or to the job). The picture is sent only after the consent box is ticked for that job. `OPENAI_MODEL` (default `gpt-5.5`),
-`OPENAI_BASE_URL`, `OPENAI_API_STYLE` (`responses`, or `chat` for OpenAI-compatible services such as DeepSeek or a local vLLM) and
-`OPENAI_REASONING_EFFORT` configure it; there is no SDK, the call is plain HTTP in `server/reader_openai.py`. The reply is checked
-with the same validator the compiler uses and sent back for at most two repairs. Without a key every other step works.
+**Reading with a large model (optional).** Any OpenAI-compatible service works; there is no vendor SDK, the call is plain HTTP in
+`server/reader_openai.py`. The key goes in the environment variable `OPENAI_API_KEY` (whichever service it belongs to) before starting,
+or is pasted on the flow page (reading card, tab "大模型自动读图"), where it is kept in the server's memory and never written to disk or
+to a job. The picture is sent only after the consent box is ticked for that job.
+
+```
+python web/server/run.py                          # OpenAI: Responses API, model gpt-5.5, strict JSON schema
+python web/server/run.py --provider deepseek      # DeepSeek: https://api.deepseek.com, model deepseek-flash, JSON mode
+```
+
+A provider preset sets base URL, model and request style; `--openai-base-url`, `--openai-model`, `--openai-style` (or `OPENAI_BASE_URL`,
+`OPENAI_MODEL`, `OPENAI_API_STYLE`) override it. Styles: `responses` (OpenAI Responses API), `chat` (Chat Completions with a strict
+schema), `chat-json` (Chat Completions for services that only have JSON mode, as DeepSeek: the schema is written into the instructions
+and the local validator plus up to two repair turns enforce it). `OPENAI_REASONING_EFFORT` (e.g. `none` to switch thinking off where the
+service supports it) and `OPENAI_MAX_OUTPUT_TOKENS` tune the request. The reply is checked with the same validator the compiler uses.
+Every request and reply of a reading is kept in the job's `reader/` folder (pictures and the key are not). Without a key every other
+step works.
 
 **Limits and safeguards.** Pictures are PNG or JPEG up to 25 MB and 5 MP: Blender renders at the picture's size and a larger frame
 ran the denoiser out of memory. A picture with an EXIF rotation tag (common for phone photos) is refused, because the browser shows

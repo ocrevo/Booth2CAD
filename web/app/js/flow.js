@@ -45,7 +45,7 @@ async function refreshHealth() {
   if (!ui.health) { b.textContent = '没有连上本机服务'; b.className = 'chip off'; o.textContent = ''; return; }
   b.textContent = ui.health.blender ? 'Blender 可用' : '没找到 Blender（预览和生成不可用）';
   b.className = `chip ${ui.health.blender ? 'ok' : 'off'}`;
-  o.textContent = ui.health.openai.configured ? `OpenAI key 已配置（${ui.health.openai.model}）` : 'OpenAI 没有 key（自动读图不可用）';
+  o.textContent = ui.health.openai.configured ? `大模型 key 已配置（${ui.health.openai.model}）` : '大模型没有 key（自动读图不可用）';
   o.className = `chip ${ui.health.openai.configured ? 'ok' : 'off'}`;
 }
 
@@ -165,7 +165,7 @@ function listOf(title, items, render) {
 function cardImage() {
   if (!ui.job) {
     return card(1, '上传图片', null,
-      h('p', { class: 'hint' }, '选一张展台效果图（PNG 或 JPEG）。图片只保存在本机的任务目录里，除非你在第 2 步选择让 OpenAI 读图并勾选同意。'),
+      h('p', { class: 'hint' }, '选一张展台效果图（PNG 或 JPEG）。图片只保存在本机的任务目录里，除非你在第 2 步选择让大模型（OpenAI、DeepSeek 等）读图并勾选同意。'),
       h('div', { class: 'row' }, h('input', { type: 'file', id: 'imageInput', accept: 'image/png,image/jpeg', onChange: (e) => e.target.files[0] && uploadImage(e.target.files[0]) })),
       errorBlock(ui.notes.image), errorBlock(ui.notes.job ? { error: ui.notes.job } : null));
   }
@@ -176,7 +176,7 @@ function cardImage() {
 }
 
 function cardRead() {
-  const tabs = [['scene', '上传场景描述'], ['spec', '直接上传 spec'], ['openai', 'OpenAI 自动读图']];
+  const tabs = [['scene', '上传场景描述'], ['spec', '直接上传 spec'], ['openai', '大模型自动读图']];
   const o = ui.health?.openai;
   const free = !busy();
   let panel;
@@ -191,11 +191,11 @@ function cardRead() {
   } else {
     const ready = Boolean(o?.configured) && ui.consent && free;
     panel = h('div', { class: 'panel' },
-      h('p', { class: 'hint' }, o?.configured ? `已配置 key（来源：${o.key_source === 'env' ? '环境变量' : '页面，仅在服务内存里'}）；模型 ${o.model}；接口 ${o.base_url}` : '没有 key：设置环境变量 OPENAI_API_KEY 后重启服务，或在下面粘贴（只保存在服务进程的内存里，不写盘）。'),
+      h('p', { class: 'hint' }, o?.configured ? `已配置 key（来源：${o.key_source === 'env' ? '环境变量' : '页面，仅在服务内存里'}）；模型 ${o.model}；接口 ${o.base_url}` : '没有 key：设置环境变量 OPENAI_API_KEY（OpenAI 兼容服务的 key 都填这里，如 DeepSeek）后重启服务，或在下面粘贴（只保存在服务进程的内存里，不写盘）。'),
       h('div', { class: 'row' }, h('input', { type: 'password', id: 'keyInput', placeholder: 'sk-…', autocomplete: 'off', value: ui.key, onInput: (e) => { ui.key = e.target.value; } }),
         h('button', { id: 'btnSaveKey', onClick: saveKey }, '保存 key')),
       h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'consent', checked: ui.consent, onChange: (e) => { ui.consent = e.target.checked; render(); } }),
-        `我同意把这张图片发送给 ${o?.base_url || 'OpenAI'}（用于读出场景描述）`),
+        `我同意把这张图片发送给 ${o?.base_url || '所配置的大模型服务'}（用于读出场景描述）`),
       h('div', { class: 'row' },
         h('button', { id: 'btnRead', class: 'primary', disabled: !ready, onClick: () => act('read', 'read', { mode: 'openai', consent: true }) }, '读图'),
         h('button', { id: 'btnReadAuto', disabled: !ready || !ui.health?.blender, onClick: () => act('read', 'auto', { mode: 'openai', consent: true, hd: ui.hd }) }, '读图并一键跑完'),

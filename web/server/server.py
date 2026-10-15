@@ -255,9 +255,9 @@ def make_handler():
             if options.get('mode') != 'openai':
                 raise BadRequest('mode must be "openai"')
             if not self.studio.config.api_key:
-                raise BadRequest('没有配置 OpenAI key：设置环境变量 OPENAI_API_KEY，或在页面里粘贴 key')
+                raise BadRequest('没有配置大模型 API key：设置环境变量 OPENAI_API_KEY（OpenAI 兼容服务的 key 都填这里，如 DeepSeek），或在页面里粘贴 key')
             if options.get('consent') is not True:
-                raise BadRequest('需要先勾选“同意把这张图片发送给 OpenAI”')
+                raise BadRequest('需要先勾选“同意把这张图片发送给所配置的大模型服务”')
 
     return Handler
 

@@ -1,9 +1,11 @@
 """Automatic reading with OpenAI: one booth image -> a scene description (see references/scene-description.md).
 
-Standard library only (urllib). Two wire formats, chosen by Config.style:
+Standard library only (urllib). Three request styles, chosen by Config.style:
   responses  the OpenAI Responses API (POST {base_url}/responses; input_text / input_image parts; text.format json_schema) - the default
-  chat       Chat Completions (POST {base_url}/chat/completions; image_url parts; response_format json_schema) for the many
-             OpenAI-compatible services (DeepSeek, Qwen, vLLM, ...); the shapes are the long-standing Chat Completions ones
+  chat       Chat Completions (POST {base_url}/chat/completions; image_url parts; response_format json_schema; max_completion_tokens)
+             for services that accept a strict schema
+  chat-json  Chat Completions for services that only offer JSON mode (DeepSeek, many local servers): response_format json_object,
+             max_tokens, and the schema written into the instructions; the local validator and the repair turns do the enforcing
 Whatever comes back is checked locally with the same validate_scene the compiler uses; problems go back to the model for at most
 two repair turns. The key is only ever used as a bearer header; nothing written to the job folder contains it or the images.
 """
@@ -186,9 +188,18 @@ def _chat_messages(instructions, turns):
     return messages
 
 
+def _schema_block(schema):
+    return ('\n\n## Output format (JSON)\nReply with exactly one JSON object and nothing else (no code fence, no commentary). It must validate against '
+            'this JSON Schema; every key is required, write null where a field does not apply:\n' + json.dumps(schema, separators=(',', ':')) + '\n')
+
+
 def _call_chat(config, instructions, turns, schema, timeout):
-    body = {'model': config.model, 'messages': _chat_messages(instructions, turns), 'max_completion_tokens': config.max_output_tokens,
-            'response_format': {'type': 'json_schema', 'json_schema': {'name': SCHEMA_NAME, 'strict': True, 'schema': schema}}}
+    if config.style == 'chat-json':
+        body = {'model': config.model, 'messages': _chat_messages(instructions + _schema_block(schema), turns), 'max_tokens': config.max_output_tokens,
+                'response_format': {'type': 'json_object'}}
+    else:
+        body = {'model': config.model, 'messages': _chat_messages(instructions, turns), 'max_completion_tokens': config.max_output_tokens,
+                'response_format': {'type': 'json_schema', 'json_schema': {'name': SCHEMA_NAME, 'strict': True, 'schema': schema}}}
     if config.effort:
         body['reasoning_effort'] = config.effort
     data = _post(config, '/chat/completions', body, timeout)
@@ -228,7 +239,7 @@ def read_scene(image_path, config, work_dir, timeout=900):
     sent, original = images['sent'], images['original']
     schema = provider_schema()
     instructions = PROMPT.read_text(encoding='utf-8')
-    call = _call_chat if config.style == 'chat' else _call_responses
+    call = _call_chat if config.style in ('chat', 'chat-json') else _call_responses
     turns = [{'role': 'user', 'content': [
         {'type': 'input_text', 'text': _task_text(sent)},
         {'type': 'input_image', 'image_url': grid.data_url(images['plain']), 'detail': 'high'},

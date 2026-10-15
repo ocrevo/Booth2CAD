@@ -368,6 +368,28 @@ class EngineHygiene(unittest.TestCase):
 
 
 class Launcher(unittest.TestCase):
+    def settings(self, argv, env=None):
+        args = run.argparse.ArgumentParser()
+        for name in ('--provider', '--openai-base-url', '--openai-model', '--openai-style'):
+            args.add_argument(name, default=None)
+        parsed = args.parse_args(argv)
+        parsed.provider = parsed.provider or 'openai'
+        return run.llm_settings(parsed, env or {})
+
+    def test_providers_preset_the_url_model_and_style_and_anything_explicit_wins(self):
+        self.assertEqual(self.settings([]), {'base_url': 'https://api.openai.com/v1', 'model': 'gpt-5.5', 'style': 'responses'})
+        self.assertEqual(self.settings(['--provider', 'deepseek']), {'base_url': 'https://api.deepseek.com', 'model': 'deepseek-flash', 'style': 'chat-json'})
+        env = {'OPENAI_MODEL': 'deepseek-v4-pro'}
+        self.assertEqual(self.settings(['--provider', 'deepseek'], env)['model'], 'deepseek-v4-pro')                    # environment over preset
+        self.assertEqual(self.settings(['--provider', 'deepseek', '--openai-model', 'other'], env)['model'], 'other')    # flag over environment
+        self.assertEqual(self.settings(['--provider', 'deepseek'], {'OPENAI_API_STYLE': 'chat'})['style'], 'chat')
+
+    def test_an_unknown_style_in_the_environment_is_refused(self):
+        err = io.StringIO()
+        with tempfile.TemporaryDirectory() as t, mock.patch.dict(os.environ, {'OPENAI_API_STYLE': 'soap'}), contextlib.redirect_stderr(err):
+            self.assertEqual(run.main(['--no-browser', '--port', '0', '--jobs-dir', t]), 2)
+        self.assertIn('chat-json', err.getvalue())
+
     def test_a_broken_environment_key_stops_the_start_without_printing_it(self):
         err = io.StringIO()
         with tempfile.TemporaryDirectory() as t, mock.patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-bad\nkey'}), contextlib.redirect_stderr(err):

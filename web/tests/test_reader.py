@@ -136,7 +136,7 @@ class ReadScene(unittest.TestCase):
 
     # -- the request
     def user_parts(self, body):
-        if self.style == 'chat':
+        if self.style != 'responses':
             return body['messages'][1]['content']
         return body['input'][0]['content']
 
@@ -189,7 +189,7 @@ class ReadScene(unittest.TestCase):
         self.assertIn('back_wall', turns[2]['content'])
 
     def turns(self, body):
-        return body['messages'][1:] if self.style == 'chat' else body['input']
+        return body['messages'][1:] if self.style != 'responses' else body['input']
 
     def test_text_that_is_not_json_is_repaired_the_same_way(self):
         mock, config = self.run_with(['not_json', 'good'])
@@ -286,6 +286,30 @@ class ReadSceneChat(ReadScene):
         for part in body['messages'][1]['content'][1:]:
             self.assertEqual(part['type'], 'image_url')
             self.assertEqual(part['image_url']['detail'], 'high')
+
+
+class ReadSceneChatJson(ReadScene):
+    """Chat Completions for services that only have JSON mode (DeepSeek and the like): no json_schema, the schema goes into the instructions."""
+    style = 'chat-json'
+
+    def assert_style_fields(self, request):
+        body = request['body']
+        self.assertTrue(request['path'].endswith('/chat/completions'))
+        self.assertEqual([m['role'] for m in body['messages']], ['system', 'user'])
+        system = body['messages'][0]['content']
+        self.assertTrue(system.startswith('You read ONE exhibition-booth render'))
+        self.assertIn('## Output format (JSON)', system)
+        schema_text = system.split('JSON Schema; every key is required, write null where a field does not apply:\n', 1)[1].strip()
+        schema = json.loads(schema_text)                                                         # the whole schema, parseable, without the root $schema
+        self.assertEqual(schema, reader.provider_schema())
+        self.assertEqual(body['response_format'], {'type': 'json_object'})
+        self.assertEqual(body['max_tokens'], 32000)
+        self.assertNotIn('max_completion_tokens', body)
+        self.assertEqual(body['reasoning_effort'], 'low')
+        for part in body['messages'][1]['content'][1:]:
+            self.assertEqual(part['type'], 'image_url')
+            self.assertTrue(part['image_url']['url'].startswith('data:image/jpeg;base64,'))
+        self.assertTrue(all(m['role'] == 'user' or isinstance(m['content'], str) for m in body['messages']))      # images only in user messages
 
 
 class ThroughTheServer(unittest.TestCase):
