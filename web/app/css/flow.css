@@ -36,6 +36,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 details ul { margin: 4px 0 0; padding-left: 18px; font-size: 12px; }
 pre.log { margin: 4px 0 0; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; max-height: 220px; overflow: auto; font-size: 11px; white-space: pre-wrap; }
 .errors { color: var(--bad); font-size: 12px; }
+.okmsg { color: var(--ok, #1a7f37); font-size: 13px; font-weight: 600; }
 .errors code { font-family: var(--mono); }
 input[type="password"], input[type="text"] { padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); min-width: 240px; }
 .metric { font-family: var(--mono); font-size: 12px; }

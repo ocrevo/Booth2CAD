@@ -35,6 +35,8 @@ class MockOpenAI:
                 with mock.lock:
                     mock.requests.append({'path': self.path, 'headers': {k.lower(): v for k, v in self.headers.items()}, 'body': body})
                     behaviour = mock.script.pop(0) if len(mock.script) > 1 else mock.script[0]
+                    if 'reject' in (self.headers.get('Authorization') or ''):          # a key with "reject" in it is a key the service does not accept
+                        behaviour = 'http401'
                 if behaviour == 'hang':
                     time.sleep(3)
                 status, payload = mock.answer(self.path, behaviour)

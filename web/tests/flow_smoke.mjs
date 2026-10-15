@@ -341,6 +341,30 @@ async function main() {
   });
 
   // ------------------------------------------------------------ the OpenAI route (against the stand-in)
+  await step('a reading that fails is shown, and the same job can still take a ready-made spec', async () => {
+    const jobR = await newJob();
+    await click('tab-openai');
+    await ev(`(() => { const el = document.getElementById('keyInput'); el.value = 'sk-smoke-reject-0123456789'; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    await click('btnSaveKey');
+    await waitFor(() => text('#chipOpenai').then((t) => /key 已配置/.test(t)), 'the key chip');
+    await click('consent');
+    await click('btnRead');
+    await waitState('scene', 'error');
+    assert.match(await text('#card-scene .msg'), /key/);
+    await shot('09a_read_failed.png');
+    await click('tab-spec');
+    assert.equal(await ev("document.getElementById('specInput').disabled"), false);
+    const spec = await api(`/api/jobs/${jobA}/spec`);
+    const good = join(work, 'after-failure.spec.json');
+    writeFileSync(good, JSON.stringify(spec));
+    await upload('#specInput', good);
+    await waitState('scene', 'skipped');
+    await waitState('compile', 'skipped');
+    assert.match(await text('#readDone'), /已载入 after-failure\.spec\.json（\d+ 个构件）/);               // the file box is empty again, so the page must say it worked
+    await shot('09b_spec_after_failure.png');
+    assert.equal((await api(`/api/jobs/${jobR}`)).spec.origin, 'uploaded');
+  });
+
   await step('without a key the automatic reading is off; pasting a key and consent turn it on', async () => {
     const jobB = await newJob();
     assert.notEqual(jobB, jobA);
@@ -348,8 +372,8 @@ async function main() {
     assert.equal(await ev("document.getElementById('btnRead').disabled"), true);
     await ev(`(() => { const el = document.getElementById('keyInput'); el.value = '${KEY}'; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
     await click('btnSaveKey');
-    await waitFor(() => text('#chipOpenai').then((t) => /key 已配置/.test(t)), 'the key chip');
-    assert.equal(await ev("document.getElementById('keyInput').value"), '');          // the page does not keep the key
+    await waitFor(async () => (await ev("document.getElementById('keyInput')?.value")) === '', 'the key box to be cleared after saving');   // the page does not keep the key
+    assert.match(await text('#chipOpenai'), /key 已配置/);
     assert.equal(await ev("document.getElementById('btnRead').disabled"), true);       // no consent yet
     await click('consent');
     assert.equal(await ev("document.getElementById('btnRead').disabled"), false);
@@ -386,7 +410,7 @@ async function main() {
     await newJob();
     await click('tab-spec');
     await upload('#specInput', wrong);
-    await waitFor(() => text('#card-scene [role=alert]').then((t) => /sha256/.test(t)), 'the refusal');
+    await waitFor(() => text('#card-scene [role=alert]').then((t) => /没有载入 wrong\.spec\.json.*sha256/s.test(t)), 'the refusal that names the file');
     await upload('#specInput', good);
     await waitState('scene', 'skipped');
     await waitState('compile', 'skipped');
@@ -397,7 +421,7 @@ async function main() {
   });
 
   await step('no key or picture bytes were written into any job file', async () => {
-    const bad = files(jobsDir).filter((p) => /\.(json|txt|md|log)$/.test(p) && readFileSync(p, 'utf8').includes(KEY));
+    const bad = files(jobsDir).filter((p) => /\.(json|txt|md|log)$/.test(p) && ['sk-smoke-secret', 'sk-smoke-reject'].some((k) => readFileSync(p, 'utf8').includes(k)));
     assert.deepEqual(bad, []);
     const requests = files(jobsDir).filter((p) => p.endsWith('request.json'));
     assert.ok(requests.length >= 1);

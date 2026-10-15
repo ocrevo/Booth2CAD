@@ -18,7 +18,7 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 
-const ui = { job: null, current: null, offline: false, health: null, tab: 'scene', consent: false, key: '', hd: false, notes: {}, timer: null, last: '' };
+const ui = { job: null, current: null, offline: false, health: null, tab: 'scene', consent: false, key: '', hd: false, notes: {}, done: {}, timer: null, last: '' };
 const MAX_IMAGE_MB = 25;
 
 async function call(method, path, { json, raw, type } = {}) {
@@ -82,6 +82,7 @@ async function loadJob(id, { quiet = false } = {}) {
 function go(id) {
   ui.consent = false;                          // the consent is for one picture: ask again for the next job
   ui.notes = {};                               // errors belong to the job they happened in
+  ui.done = {};                                // and so do the confirmations
   ui.current = id || null;
   clearTimeout(ui.timer);                      // a poll scheduled for the job we are leaving must not bring it back
   const url = new URL(window.location.href);
@@ -96,6 +97,7 @@ const busy = () => !ui.job || Boolean(ui.job.busy) || Object.values(ui.job.steps
 
 async function act(card, path, body) {
   ui.notes[card] = null;
+  ui.done[card] = null;
   const res = await call('POST', `/api/jobs/${ui.job.id}/${path}`, { json: body || {} });
   if (!res.ok) ui.notes[card] = res.data || { error: `HTTP ${res.status}` };
   else if (card === 'open') ui.notes.opened = '已请求 Blender 打开这个文件（窗口出现可能要几秒）。';
@@ -112,10 +114,17 @@ async function uploadImage(file) {
 
 async function uploadJson(card, path, file) {
   ui.notes[card] = null;
+  ui.done[card] = null;
   let body;
   try { body = JSON.parse(await file.text()); } catch (e) { ui.notes[card] = { error: `${file.name} 不是有效的 JSON：${e.message}` }; render(); return; }
   const res = await call('PUT', `/api/jobs/${ui.job.id}/${path}`, { json: body });
-  if (!res.ok) ui.notes[card] = res.data;
+  if (!res.ok) {
+    ui.notes[card] = { ...(res.data || {}), error: `没有载入 ${file.name}：${res.data?.error || `HTTP ${res.status}`}` };
+  } else {
+    // the page redraws after an upload, so the file box is empty again: say plainly what was loaded
+    const skipped = path.startsWith('spec') ? '；读图和编译已跳过，可以直接预览或生成' : '';
+    ui.done[card] = `已载入 ${file.name}（${res.data.components} 个构件）${skipped}`;
+  }
   await loadJob(ui.job.id);
 }
 
@@ -204,7 +213,7 @@ function cardRead() {
   const scene = ui.job.steps.scene;
   return card(2, '读图（图片 → 场景描述）', 'scene',
     h('div', { class: 'tabs' }, tabs.map(([k, label]) => h('button', { 'aria-pressed': String(ui.tab === k), id: `tab-${k}`, onClick: () => { ui.tab = k; render(); } }, label))),
-    panel, errorBlock(ui.notes.read), scene.state === 'error' ? errorBlock({ errors: scene.detail?.errors, error: '' }) : null,
+    panel, ui.done.read ? h('p', { class: 'okmsg', id: 'readDone', role: 'status' }, `✓ ${ui.done.read}`) : null, errorBlock(ui.notes.read), scene.state === 'error' ? errorBlock({ errors: scene.detail?.errors, error: '' }) : null,
     ['done'].includes(scene.state) ? h('a', { class: 'plain', href: fileUrl('scene.json'), target: '_blank', rel: 'noopener' }, '查看 scene.json') : null);
 }
 
