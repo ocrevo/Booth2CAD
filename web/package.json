@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Web studio (local server, one window from picture to render) and standalone spec editor for booth-image-to-model. The deployable static site is app/; server/, tests/ and tools/ are not served.",
   "license": "Apache-2.0",
-  "repository": { "type": "git", "url": "https://github.com/ocrevo/Booth2CAD.git", "directory": "web" },
+  "repository": { "type": "git", "url": "https://github.com/ocrevo/booth-image-to-model.git", "directory": "web" },
   "engines": { "node": ">=22.15" },
   "scripts": {
     "start": "node tools/py.mjs server/run.py",

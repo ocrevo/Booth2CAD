@@ -5,7 +5,7 @@
 - 统一的 Blender 查找 `common.find_blender`：显式路径或 `BLENDER_EXE`，再到 `PATH`，再到各系统常见安装位置（Windows 取最新版本，macOS `/Applications/Blender.app`，Linux snap 和 /usr/bin），接受 macOS 的 `.app` 目录；显式路径无效时报告而不悄悄换成别的 Blender。`doctor`、`preview`、测试运行器和网页服务都用它。`doctor` 增加 jsonschema、trimesh 检查、Blender 版本提示（低于 4.0 警告）和 `next_steps`。
 - 新增 `boothctl.py build` 与 `boothctl.py verify`，包装原生 Blender 调用（`--` 之后的选项传给 blender_build.py），文档不再需要 PowerShell 的 `& $blenderExe`。Blender 子进程输出按 UTF-8 解码（错误替换），不会因非 ASCII 字符中断。
 - 回归示例改为合成数据：`examples/regression/`（由 `tests/make_regression_example.py` 生成，尺寸全部虚构），替换原先带客户品牌的示例；原来的客户回归说明改为通用的 `references/legacy-regression.md`，只保留通用教训；`release_status.json` 中旧案例的键改为 `legacy_case_end_to_end_visual_match`。测试中的相机拟合改用示例自身画幅。示例数值重新虚构，与任何客户案例无关。
-- 发布证据只记录相对仓库的路径（测试运行器和打包工具），不再写入本机绝对路径。`tools/package_skill.py --bundle <zip>` 生成只含运行时文件的 zip（不含测试、验证历史和示例，只附带参考文档指向的 `examples/regression/annotations.template.json`），用于发布页附件。`validation/history/`（以前版本的证据）不再纳入版本库和清单，只在本地保留并作为发布附件；旧的 2.2 时期验证记录移入本地 `validation/history/legacy`。`release_status.json` 去掉 `audit_evidence` 并更新说明文字。
+- 发布证据只记录相对仓库的路径（测试运行器和打包工具），不再写入本机绝对路径。`tools/package_skill.py --bundle <zip>` 生成只含运行时文件的 zip（不含测试、验证历史和示例，只附带参考文档指向的 `examples/regression/annotations.template.json`），用于发布页附件。`validation/history/`（以前版本的证据）不再纳入版本库和清单，只在维护者本地保留，不纳入版本库也不发布；旧的 2.2 时期验证记录移入本地 `validation/history/legacy`。`release_status.json` 去掉 `audit_evidence` 并更新说明文字。
 - `tests/run_tests.py` 的 Blender 探测也统一走 `find_blender`（接受 `Blender.app` 及末尾斜杠），证据中只记录脱敏后的路径。
 - 参考文档（重建 QA、场景描述、基准流程）的命令改为在工作目录运行 `python "<SKILL_DIR>/scripts/..."`，原生构建和重开改用 `boothctl.py build` / `boothctl.py verify`。skill 目录的 `NOTICE` 只保留本目录相关内容（three.js 属于仓库的 `web/`，不在本目录）。
 - 文档去掉客户案例名称；设计先验注明来源为一份未公开的工作室内部规范，只采用通用尺寸。

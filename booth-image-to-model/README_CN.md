@@ -22,14 +22,14 @@ agent 按 [`SKILL.md`](SKILL.md) 执行（英文）；本页给安装的人看�
 从克隆的仓库获取本目录（正式发布后，每个版本会附带一个只含运行时文件、不含测试和验证证据的 zip）：
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git
+git clone https://github.com/ocrevo/booth-image-to-model.git
 ```
 
 **Claude Code**：把目录复制（或软链接）到 skills 目录：所有项目通用放 `~/.claude/skills/`，单个项目放 `<项目>/.claude/skills/`。
 
 ```bash
 mkdir -p ~/.claude/skills                                   # 单个项目则用：mkdir -p .claude/skills
-cp -r Booth2CAD/booth-image-to-model ~/.claude/skills/
+cp -r booth-image-to-model/booth-image-to-model ~/.claude/skills/
 python3 -m venv .venv && . .venv/bin/activate              # Windows：py -3 -m venv .venv ; .venv\Scripts\activate
 python -m pip install -r ~/.claude/skills/booth-image-to-model/requirements.txt
 ```

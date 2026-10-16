@@ -12,7 +12,7 @@ How a release of the skill is checked and recorded. Contributors do not need thi
 | `release_status.json` | Version, release status, what was tested natively, open limits |
 | `FILE_MANIFEST.json` | SHA-256 of every tracked file of the skill, so a copy can be checked against a release |
 | `validation/` | The last regression's results and transcript, and the tested dependency versions |
-| `validation/history/` | Earlier evidence, archived by `package_skill.py`; git-ignored, kept locally and attached to the GitHub release |
+| `validation/history/` | Earlier evidence, archived by `package_skill.py`; git-ignored and kept by the maintainer; never published (older records hold machine paths) |
 
 These files are **written only by `tools/package_skill.py`** and never edited by hand. They describe the machine that ran the
 regression (Blender version, timings); they are not a statement that every machine behaves the same way, and they are not a visual
@@ -31,7 +31,7 @@ accuracy score for any picture.
 
    It must report zero failures and zero skips. `--require-native` blocks instead of skipping when Blender is missing.
 4. Record it: `python tools/package_skill.py --test-run output/_validation/<new-name>`. This checks that the run matches the current
-   sources, archives the previous evidence under `validation/history/` (git-ignored; attach it to the GitHub release) and rewrites
+   sources, archives the previous evidence under `validation/history/` (git-ignored; keep it, do not publish it) and rewrites
    `release_status.json`, `FILE_MANIFEST.json` and `validation/`. `--bundle dist/booth-image-to-model-<version>.zip` builds the
    runtime-only zip for the release page (no tests, validation or examples except `examples/regression/annotations.template.json`,
    which the references point to).

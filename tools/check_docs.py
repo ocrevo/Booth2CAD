@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL = 'booth-image-to-model'
 NAME = 'booth-image-to-model'
 LICENSE = 'Apache-2.0'
-REPO_URL = 'https://github.com/ocrevo/Booth2CAD/'
+REPO_URL = 'https://github.com/ocrevo/booth-image-to-model/'
 REPO_LINK = re.compile(re.escape(REPO_URL) + r'(?:blob|tree)/main/(.*)$')
 
 # Client names, personal paths and key-like strings. The pattern is split so this file does not match itself.

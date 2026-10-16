@@ -5,7 +5,7 @@
 /output/*
 !/output/.gitkeep
 
-# Earlier release evidence of the skill: kept locally by tools/package_skill.py, attached to releases, not tracked
+# Earlier release evidence of the skill: archived locally by tools/package_skill.py; not tracked and not published
 /booth-image-to-model/validation/history/
 
 # The demo picture is made locally until free-to-use sample pictures are chosen (docs/sample-images.md)

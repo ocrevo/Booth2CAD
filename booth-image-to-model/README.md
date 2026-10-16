@@ -23,7 +23,7 @@ Without Blender the skill still produces the observations, the spec, a GLB and c
 Get the folder from a clone of the repository (once releases are published, a runtime-only zip without tests and evidence will be attached to each):
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git
+git clone https://github.com/ocrevo/booth-image-to-model.git
 ```
 
 **Claude Code**: copy (or symlink) the folder into a skills directory: `~/.claude/skills/` for all your projects, or
@@ -31,7 +31,7 @@ git clone https://github.com/ocrevo/Booth2CAD.git
 
 ```bash
 mkdir -p ~/.claude/skills                                   # one project instead: mkdir -p .claude/skills
-cp -r Booth2CAD/booth-image-to-model ~/.claude/skills/
+cp -r booth-image-to-model/booth-image-to-model ~/.claude/skills/
 python3 -m venv .venv && . .venv/bin/activate              # Windows: py -3 -m venv .venv ; .venv\Scripts\activate
 python -m pip install -r ~/.claude/skills/booth-image-to-model/requirements.txt
 ```

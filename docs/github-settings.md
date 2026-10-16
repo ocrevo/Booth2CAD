@@ -20,6 +20,6 @@ The first sentence is the project's canonical definition; `tools/check_docs.py` 
 
 **Actions:** allow GitHub Actions so `.github/workflows/ci.yml` runs on pushes and pull requests.
 
-**After renaming the repository to `booth-image-to-model`:** update the URLs in `README.md`, `README.zh-CN.md`, `llms.txt`,
-`CITATION.cff`, `CONTRIBUTING.md`, `web/package.json`, both skill READMEs and `.github/ISSUE_TEMPLATE/config.yml` (GitHub redirects the
-old URL, but the canonical name should match).
+**Repository name:** `booth-image-to-model` (renamed from `Booth2CAD`; GitHub redirects the old URL). The URLs in `README.md`,
+`README.zh-CN.md`, `llms.txt`, `CITATION.cff`, `CONTRIBUTING.md`, `web/package.json`, both skill READMEs and
+`.github/ISSUE_TEMPLATE/config.yml` use the new name; `tools/check_docs.py` checks the `llms.txt` links against it.

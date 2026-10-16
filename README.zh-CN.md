@@ -32,11 +32,11 @@ skill 使用，也可以在本机网页工作台里使用。**
 ### A. 在 agent 里使用 skill
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git
+git clone https://github.com/ocrevo/booth-image-to-model.git
 python3 -m venv .venv && . .venv/bin/activate              # Windows：py -3 -m venv .venv ; .venv\Scripts\activate
-python -m pip install -r Booth2CAD/booth-image-to-model/requirements.txt
+python -m pip install -r booth-image-to-model/booth-image-to-model/requirements.txt
 mkdir -p ~/.claude/skills
-cp -r Booth2CAD/booth-image-to-model ~/.claude/skills/          # Claude Code；其他 agent 让它读 SKILL.md
+cp -r booth-image-to-model/booth-image-to-model ~/.claude/skills/          # Claude Code；其他 agent 让它读 SKILL.md
 python ~/.claude/skills/booth-image-to-model/scripts/boothctl.py doctor   # 列出依赖包和找到的 Blender
 ```
 
@@ -45,7 +45,7 @@ python ~/.claude/skills/booth-image-to-model/scripts/boothctl.py doctor   # 列�
 ### B. 运行网页工作台
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git && cd Booth2CAD
+git clone https://github.com/ocrevo/booth-image-to-model.git && cd booth-image-to-model
 python3 -m venv .venv && . .venv/bin/activate              # Windows：py -3 -m venv .venv ; .venv\Scripts\activate
 python -m pip install -r booth-image-to-model/requirements.txt
 python web/server/run.py                                  # 打开 http://127.0.0.1:8800/
@@ -121,5 +121,5 @@ spec（[booth-spec-v2 schema](booth-image-to-model/schemas/booth-spec-v2.schema.
 
 ## 项目
 
-GitHub 仓库目前仍叫 `Booth2CAD`，计划改名为 `booth-image-to-model`（旧地址会自动跳转）。当前版本 2.8.0-rc1。欢迎按 [Apache License 2.0](LICENSE)
+仓库已从 `Booth2CAD` 改名为 `booth-image-to-model`，旧链接会自动跳转。当前版本 2.8.0-rc1。欢迎按 [Apache License 2.0](LICENSE)
 贡献；请先读 [CONTRIBUTING.md](CONTRIBUTING.md)，不要附带客户图片。引用本项目请用 [CITATION.cff](CITATION.cff)。

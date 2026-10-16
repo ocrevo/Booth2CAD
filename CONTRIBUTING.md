@@ -14,7 +14,7 @@ Coding agents: read [AGENTS.md](AGENTS.md) as well.
 | Chrome, Chromium or Edge, optional | the browser smoke tests |
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git booth-image-to-model
+git clone https://github.com/ocrevo/booth-image-to-model.git booth-image-to-model
 cd booth-image-to-model
 python3 -m venv .venv && . .venv/bin/activate          # Windows: py -3 -m venv .venv ; .venv\Scripts\activate
 python -m pip install -r booth-image-to-model/requirements.txt

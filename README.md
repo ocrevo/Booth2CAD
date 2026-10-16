@@ -34,11 +34,11 @@ and clean client renders — as an AI-agent skill or a local web studio.**
 ### A. Use the skill in your agent
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git
+git clone https://github.com/ocrevo/booth-image-to-model.git
 python3 -m venv .venv && . .venv/bin/activate              # Windows: py -3 -m venv .venv ; .venv\Scripts\activate
-python -m pip install -r Booth2CAD/booth-image-to-model/requirements.txt
+python -m pip install -r booth-image-to-model/booth-image-to-model/requirements.txt
 mkdir -p ~/.claude/skills
-cp -r Booth2CAD/booth-image-to-model ~/.claude/skills/          # Claude Code; other agents: point them at SKILL.md
+cp -r booth-image-to-model/booth-image-to-model ~/.claude/skills/          # Claude Code; other agents: point them at SKILL.md
 python ~/.claude/skills/booth-image-to-model/scripts/boothctl.py doctor   # lists packages and the Blender it found
 ```
 
@@ -48,7 +48,7 @@ packages. Then, in the folder with your picture, ask your agent: *"Turn input/bo
 ### B. Run the web studio
 
 ```bash
-git clone https://github.com/ocrevo/Booth2CAD.git && cd Booth2CAD
+git clone https://github.com/ocrevo/booth-image-to-model.git && cd booth-image-to-model
 python3 -m venv .venv && . .venv/bin/activate              # Windows: py -3 -m venv .venv ; .venv\Scripts\activate
 python -m pip install -r booth-image-to-model/requirements.txt
 python web/server/run.py                                  # opens http://127.0.0.1:8800/
@@ -132,6 +132,6 @@ other agent at its `SKILL.md`.
 
 ## Project
 
-The GitHub repository is still named `Booth2CAD`; a rename to `booth-image-to-model` is planned (the old URL will redirect).
+The repository was renamed from `Booth2CAD` to `booth-image-to-model`; old links redirect.
 Version 2.8.0-rc1. Contributions are welcome under the [Apache License 2.0](LICENSE); please read [CONTRIBUTING.md](CONTRIBUTING.md)
 first and never attach client pictures. To cite the project, use [CITATION.cff](CITATION.cff).

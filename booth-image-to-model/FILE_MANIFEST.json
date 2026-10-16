@@ -2,8 +2,8 @@
   "files": [
     {
       "path": "CHANGELOG.md",
-      "bytes": 20126,
-      "sha256": "63e4555676a62bbbdb1e1373e6e09495ac1cbf79c43acb3d3cdabae131f52532"
+      "bytes": 20147,
+      "sha256": "090ade62d8f308147cd77678273b8e7f0be8f365dc421f5ebc6e4b6f18929400"
     },
     {
       "path": "LICENSE",
@@ -17,13 +17,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 4060,
-      "sha256": "fafcd5a1a790527565d9267087f4d3d2a0f3c26d9e428253e0c269e3a94f244a"
+      "bytes": 4082,
+      "sha256": "0d0b7e40785e9af1cd39cb3040b10a2a26d8190a8abb404281b6dc361d0ccef3"
     },
     {
       "path": "README_CN.md",
-      "bytes": 3925,
-      "sha256": "76d77a772d0a99064bbe4f8e1876e22693ac4a84ebb5d09586fa31467c5ad9f3"
+      "bytes": 3947,
+      "sha256": "551ae271cc696c04b3e4aaf3ed56144336e108e007ef047a328aa06146be9200"
     },
     {
       "path": "SKILL.md",
@@ -117,8 +117,8 @@
     },
     {
       "path": "release_status.json",
-      "bytes": 4564,
-      "sha256": "91ec41e914216704e8058eb88f8658776b6c825c7c58b60a3075e49525453de1"
+      "bytes": 4577,
+      "sha256": "911303317312ffb383c6a5af8c8a05a1b9a07d8a461798c74183f9ee8a88be34"
     },
     {
       "path": "requirements.txt",

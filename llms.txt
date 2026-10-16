@@ -9,27 +9,27 @@ Key facts:
 - Not a CAD tool: dimensions are estimates from one picture and every assumption is recorded.
 - Requirements: Python 3.10+ with numpy, Pillow, SciPy, jsonschema and trimesh; Blender 4.0+ (5.2.2 tested) for `.blend` files and renders.
 - Privacy: the skill makes no network calls; the studio sends a picture only to the configured model service and only after per-picture consent; the API key stays in memory.
-- License: Apache-2.0. Repository: https://github.com/ocrevo/Booth2CAD (to be renamed booth-image-to-model).
+- License: Apache-2.0. Repository: https://github.com/ocrevo/booth-image-to-model (formerly Booth2CAD).
 
 ## Docs
 
-- [README](https://github.com/ocrevo/Booth2CAD/blob/main/README.md): what it is, the two ways in, requirements, FAQ
-- [README (简体中文)](https://github.com/ocrevo/Booth2CAD/blob/main/README.zh-CN.md): Chinese version
-- [Skill README](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/README.md): installing the skill in an agent
-- [SKILL.md](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/SKILL.md): the step-by-step route the agent follows
-- [Web studio and editor](https://github.com/ocrevo/Booth2CAD/blob/main/web/README.md): running the studio, configuring a model (OpenAI, DeepSeek, any OpenAI-compatible service), the standalone editor
-- [Security](https://github.com/ocrevo/Booth2CAD/blob/main/SECURITY.md): threat model of the local studio, keys and pictures
+- [README](https://github.com/ocrevo/booth-image-to-model/blob/main/README.md): what it is, the two ways in, requirements, FAQ
+- [README (简体中文)](https://github.com/ocrevo/booth-image-to-model/blob/main/README.zh-CN.md): Chinese version
+- [Skill README](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/README.md): installing the skill in an agent
+- [SKILL.md](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/SKILL.md): the step-by-step route the agent follows
+- [Web studio and editor](https://github.com/ocrevo/booth-image-to-model/blob/main/web/README.md): running the studio, configuring a model (OpenAI, DeepSeek, any OpenAI-compatible service), the standalone editor
+- [Security](https://github.com/ocrevo/booth-image-to-model/blob/main/SECURITY.md): threat model of the local studio, keys and pictures
 
 ## Formats
 
-- [Spec schema (booth-spec-v2)](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/schemas/booth-spec-v2.schema.json): the parametric model
-- [Scene description schema](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/schemas/scene-description.v1.json): what is read from the picture, in pixels and plain numbers
-- [Data contract](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/references/data-contract.md) (Chinese): coordinates, parameters and states
-- [Scene description guide](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/references/scene-description.md) (Chinese)
+- [Spec schema (booth-spec-v2)](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/schemas/booth-spec-v2.schema.json): the parametric model
+- [Scene description schema](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/schemas/scene-description.v1.json): what is read from the picture, in pixels and plain numbers
+- [Data contract](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/references/data-contract.md) (Chinese): coordinates, parameters and states
+- [Scene description guide](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/references/scene-description.md) (Chinese)
 
 ## Optional
 
-- [Changelog](https://github.com/ocrevo/Booth2CAD/blob/main/booth-image-to-model/CHANGELOG.md) (Chinese)
-- [Contributing](https://github.com/ocrevo/Booth2CAD/blob/main/CONTRIBUTING.md)
-- [Third-party notices](https://github.com/ocrevo/Booth2CAD/blob/main/THIRD_PARTY_NOTICES.md)
-- [Citation](https://github.com/ocrevo/Booth2CAD/blob/main/CITATION.cff)
+- [Changelog](https://github.com/ocrevo/booth-image-to-model/blob/main/booth-image-to-model/CHANGELOG.md) (Chinese)
+- [Contributing](https://github.com/ocrevo/booth-image-to-model/blob/main/CONTRIBUTING.md)
+- [Third-party notices](https://github.com/ocrevo/booth-image-to-model/blob/main/THIRD_PARTY_NOTICES.md)
+- [Citation](https://github.com/ocrevo/booth-image-to-model/blob/main/CITATION.cff)

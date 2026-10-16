@@ -130,7 +130,7 @@ def validate_run(skill, test_run):
 
 def ignored(path):
     """Files that are not part of the published skill: the manifest itself, caches, and earlier evidence (validation/history is kept
-    locally and attached to releases, never tracked)."""
+    locally by the maintainer, never tracked or published)."""
     return (path == Path('FILE_MANIFEST.json') or '__pycache__' in path.parts or path.suffix.lower() == '.pyc'
             or path.parts[:2] == ('validation', 'history'))
 
@@ -139,8 +139,8 @@ def ignored(path):
 RENAMED_KEYS = {'cl' 'eer_end_to_end_visual_match': 'legacy_case_end_to_end_visual_match'}  # split: the old key named a client
 DROPPED_KEYS = ('local_skill_source_read', 'audit_evidence')   # audit_evidence pointed at a moved 2.2-era record
 # Text fields that described an earlier layout; every packaging run rewrites them to the current, neutral wording.
-RELEASE_TEXT = {'baseline': 'Source-bound native regression of the current sources; earlier audits and evidence are kept with the '
-                            'releases (validation/history/, not tracked).',
+RELEASE_TEXT = {'baseline': 'Source-bound native regression of the current sources; earlier audits and evidence are kept by the '
+                            'maintainer (validation/history/, not tracked or published).',
                 'source_assets_and_derived_scenes': 'Not committed; input/ and output/ are git-ignored.'}
 ITERATION_TEXT = {'artifact_location': 'Local git-ignored output/; original pictures in input/.'}
 LAYOUT = {'input': 'original pictures (git-ignored, in the working folder)', 'output': 'per-job snapshots, scenes, renders and evidence (git-ignored)'}
