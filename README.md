@@ -9,10 +9,7 @@ and clean client renders — as an AI-agent skill or a local web studio.**
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![Blender 4.0+](https://img.shields.io/badge/blender-4.0%2B-orange.svg)
 
-![The web studio with its demo booth: on the left a synthetic picture rendered from the demo model, on the right the same editable 3D model at that camera](docs/images/studio-demo.png)
-
-*The studio's demo booth: the synthetic picture (left of the line) is rendered from the demo model at its own camera, so the editable model
-(right) lines up exactly. With a real picture the camera and sizes are an estimated fit.*
+<!-- Screenshots come back once representative, free-to-use sample pictures are chosen: docs/sample-images.md -->
 
 ## What it does
 

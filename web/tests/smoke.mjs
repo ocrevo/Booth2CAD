@@ -268,9 +268,11 @@ print(json.dumps({'meshes': len(s.geometry), 'groups': sorted(n for n in nodes i
     const json = await ev(`JSON.stringify(${E}.state.spec, null, 2)`);
     const dir = join(work, 'spec');
     mkdirSync(dir);
-    copyFileSync(join(webDir, 'app', 'demo', 'demo_source.png'), join(dir, 'demo_source.png'));
+    const picture = join(webDir, 'app', 'demo', 'demo_source.png');      // only when made locally; see docs/sample-images.md
+    if (existsSync(picture)) copyFileSync(picture, join(dir, 'demo_source.png'));
     writeFileSync(join(dir, 'edited.spec.json'), json);
-    const run = spawnSync(PYTHON, [join(repo, 'booth-image-to-model', 'scripts', 'validate_spec.py'), '--spec', join(dir, 'edited.spec.json'), '--check-source'], { encoding: 'utf8' });
+    const check = existsSync(picture) ? ['--check-source'] : [];
+    const run = spawnSync(PYTHON, [join(repo, 'booth-image-to-model', 'scripts', 'validate_spec.py'), '--spec', join(dir, 'edited.spec.json'), ...check], { encoding: 'utf8' });
     assert.equal(run.status, 0, run.stdout + run.stderr);
     assert.equal(JSON.parse(run.stdout).valid, true);
     await shot('04_after_edits.png');

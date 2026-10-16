@@ -7,8 +7,6 @@ The web side of [booth-image-to-model](../README.md). Two pages, one folder:
 - **The standalone editor** (`index.html`, no server): opens a `spec.json`, lets you move, turn, recolour, resize and
   duplicate parts, and exports GLB. Everything stays in your browser; nothing is uploaded. Chinese and English UI.
 
-![The studio comparing a synthetic booth picture (left) with the live 3D model at the same camera (right)](../docs/images/studio-demo.png)
-
 ## Run the studio
 
 Requirements: Python 3.10+, the engine's Python packages, a current browser. Optional: Blender 4.x+ (5.2.2 tested) for renders and
@@ -23,8 +21,9 @@ python web/server/run.py                             # opens http://127.0.0.1:88
 
 `run.py` names any missing package and stops. It prints where it found Blender (or that it did not), and whether a key is set.
 
-**Try it without a key:** on the empty stage click **试用示例展台** ("try the demo booth"). It loads a synthetic booth picture and its
-model, so you can adjust, compare and render at once.
+**Try it without a key:** on the empty stage click **试用示例展台** ("try the demo booth"). It loads a synthetic booth model, so you can
+adjust, compare and render at once. The repository has no sample picture yet ([docs/sample-images.md](../docs/sample-images.md)): the
+demo shows its model on a plain stand-in picture, or on `app/demo/demo_source.png` if you made one with `tools/make_demo.py --render`.
 
 **With your own picture:** drop it on the stage (PNG or JPEG, ≤ 25 MB, ≤ 5 MP, no EXIF rotation). Then either:
 - tick the consent box and click **生成模型** (needs a key, see below), or
@@ -98,8 +97,6 @@ The presets follow each provider's published API. In this repository they are te
 python web/tools/serve.py          # http://127.0.0.1:8000/ ; opening index.html from disk does not work (ES modules)
 ```
 
-![The standalone editor with the synthetic demo booth: part list, 3D view, move and rotate tools](../docs/images/editor-demo.png)
-
 It loads the synthetic demo booth; "打开 spec / Open spec" opens your own. Edited parts are marked `inferred` with the note "Edited in
 the web editor", and the camera is marked `unfitted`. Check the result with `validate_spec.py --check-source` before rebuilding.
 
@@ -132,7 +129,7 @@ npm run test:server   # every studio step through the real HTTP API; the reader 
 npm run smoke         # headless browser drives the standalone editor
 npm run smoke:studio  # headless browser drives the studio end to end (Blender steps when Blender is found)
 python tests/make_geometry_reference.py   # after changing geometry.py
-python tools/make_demo.py [--render]      # after changing the macros; --render re-renders the demo picture with Blender
+python tools/make_demo.py [--render]      # after changing the macros; --render renders a local demo picture with Blender (git-ignored)
 ```
 
 ## Third-party

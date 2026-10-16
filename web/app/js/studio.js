@@ -189,13 +189,35 @@ async function uploadImage(file) {
   go(res.data.id);
 }
 
-/** The synthetic demo booth (web/app/demo): its picture and its model, so the whole studio can be tried without a key. */
+/** The demo picture: demo/demo_source.png when it exists locally (web/tools/make_demo.py --render; no sample picture is in the
+ *  repository yet, see docs/sample-images.md), otherwise a plain stand-in at the demo camera's frame size. */
+async function demoPicture(source) {
+  if (ui.health?.demo_picture) {                       // the server says whether it exists, so a missing file is never requested
+    const res = await fetch('demo/demo_source.png');
+    if (res.ok) return { name: 'demo_source.png', bytes: await res.arrayBuffer() };
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = source.width;
+  canvas.height = source.height;
+  const g = canvas.getContext('2d');
+  g.fillStyle = '#d6dade';
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = '#5a6068';
+  g.font = '20px sans-serif';
+  g.fillText(M.demoPicture, 24, 40);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  return { name: 'demo_placeholder.png', bytes: await blob.arrayBuffer() };
+}
+
+/** The synthetic demo booth (web/app/demo): its model on its picture, so the whole studio can be tried without a key. */
 async function tryDemo() {
   ui.notes.card = null;
   try {
-    const picture = await fetch('demo/demo_source.png');
     const spec = await (await fetch('demo/demo-booth.spec.json')).json();
-    const job = await call('POST', '/api/jobs?name=demo_source.png', { raw: await picture.arrayBuffer(), type: 'image/png' });
+    const picture = await demoPicture(spec.source);
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', picture.bytes));
+    spec.source = { ...spec.source, image: picture.name, sha256: Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('') };
+    const job = await call('POST', `/api/jobs?name=${picture.name}`, { raw: picture.bytes, type: 'image/png' });
     if (!job.ok) throw new Error(job.data?.error || `HTTP ${job.status}`);
     const put = await call('PUT', `/api/jobs/${job.data.id}/spec?origin=uploaded`, { json: spec });
     if (!put.ok) throw new Error(put.data?.error || `HTTP ${put.status}`);

@@ -106,6 +106,7 @@ class FlowSteps(StudioCase):
                                        'base_url': 'http://127.0.0.1:9/v1', 'style': 'responses'})
         self.assertNotIn('api_key', json.dumps(h))
         self.assertEqual(h['python_missing'], [])                     # every package the engine needs is importable here
+        self.assertEqual(h['demo_picture'], (REPO / 'web' / 'app' / 'demo' / 'demo_source.png').is_file())   # docs/sample-images.md
 
     def test_upload_checks_the_image(self):
         for raw, why in ((b'', 'empty'), (b'not an image', 'text'), (png_bytes((32, 32)), 'tiny')):

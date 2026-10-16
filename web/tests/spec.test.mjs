@@ -2,10 +2,11 @@ import { fileURLToPath } from 'node:url';
 import { PYTHON } from './python.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, mkdtempSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { transformPoint, meshFor } from '../app/js/geometry.js';
 import * as S from '../app/js/spec.js';
 
@@ -171,7 +172,16 @@ test('an edited spec still validates in Python and exports to GLB', () => {
   everything((s) => { S.remove(s, S.groupMembers(s, 'spot')); });
   const dir = mkdtempSync(join(tmpdir(), 'booth-web-'));
   try {
-    copyFileSync(new URL('demo_source.png', DEMO), join(dir, 'demo_source.png'));
+    // The demo picture exists only when made locally (docs/sample-images.md); otherwise a plain stand-in of the same size, as the studio does.
+    const picture = new URL('demo_source.png', DEMO);
+    const local = join(dir, 'demo_source.png');
+    if (existsSync(picture)) copyFileSync(picture, local);
+    else {
+      const made = spawnSync(PYTHON, ['-c', 'import sys; from PIL import Image; Image.new("RGB", (int(sys.argv[2]), int(sys.argv[3])), (214, 218, 222)).save(sys.argv[1])',
+        local, String(spec.source.width), String(spec.source.height)], { encoding: 'utf8' });
+      assert.equal(made.status, 0, made.stderr);
+      spec.source.sha256 = createHash('sha256').update(readFileSync(local)).digest('hex');
+    }
     const file = join(dir, 'edited.spec.json');
     writeFileSync(file, `${JSON.stringify(spec, null, 2)}\n`);
     const scripts = new URL('../../booth-image-to-model/scripts/', import.meta.url);

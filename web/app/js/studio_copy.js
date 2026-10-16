@@ -12,7 +12,8 @@ export const COPY = {
     emptyTitle: '先选一张展台效果图',
     emptyBody: '选好图后，大模型会看图，搭出一个可以修改的三维模型。',
     tryDemo: '试用示例展台（合成数据，不需要 key）',
-    tryDemoHint: '载入一张合成的展台图和它的模型，可以直接调整、对照和出图。',
+    tryDemoHint: '载入一个合成的示例展台，可以直接调整、对照和出图。示例图片之后会换成可自由使用的真实展台照片。',
+    demoPicture: '示例展台（合成数据）：示例图片待补充',
     imageInfo: '{w} × {h} 像素',
 
     consent: '同意把这张图发送给已配置的大模型服务（{model}）',

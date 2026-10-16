@@ -207,6 +207,7 @@ def make_handler():
             jobs, config = studio.jobs, studio.config
             if path == '/api/health' and method == 'GET':
                 return self.json(HTTPStatus.OK, {'studio': True, 'blender': engine.blender_path(), 'python_missing': engine.missing_packages(),
+                                                 'demo_picture': (APP / 'demo' / 'demo_source.png').is_file(),  # see docs/sample-images.md
                                                  'openai': config.public()})
             if path == '/api/config' and method == 'POST':
                 try:
