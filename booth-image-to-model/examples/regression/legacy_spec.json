@@ -1,0 +1,49 @@
+{
+  "project": "synthetic legacy booth (pre-v2 format)",
+  "units": "m",
+  "source": "synthetic picture; invented dimensions",
+  "scope": {
+    "include": [
+      "platform",
+      "upper rounded fascia",
+      "portal",
+      "rear wall",
+      "round counter"
+    ],
+    "exclude": [
+      "hall ceiling",
+      "hall lighting",
+      "neighbouring stands"
+    ]
+  },
+  "assumptions": {
+    "footprint": [
+      8.0,
+      5.0
+    ],
+    "platform_thickness": 0.08,
+    "maximum_height": 3.6
+  },
+  "dimensions": {
+    "platform": {
+      "size": [
+        8.0,
+        5.0,
+        0.08
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.04
+      ]
+    },
+    "upper_ring": {
+      "size": [
+        7.0,
+        4.0,
+        0.6
+      ],
+      "corner_radius_visual": 1.0
+    }
+  }
+}

@@ -125,7 +125,7 @@ class ProfileGeometryTests(unittest.TestCase):
             with self.subTest(params=params),self.assertRaises(ValueError):mesh('arc_panel',params)
 
     def test_schema_validator_and_unused_parameter_agree(self):
-        spec=read_json(ROOT/'examples/legacy-case/candidate_spec.json')
+        spec=read_json(ROOT/'examples/regression/candidate_spec.json')
         for kind,params in (('profile_extrusion',PROFILE),('arc_panel',ARC)):
             c=copy.deepcopy(spec['components'][0]);c.update(id='generic_'+kind,kind=kind,
                     role='panel',params=copy.deepcopy(params))
@@ -172,7 +172,7 @@ class NativeProfileGeometryTests(unittest.TestCase):
         run_root=Path(os.environ.get('BOOTH_TEST_RUN_ROOT',repository/'output/_validation'))
         path=run_root/'component_validation'/('native_'+str(time.time_ns()))
         path.mkdir(parents=True)
-        spec=read_json(ROOT/'examples/legacy-case/candidate_spec.json')
+        spec=read_json(ROOT/'examples/regression/candidate_spec.json')
         source=path/'synthetic_source.png';Image.new('RGB',(120,80),'white').save(source)
         spec['source'].update(image=str(source),sha256=file_sha(source),width=120,height=80)
         for kind,params in (('profile_extrusion',PROFILE),('arc_panel',ARC)):

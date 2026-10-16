@@ -23,7 +23,7 @@ from boothctl import patch_component,delivery_gate,doctor
 from camera_fit import project,fit
 
 
-def sample():return read_json(ROOT/'examples/legacy-case/candidate_spec.json')
+def sample():return read_json(ROOT/'examples/regression/candidate_spec.json')
 def component(ident):return next(c for c in sample()['components'] if c['id']==ident)
 def errors(s):return {e['code'] for e in validate(s)['errors']}
 
@@ -36,8 +36,8 @@ class GeometryTests(unittest.TestCase):
         self.assertTrue(m.is_watertight);self.assertTrue(m.is_winding_consistent)
         self.assertEqual(m.euler_number,0);self.assertEqual(len(m.split(only_watertight=False)),1);self.assertGreater(m.volume,0)
     def test_ring_dimensions_are_driven(self):
-        c=component('top_ring');c['params']['outer_size']=[6.2,4.7]
-        np.testing.assert_allclose(self.mesh(c).extents,[6.2,4.7,.75],atol=1e-7)
+        c=component('top_ring');c['params']['outer_size']=[7.6,4.8]
+        np.testing.assert_allclose(self.mesh(c).extents,[7.6,4.8,.6],atol=1e-7)
     def test_ring_radius_changes_actual_vertices(self):
         c=component('top_ring');before=mesh_for(c)[0];c['params']['outer_radius']=.8
         self.assertNotEqual(before,mesh_for(c)[0])
@@ -45,10 +45,10 @@ class GeometryTests(unittest.TestCase):
         c=component('top_ring');c['params']['outer_radius']=99
         with self.assertRaises(ValueError):mesh_for(c)
     def test_ring_closed_opening_fails(self):
-        c=component('top_ring');c['params']['inner_size']=[6,5]
+        c=component('top_ring');c['params']['inner_size']=[7.5,4.5]
         with self.assertRaises(ValueError):mesh_for(c)
     def test_ring_inner_corner_intersection_fails(self):
-        c=component('top_ring');c['params']['outer_radius']=2.0;c['params']['inner_size']=[5.44,4.64]
+        c=component('top_ring');c['params']['outer_radius']=1.8;c['params']['inner_size']=[6.5,3.5]   # each alone is valid
         with self.assertRaises(ValueError):mesh_for(c)
     def test_portal_continuous_watertight(self):
         m=self.mesh(component('main_portal'))
@@ -74,11 +74,11 @@ class GeometryTests(unittest.TestCase):
 
 class SpecTests(unittest.TestCase):
     def test_candidate_is_valid_but_not_finished(self):
-        r=validate(sample(),ROOT/'examples/legacy-case');self.assertTrue(r['valid']);self.assertTrue(r['warnings'])
+        r=validate(sample(),ROOT/'examples/regression');self.assertTrue(r['valid']);self.assertTrue(r['warnings'])
     def test_formal_schema_accepts_candidate(self):
         jsonschema.Draft202012Validator(read_json(ROOT/'schemas/booth-spec-v2.schema.json')).validate(sample())
     def test_real_legacy_spec_is_rejected(self):
-        self.assertIn('SCHEMA_VERSION',errors(read_json(ROOT/'examples/legacy-case/legacy_spec.json')))
+        self.assertIn('SCHEMA_VERSION',errors(read_json(ROOT/'examples/regression/legacy_spec.json')))
     def test_venue_cannot_be_included(self):
         s=sample();s['scope']['decisions'][0]['owner']='venue'
         self.assertIn('NON_BOOTH_INCLUDED',errors(s));self.assertIn('SCOPE_BLOCKED',errors(s))
@@ -91,20 +91,20 @@ class SpecTests(unittest.TestCase):
     def test_unused_visual_radius_parameter_rejected(self):
         s=sample();s['components'][1]['params']['corner_radius_visual']=.3;self.assertIn('UNUSED_PARAMETER',errors(s))
     def test_wrong_primitive_for_critical_ring(self):
-        s=sample();s['components'][1]['kind']='box';s['components'][1]['params']={'size':[5,4,.7]}
+        s=sample();s['components'][1]['kind']='box';s['components'][1]['params']={'size':[7,4.0,.6]}
         self.assertIn('WRONG_PRIMITIVE',errors(s))
     def test_duplicate_component_rejected(self):
         s=sample();s['components'].append(copy.deepcopy(s['components'][0]));self.assertIn('DUPLICATE_COMPONENT',errors(s))
     def test_bad_observation_roi_rejected(self):
         s=sample();s['components'][0]['evidence']['roi_xyxy_norm']=[0,0,2,1];self.assertIn('OBSERVATION_ROI',errors(s))
     def test_footprint_metadata_must_match_geometry(self):
-        s=sample();s['scale']['footprint_m']=[8,6];self.assertIn('FOOTPRINT_MISMATCH',errors(s))
+        s=sample();s['scale']['footprint_m']=[9,6];self.assertIn('FOOTPRINT_MISMATCH',errors(s))
     def test_unknown_camera_field_is_not_silently_ignored(self):
         s=sample();s['camera']['imaginary_focal_length']=25;self.assertIn('UNKNOWN_CAMERA_FIELD',errors(s))
     def test_nonfinite_rejected(self):
         s=sample();s['components'][0]['location'][0]=float('nan');self.assertIn('TRANSFORM',errors(s))
     def test_source_bytes_must_match(self):
-        s=sample();s['source']['sha256']='0'*64;self.assertFalse(validate(s,ROOT/'examples/legacy-case')['valid'])
+        s=sample();s['source']['sha256']='0'*64;self.assertFalse(validate(s,ROOT/'examples/regression')['valid'])
     def test_patch_cannot_change_ownership(self):
         with self.assertRaises(ValueError):patch_component(sample(),'top_ring','owner','venue')
     def test_patch_cannot_create_unused_field(self):
@@ -130,11 +130,11 @@ class CompareTests(unittest.TestCase):
     def test_empty_reference_blocks(self):
         with self.assertRaises(ValueError):compare_masks(np.zeros((20,20),bool),np.zeros((20,20),bool))
     def test_real_legacy_canvas_cannot_be_silently_compared(self):
-        a=Image.open(ROOT/'examples/legacy-case/reference.png');b=Image.open(ROOT/'examples/legacy-case/legacy_proxy.png')
+        a=Image.open(ROOT/'examples/regression/reference.png');b=Image.open(ROOT/'examples/regression/legacy_proxy.png')
         with self.assertRaisesRegex(ValueError,'IMAGE_SHAPE_MISMATCH'):
             compare_masks(np.ones((a.height,a.width),bool),np.ones((b.height,b.width),bool))
     def test_rgb_photo_is_not_auto_thresholded(self):
-        with self.assertRaises(ValueError):load_mask(ROOT/'examples/legacy-case/reference.png')
+        with self.assertRaises(ValueError):load_mask(ROOT/'examples/regression/reference.png')
     def test_unknown_region_can_be_excluded(self):
         ref=np.zeros((40,40),bool);ref[5:20,5:20]=True;can=ref.copy();can[25:35,25:35]=True
         valid=np.ones_like(ref);valid[20:,:]=False
@@ -146,10 +146,10 @@ class CompareTests(unittest.TestCase):
         s=sample();cid='booth_carpet';c=s['components'][0]
         local=np.asarray([[-2,-2,0],[2,-2,0],[2,2,0],[-2,2,0],[-2,-2,3],[2,-2,3],[2,2,3],[-2,2,3],[0,1,1.5],[1,0,2]])
         world=local+np.asarray(c['location']);true=copy.deepcopy(s['camera'])
-        uv,depth=project(world,true,495,394)
+        uv,depth=project(world,true,s['source']['width'],s['source']['height'])
         self.assertTrue((depth>0).all());self.assertTrue(((uv>=0)&(uv<=1)).all())
         s['landmarks']=[{'id':f'a{i}','component_id':cid,'local_xyz':xyz.tolist(),'uv':uv[i].tolist(),'visibility':'visible','fit':i<8} for i,xyz in enumerate(local)]
-        s['camera']['position']=[6.8,-9.1,2.55];s['camera']['lens_mm']=38
+        s['camera']['position']=[-6.6,-8.4,2.1];s['camera']['lens_mm']=30
         result=fit(s);self.assertLess(result['metrics']['median_diag'],1e-5);self.assertEqual(result['metrics']['held_out_count'],2)
     def test_camera_fit_refuses_unannotated_photo(self):
         with self.assertRaisesRegex(ValueError,'anchors'):fit(sample())
@@ -177,7 +177,7 @@ class NativeBlenderTests(unittest.TestCase):
     def test_build_reopen_native_file(self):
         with tempfile.TemporaryDirectory() as d:
             binary=shutil.which('blender');base=[binary,'--background','--factory-startup','--disable-autoexec','--python-exit-code','1']
-            spec=str(ROOT/'examples/legacy-case/candidate_spec.json')
+            spec=str(ROOT/'examples/regression/candidate_spec.json')
             subprocess.run(base+['--python',str(ROOT/'scripts/blender_build.py'),'--','--spec',spec,'--out',d],check=True,timeout=180,capture_output=True)
             subprocess.run(base+['--python',str(ROOT/'scripts/blender_verify.py'),'--','--spec',spec,'--blend',str(Path(d)/'booth.blend'),'--report',str(Path(d)/'native_verification.json')],check=True,timeout=180,capture_output=True)
             self.assertTrue(read_json(Path(d)/'native_verification.json')['geometry_verified'])

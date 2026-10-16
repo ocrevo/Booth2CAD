@@ -82,6 +82,7 @@ def current_regression_inputs_hash(skill):
 
 
 def validate_run(skill, test_run):
+    test_run = Path(test_run).resolve()
     summary, summary_bytes = read_object(test_run / 'test_results.json')
     if summary.get('discovery_pattern') != 'test_*.py':
         raise ValueError('Only a complete test_*.py discovery run can be packaged')
@@ -128,7 +129,21 @@ def validate_run(skill, test_run):
 
 
 def ignored(path):
-    return path == Path('FILE_MANIFEST.json') or '__pycache__' in path.parts or path.suffix.lower() == '.pyc'
+    """Files that are not part of the published skill: the manifest itself, caches, and earlier evidence (validation/history is kept
+    locally and attached to releases, never tracked)."""
+    return (path == Path('FILE_MANIFEST.json') or '__pycache__' in path.parts or path.suffix.lower() == '.pyc'
+            or path.parts[:2] == ('validation', 'history'))
+
+
+# Keys of release_status.json that were renamed; the old record is migrated, never edited by hand.
+RENAMED_KEYS = {'cl' 'eer_end_to_end_visual_match': 'legacy_case_end_to_end_visual_match'}  # split: the old key named a client
+DROPPED_KEYS = ('local_skill_source_read', 'audit_evidence')   # audit_evidence pointed at a moved 2.2-era record
+# Text fields that described an earlier layout; every packaging run rewrites them to the current, neutral wording.
+RELEASE_TEXT = {'baseline': 'Source-bound native regression of the current sources; earlier audits and evidence are kept with the '
+                            'releases (validation/history/, not tracked).',
+                'source_assets_and_derived_scenes': 'Not committed; input/ and output/ are git-ignored.'}
+ITERATION_TEXT = {'artifact_location': 'Local git-ignored output/; original pictures in input/.'}
+LAYOUT = {'input': 'original pictures (git-ignored, in the working folder)', 'output': 'per-job snapshots, scenes, renders and evidence (git-ignored)'}
 
 
 def atomic_write(path, data):
@@ -180,9 +195,22 @@ def package(skill, test_run, explicit_version=None):
             else:
                 planned[relative] = data
                 archived.append(relative.as_posix())
-    provenance = {'source_test_run': str(test_run), 'summary': 'validation/test_results.json',
+    try:
+        shown_run = test_run.relative_to(skill.parent).as_posix()           # never a machine's absolute path in public evidence
+    except ValueError:
+        shown_run = '<outside-repository>/' + test_run.name
+    provenance = {'source_test_run': shown_run, 'summary': 'validation/test_results.json',
                   'summary_sha256': sha(summary_bytes), 'transcript': 'validation/test_transcript.txt',
                   'transcript_sha256': sha(transcript_bytes)}
+    for before, after in RENAMED_KEYS.items():
+        if before in release:
+            release[after] = release.pop(before)
+    for key in DROPPED_KEYS:
+        release.pop(key, None)
+        iteration.pop(key, None)
+    release.update(RELEASE_TEXT)
+    iteration.update(ITERATION_TEXT)
+    release['project_layout'] = dict(LAYOUT)
     release.update(skill_name=metadata_name(skill), version=version, builder_sha256=builder, regression_inputs_sha256=inputs_hash, python_tests=summary,
                    test_run_evidence=provenance)
     release['native_blender_integration'] = 'passed_' + blender_version.lower().replace(' ', '_')
@@ -202,7 +230,7 @@ def package(skill, test_run, explicit_version=None):
             if not path.resolve().is_relative_to(skill):
                 raise ValueError('Package file points outside the skill directory: ' + str(relative))
             inventory[relative] = path.read_bytes()
-    inventory.update(planned)
+    inventory.update({relative: data for relative, data in planned.items() if not ignored(relative)})
     manifest['files'] = [{'path': path.as_posix(), 'bytes': len(data), 'sha256': sha(data)}
                          for path, data in sorted(inventory.items(), key=lambda item: item[0].as_posix())]
     planned[Path('FILE_MANIFEST.json')] = json_bytes(manifest)
@@ -224,8 +252,39 @@ def package(skill, test_run, explicit_version=None):
             atomic_write(path, data)
     return {'version': version, 'tests_run': summary['tests_run'], 'builder_sha256': builder,
             'regression_inputs_sha256': inputs_hash,
-            'skill': str(skill), 'archived': archived, 'manifest_files': len(manifest['files']),
+            'skill': skill.name, 'archived': archived, 'manifest_files': len(manifest['files']),
             'note': 'Real native regression evidence only; no new client-image fidelity or engineering certification.'}
+
+
+RUNTIME = ('SKILL.md', 'README.md', 'README_CN.md', 'CHANGELOG.md', 'LICENSE', 'NOTICE', 'requirements.txt', 'release_status.json',
+           'scripts', 'schemas', 'references', 'templates',
+           'examples/regression/annotations.template.json')         # the references point agents to this template
+
+
+def bundle(skill, out):
+    """A runtime-only zip of the skill (what an agent needs: no tests or validation history, and of the examples only the annotation
+    template), for installing elsewhere."""
+    import zipfile
+    skill, out = Path(skill).resolve(), Path(out).resolve()
+    name = metadata_name(skill)
+    files = []
+    for entry in RUNTIME:
+        path = skill / entry
+        if path.is_file():
+            files.append(path)
+        elif path.is_dir():
+            files += [p for p in sorted(path.rglob('*')) if p.is_file() and not ignored(p.relative_to(skill))]
+    missing = [e for e in ('SKILL.md', 'LICENSE', 'requirements.txt', 'scripts', 'schemas') if not (skill / e).exists()]
+    if missing:
+        raise ValueError('The skill folder lacks ' + ', '.join(missing))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for path in files:
+            info = zipfile.ZipInfo((Path(name) / path.relative_to(skill)).as_posix(), date_time=(2020, 1, 1, 0, 0, 0))   # reproducible
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            zf.writestr(info, path.read_bytes())
+    return {'bundle': out.name, 'version': metadata_version(skill), 'files': len(files), 'bytes': out.stat().st_size}
 
 
 def main(argv=None):
@@ -234,11 +293,16 @@ def main(argv=None):
             stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--skill', type=Path, default=Path(__file__).resolve().parents[1] / 'booth-image-to-model')
-    parser.add_argument('--test-run', type=Path, required=True, help='Actual completed runner result directory')
+    parser.add_argument('--test-run', type=Path, help='Actual completed runner result directory (records release evidence)')
     parser.add_argument('--version', help='Release version; defaults to SKILL.md metadata.version')
+    parser.add_argument('--bundle', type=Path, help='Write a runtime-only zip of the skill (no tests, validation or example cases) to this path')
     args = parser.parse_args(argv)
+    if not args.test_run and not args.bundle:
+        parser.error('give --test-run (record release evidence) and/or --bundle (write a runtime zip)')
     try:
-        result = package(args.skill, args.test_run, args.version)
+        result = package(args.skill, args.test_run, args.version) if args.test_run else {}
+        if args.bundle:
+            result['bundle'] = bundle(args.skill, args.bundle)
     except (OSError, ValueError, KeyError, ImportError) as ex:
         print('Packaging rejected: ' + str(ex), file=sys.stderr)
         return 2

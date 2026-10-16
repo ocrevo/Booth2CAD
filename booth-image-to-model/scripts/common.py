@@ -121,6 +121,48 @@ def hd_scale_for(width, height, requested, max_megapixels=5.0):
     return 1
 
 
+def _blender_version_key(path):
+    import re
+    return [int(n) for n in re.findall(r'\d+', Path(path).parent.name)] or [0]
+
+
+def blender_candidates():
+    """Where Blender usually is on this operating system, newest first where several versions sit side by side."""
+    import glob
+    import sys
+    if sys.platform == 'win32':
+        found = []
+        for base in (os.environ.get('ProgramFiles') or 'C:/Program Files', os.environ.get('ProgramFiles(x86)')):
+            if base:
+                found += glob.glob(os.path.join(base, 'Blender Foundation', 'Blender*', 'blender.exe'))
+        return sorted(found, key=_blender_version_key, reverse=True)
+    if sys.platform == 'darwin':
+        return ['/Applications/Blender.app/Contents/MacOS/Blender', os.path.expanduser('~/Applications/Blender.app/Contents/MacOS/Blender')]
+    return ['/snap/bin/blender', '/usr/bin/blender', '/usr/local/bin/blender', '/opt/blender/blender']
+
+
+def find_blender(explicit=None):
+    """The Blender executable: an explicit path (argument, else BLENDER_EXE), then PATH, then the usual install places.
+    An explicit path that does not exist gives None rather than silently another Blender. A macOS .app folder is accepted."""
+    import shutil
+
+    def usable(candidate):
+        folder = candidate.rstrip(os.sep + (os.altsep or '')) or candidate     # '/Applications/Blender.app/' is the same folder
+        if folder.endswith('.app') and os.path.isdir(folder):
+            candidate = os.path.join(folder, 'Contents', 'MacOS', 'Blender')
+        if os.path.isfile(candidate):
+            return os.path.abspath(candidate)
+        found = shutil.which(candidate)
+        return os.path.abspath(found) if found else None
+    chosen = explicit or os.environ.get('BLENDER_EXE')
+    if chosen:
+        return usable(chosen)
+    for candidate in [shutil.which('blender'), *blender_candidates()]:
+        if candidate and usable(candidate):
+            return usable(candidate)
+    return None
+
+
 def code_hash():
     root=Path(__file__).resolve().parent
     return digest({p.name:file_sha(p) for p in sorted(root.glob('*.py'))})

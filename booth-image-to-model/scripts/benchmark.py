@@ -114,14 +114,14 @@ def report(manifest_path,output):
                         +'</div><p>'+' · '.join(links)+'</p><ul>'+notes+'</ul><p class="status">'+html.escape(case.get('status','review_required'))+'</p></section>')
         records.append({'id':case['id'],'assets':assets,'status':case.get('status','review_required')})
     doc='''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Booth2CAD 渲染对比</title><style>
+<title>booth-image-to-model 渲染对比</title><style>
 body{font:15px/1.6 system-ui,sans-serif;background:#edf0f3;color:#202b36;margin:0;padding:28px;max-width:1800px;margin:auto}
 h1{font-size:26px}h2{font-size:20px}section{background:white;padding:22px;border-radius:12px;margin:24px 0}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}figure{margin:0;min-width:0;background:#e7e9eb;border-radius:8px;overflow:hidden}
 figcaption,small{display:block;padding:8px 12px}figcaption{font-weight:600;background:#f5f6f7}img{width:100%;height:350px;object-fit:contain;display:block}
 a{color:#145f9b}button{font:inherit;padding:7px 12px;border:1px solid #b2bdc8;border-radius:6px;cursor:pointer}.dark figure{background:#22272d}
 .status{font-size:13px;color:#52606e}@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:550px){.grid{grid-template-columns:1fr}}
-</style><h1>Booth2CAD：原图、Skill基线、Skill优化、AI大模型</h1>
+</style><h1>booth-image-to-model：原图、Skill基线、Skill优化、AI大模型</h1>
 <p>点击图片查看原尺寸。缩略图只用于视觉比较；不同尺寸/构图的AI图不能直接计算像素相似度。原图是唯一几何证据。</p>
 <button onclick="document.body.classList.toggle('dark')">切换深色 / 浅色底，检查透明边缘</button>
 '''+''.join(sections)+'</html>'

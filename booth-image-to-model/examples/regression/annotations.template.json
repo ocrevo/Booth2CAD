@@ -1,0 +1,27 @@
+{
+  "source_sha256": "a3dc079fb19d839f660c9b9d07197dd63e2ed393da5f0cd536295bb1587f0b21",
+  "review_status": "pending",
+  "reviewer": null,
+  "silhouette": {
+    "mask": "masks/booth_visible.png",
+    "valid_mask": "masks/valid.png"
+  },
+  "parts": {
+    "top_ring": {
+      "mask": "masks/top_ring_visible.png",
+      "valid_mask": "masks/valid.png"
+    },
+    "main_portal": {
+      "mask": "masks/main_portal_visible.png",
+      "valid_mask": "masks/valid.png"
+    },
+    "rear_wall": {
+      "mask": "masks/rear_wall_visible.png",
+      "valid_mask": "masks/valid.png"
+    },
+    "round_display": {
+      "mask": "masks/round_display_visible.png",
+      "valid_mask": "masks/valid.png"
+    }
+  }
+}

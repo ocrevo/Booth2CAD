@@ -1,3 +1,16 @@
+# 2.8.0-rc1 — 2026-10-16
+
+- 开源准备：许可证改为 Apache-2.0（本目录附 `LICENSE`、`NOTICE`）。`SKILL.md` 改为英文，frontmatter 增加顶层 `license`、`compatibility` 和中英双语 description（含触发词），只保留运行时说明；维护和发布流程移到仓库的 `docs/maintainers.md`。新增英文 `README.md`（安装到 Claude Code、Codex、Cursor 或其他 agent，检查安装，环境变量），`README_CN.md` 同步改写。
+- 可在任何位置使用：所有命令写成 `python "<SKILL_DIR>/scripts/..."`，在 bash 和 PowerShell 下相同；`input/`、`output/` 放在用户的工作目录。`templates/build_spec_template.py` 找不到 skill 时给出 `BOOTH_SKILL` 提示，不再抛 StopIteration。
+- 统一的 Blender 查找 `common.find_blender`：显式路径或 `BLENDER_EXE`，再到 `PATH`，再到各系统常见安装位置（Windows 取最新版本，macOS `/Applications/Blender.app`，Linux snap 和 /usr/bin），接受 macOS 的 `.app` 目录；显式路径无效时报告而不悄悄换成别的 Blender。`doctor`、`preview`、测试运行器和网页服务都用它。`doctor` 增加 jsonschema、trimesh 检查、Blender 版本提示（低于 4.0 警告）和 `next_steps`。
+- 新增 `boothctl.py build` 与 `boothctl.py verify`，包装原生 Blender 调用（`--` 之后的选项传给 blender_build.py），文档不再需要 PowerShell 的 `& $blenderExe`。Blender 子进程输出按 UTF-8 解码（错误替换），不会因非 ASCII 字符中断。
+- 回归示例改为合成数据：`examples/regression/`（由 `tests/make_regression_example.py` 生成，尺寸全部虚构），替换原先带客户品牌的示例；原来的客户回归说明改为通用的 `references/legacy-regression.md`，只保留通用教训；`release_status.json` 中旧案例的键改为 `legacy_case_end_to_end_visual_match`。测试中的相机拟合改用示例自身画幅。示例数值重新虚构，与任何客户案例无关。
+- 发布证据只记录相对仓库的路径（测试运行器和打包工具），不再写入本机绝对路径。`tools/package_skill.py --bundle <zip>` 生成只含运行时文件的 zip（不含测试、验证历史和示例，只附带参考文档指向的 `examples/regression/annotations.template.json`），用于发布页附件。`validation/history/`（以前版本的证据）不再纳入版本库和清单，只在本地保留并作为发布附件；旧的 2.2 时期验证记录移入本地 `validation/history/legacy`。`release_status.json` 去掉 `audit_evidence` 并更新说明文字。
+- `tests/run_tests.py` 的 Blender 探测也统一走 `find_blender`（接受 `Blender.app` 及末尾斜杠），证据中只记录脱敏后的路径。
+- 参考文档（重建 QA、场景描述、基准流程）的命令改为在工作目录运行 `python "<SKILL_DIR>/scripts/..."`，原生构建和重开改用 `boothctl.py build` / `boothctl.py verify`。skill 目录的 `NOTICE` 只保留本目录相关内容（three.js 属于仓库的 `web/`，不在本目录）。
+- 文档去掉客户案例名称；设计先验注明来源为一份未公开的工作室内部规范，只采用通用尺寸。
+- 测试：新增 `tests/test_blender_lookup.py`（查找顺序、显式路径、`.app`、各系统候选、doctor 的下一步、build/verify 参数传递）。
+
 # 2.7.0-rc1 — 2026-10-15
 
 - 新增场景描述契约 `schemas/scene-description.v1.json`：图上读到的东西（尺寸标注、角点、构件落点像素、颜色、证据）写成纯数字 JSON。所有键必填、可空用 null，只用 `$schema/title/description/type/enum/properties/required/items/additionalProperties` 这几个各家结构化输出都支持的关键字（测试强制白名单），方便任何看图模型或人填写。
@@ -6,7 +19,7 @@
 - 一轮独立对抗性审查（三个视角，每条发现由另一个 agent 复现）发现并已修复：带关键不确定项的场景会崩溃（KeyError）；box/cylinder 几何被拒绝时整个编译中断；高度未知时抛 KeyError；`size_m` 太短时 IndexError；整数字段接受 2.5 之类；旋转盒子按外接圆钳位被误移数米；共面修复会缩小地面使 spec 失效；louvre 排不下、斜排、单片偏心、超出展台；电视和 LED 墙只修剪位置却照常超出墙边；浅展台的默认屋顶框被丢弃；先验值未记录；丢弃的构件仍留下假设记录；`--fit` 与场景不一致时被静默采用；重新编译时 SameFileError 和旧文件残留；地面角点地标按 W/2 取值而不看记号；两个入口失败输出通道不一致、I/O 错误是栈回溯；jsonschema 被写成仅测试依赖。
 - 测试：`tests/test_draft_compile.py`（22 项，含 1 项原生预览）和 `tests/test_draft_compile_rules.py`（34 项，每项对应一个审查发现，另含四个展台边的 wall/wall_panel/tv 位置与朝向、schema 白名单和 schema/处理器/文档一致性）。对编译器副本做了 23 种故障注入的变异检查（翻转各边内向符号、去掉去重、跳过共面修复、忽略证据、允许移动地面、取消回滚等）：22 种首轮即被测试发现，剩下的“编译途中先写文件”补了一条晚期失败测试后也被发现。
 - 新增 `references/scene-description.md`，SKILL.md 快速路线第 4 步增加这条路径，兼容性说明加入 jsonschema（GLB 导出需 trimesh）。
-- 用橙色测试图实测（只在 output/）：同一份读数写成场景描述后编译，99 个构件、校验通过、无警告，与手写 spec 逐件对比位置中位差 0.4 mm、最大尺寸差 4 mm，分组一致；原生预览角点中位误差 2.14 px。
+- 用一张本地客户图实测（只在 output/）：同一份读数写成场景描述后编译，99 个构件、校验通过、无警告，与手写 spec 逐件对比位置中位差 0.4 mm、最大尺寸差 4 mm，分组一致；原生预览角点中位误差 2.14 px。
 
 # 2.6.0-rc2 — 2026-10-14
 
@@ -31,7 +44,7 @@
 
 # 2.4.0-rc3 — 2026-10-14
 
-- 依据 orange、legacy-case、wx 三张图的新流程计时（20–27 分钟；工具计算只占 2–7 分钟，其余是读图和写 spec）：
+- 依据三张本地客户图的新流程计时（20–27 分钟；工具计算只占 2–7 分钟，其余是读图和写 spec）：
 - 预览新增 `--client-look`（`boothctl preview --client-look`、`blender_build --preview-client-look`）：同时渲出终版客户画面，报告高光被压平的像素比例，并给出建议的 `--client-exposure`；`--client-exposure` 可传给预览以验证。实测全白展台在默认 −0.5 EV 下 6%–12% 的像素被压平，建议值 −1.0 EV 后降到 2.4% 以下。默认曝光不变。
 - box_fit 新增 `scale_checks`（用图中直立标准件的底、顶像素和期望高度核对尺度假设，不参与拟合），结果带 `assumed` 列表，模板把它写进 `scale.notes`。
 - 修复：overlay 在没有任何点用到高度时不再 KeyError（只画地面）；宽、深缺失时给出明确提示。
@@ -43,7 +56,7 @@
 - 修复：`--hd-scale 3` 在 938×816 的图上（6.9 MP）让 OIDN 降噪器内存不足，Blender 崩溃，高清图损坏且没有 build_report。现在高清帧默认限制在 5 MP（`--hd-max-mp`，4.9 MP 实测可渲出），超出时降低有效倍数，必要时跳过高清；高清阶段前先写一份 `partial` 报告，渲染高清前释放持久数据；build_report 的 `hd` 记录请求倍数、有效倍数和是否被限制。
 - box_fit：残差超过 4 px 时状态为 `high_residual`，并点名最差的三个点与警告（此前会报 fitted）。
 - design_check：单个挤出的 U 形门头不再按平面范围误报带深（改为 not_checked）；椅子和桌子按 0.6 m 内归为一个座位组，避免椅腿被当成独立家具而产生大量窄间隙提示。
-- 依据：orange 图的新流程计时（约 26 分钟，终版因上述崩溃失败）。
+- 依据：一张本地客户图的新流程计时（约 26 分钟，终版因上述崩溃失败）。
 
 # 2.4.0-rc1 — 2026-10-14
 
@@ -70,7 +83,7 @@
 - validate 新增 COPLANAR_OVERLAP 警告：同向共面且重叠的外露面会渲出黑面或闪烁；凸面精确求交，被反向面贴住的情况不报。
 - blender_build 新增 `--preview`（Workbench 或低采样 Cycles，只渲源机位）与 `--hd-scale`（同进程高清客户图和第二视角）；Cycles 默认自适应采样、OIDN 和持久数据；材质同步视口颜色；相机近裁剪面按距离设置，修复光栅预览和视口的深度锯齿；同一输出目录加构建锁。
 - boothctl 新增 `preview`：新编号目录、单图渲染、四宫格对照与 landmark 像素误差；核显驱动导致 Workbench 失败时自动改用 Cycles。
-- 新增设计先验文档：工作室规范尺寸换算为米制、尺度锚点优先级（系统展具 0.99/0.992 m 模块、LED 拼缝、电视档位优先；前台、人、绿植只作核对）、展位类型读图提示，并引用 knowledge/research 中带出处的场馆与尺寸整理稿。
+- 新增设计先验文档：一份工作室内部规范（未公开）的通用尺寸换算为米制、尺度锚点优先级（系统展具 0.99/0.992 m 模块、LED 拼缝、电视档位优先；前台、人、绿植只作核对）、展位类型读图提示，并引用 knowledge/research 中带出处的场馆与尺寸整理稿。
 - Cycles 降噪改为 OIDN Fast 预滤波 + Balanced 质量；壳椅默认座高 0.45 m。
 
 # 2.2.0-rc2 — 2026-10-07
@@ -122,5 +135,5 @@
 
 ## 发布状态
 
-候选版。单元与实际旧输入拒绝测试完成；原生 Blender 集成和完整 Legacy case 对拍尚待验证。
+候选版。单元与实际旧输入拒绝测试完成；原生 Blender 集成和完整的旧客户案例对拍尚待验证。
 未更新用户账号中的已安装版本。

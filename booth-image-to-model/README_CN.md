@@ -1,56 +1,71 @@
-# booth-image-to-model · v2.7.0-rc1
+[English](README.md) · **简体中文**
 
-从一张展台图片生成纯展台客户图和分件可编辑的参数化三维模型（Blender 场景）。原名 rebuild-booth-blender，2.5.0 起改名。默认清除展厅、邻展、Logo、人物、广告、水印和尺寸箭头，保留建筑、开口、柜台及自有灯具；屏框保留，内容中性化。
+# booth-image-to-model（agent skill）· v2.8.0-rc1
 
-## 使用
+一个 agent skill：从一张展台照片或效果图生成可编辑的参数化三维模型（JSON spec）、Blender 场景，以及去掉展厅、品牌和人物的客户渲染图。
+agent 看图并判断哪些属于展台；脚本负责拟合相机、构建几何、校验和渲染。尺寸是从单张图估计的，不是实测值。
 
-保留完整包，按 [SKILL.md](SKILL.md) 执行：实际观察与范围裁定 → 参数化建模/AI 对照 → 复核与客户候选交付。命令从包含本包的项目根目录执行；原始输入放在 `input/`，结果使用新的 `output/` 子目录。
+agent 按 [`SKILL.md`](SKILL.md) 执行（英文）；本页给安装的人看。详细规则和格式在 `references/`（中文）。
 
-```powershell
-python -m pip install -r booth-image-to-model/requirements.txt
-python booth-image-to-model/scripts/boothctl.py doctor --output output/new-booth/runtime_probe.json
-python booth-image-to-model/scripts/validate_spec.py --spec output/new-booth/spec.json --check-source --report output/new-booth/spec_check.json
+## 需要
+
+| | |
+|---|---|
+| 能看图、能运行命令的 agent | Claude Code、Claude Agent SDK、OpenAI Codex、Cursor，或任何能读 `SKILL.md` 这类说明文件的 agent |
+| Python 3.10+（已测 3.12） | `requirements.txt` 里的依赖包（numpy、Pillow、SciPy、jsonschema、trimesh），装在虚拟环境里（见“安装”） |
+| Blender 4.0+（已测 5.2.2），用于 `.blend` 和渲染 | 通过 `--blender`、`BLENDER_EXE`、`PATH` 或常见安装位置查找 |
+
+没有 Blender 时仍可产出观察记录、spec、GLB 和代码；渲染和 `.blend` 等装好 Blender 再做。
+
+## 安装
+
+从克隆的仓库获取本目录（正式发布后，每个版本会附带一个只含运行时文件、不含测试和验证证据的 zip）：
+
+```bash
+git clone https://github.com/ocrevo/Booth2CAD.git
 ```
 
-快速路线（默认）：角点拟合相机与比例 → 模板 + 构件宏写 spec → `boothctl.py preview` 迭代 → 一次终版渲染（含高清）。命令见 [SKILL.md](SKILL.md) 第 0 节，默认尺寸与定尺度方法见 [设计先验](references/design-priors.md)。
+**Claude Code**：把目录复制（或软链接）到 skills 目录：所有项目通用放 `~/.claude/skills/`，单个项目放 `<项目>/.claude/skills/`。
 
-改 spec：仓库根目录的 `web/` 是静态网页编辑器（不随本包分发），`python web/tools/serve.py` 启动后载入 spec 即可移动、改色、改尺寸、复制；保存的 spec 仍须过 `validate_spec.py`。图纸（平面图、立面图）尚未提供。
-
-场景描述：把“图上看到什么”写成像素加普通数字的 JSON（[说明](references/scene-description.md)），`boothctl.py compile` 编译成 spec；谁来读图（agent、脚本、人或某个模型）都行，编译器不调用任何模型。
-
-外部 Python 用于参数、相机和 QA；原生构建/重开脚本使用 Blender 内置 Python。`doctor --blender` 可传已确认的可执行路径。
-普通客户展示应检查原图机位与第二视角，并以独立进程重新打开 `.blend`；不必先完成像素分割。未做严格量化 QA 的客户候选保留 `review_required`，不声称已严格验证或还原百分比。
-图上尺寸可作为来源证据，客户图仍删除箭头；估计尺寸与隐藏连接不能直接作为施工 BOM。
-
-## 按需参考
-
-- [观察协议](references/observation-protocol.md)：ROI、范围、遮挡、负空间与证据。
-- [数据契约](references/data-contract.md) 和 [schema](schemas/booth-spec-v2.schema.json)：坐标、参数与状态。
-- [构件 recipes](references/component-recipes.md)：语义组合与 `components.py` 宏，不是新增 primitive API。
-- [设计先验](references/design-priors.md)：常用尺寸、尺度锚点、展位类型与坐标换算；机器可读版本见 `schemas/design-priors.v1.json`，建议性检查见 `scripts/design_check.py`。
-- [重建 QA](references/reconstruction-qa.md)：量化复原时用 camera-fit、masks、compare、assess。
-- [benchmark 工作流](references/benchmark-workflow.md)：原图、基线、优化及 AI 对照。
-
-## 新图实验
-
-```powershell
-python booth-image-to-model/scripts/benchmark.py prepare --image input/new-image.jpg --out output/new-benchmark
-python booth-image-to-model/scripts/benchmark.py report --manifest output/new-benchmark/cases.json --out output/new-benchmark/comparison.html
+```bash
+mkdir -p ~/.claude/skills                                   # 单个项目则用：mkdir -p .claude/skills
+cp -r Booth2CAD/booth-image-to-model ~/.claude/skills/
+python3 -m venv .venv && . .venv/bin/activate              # Windows：py -3 -m venv .venv ; .venv\Scripts\activate
+python -m pip install -r ~/.claude/skills/booth-image-to-model/requirements.txt
 ```
 
-批量登记用 `--input-dir input` 替代 `--image`，两者互斥。prepare 将原图复制为输出目录中的输入快照，登记实际 hash 与画幅，不调用模型；report 需要四条真实图片路径，可额外附 client 与 inspection 链接。原图留在 `input/`，观察、spec、代码快照、prompt 和派生文件留在 `output/`，不把客户样本写入通用库。
+请在已激活这个 venv 的终端里启动 agent（或告诉 agent 用哪个 `python`），skill 的命令才能找到这些依赖包。
 
-## 维护与边界
+**其他 agent**（Codex、Cursor、Agent SDK 应用或自建 agent）：目录放在任意位置，让 agent 读 `booth-image-to-model/SKILL.md`，例如在
+`AGENTS.md` 里写：“处理展台图片时，按 `<路径>/booth-image-to-model/SKILL.md` 执行。”
 
-```powershell
-python booth-image-to-model/tests/run_tests.py --blender $blenderExe --require-native --output output/_validation/release-check
+**不用 agent**：每一步都是普通命令（`scripts/boothctl.py --help`），人也可以照 `SKILL.md` 操作。
+
+## 检查安装
+
+```bash
+python ~/.claude/skills/booth-image-to-model/scripts/boothctl.py doctor
 ```
 
-先将 `$blenderExe` 设置为实际可执行路径。runner 将完整日志和结果写入独立目录；缺原生 Blender 时 `--require-native` 明确阻止原生验证。默认测试或针对性 `--pattern` 中的 skipped 不得算通过；`validation/` 只保存经核对后归档的发布证据，不由测试自动覆盖。
+它列出 Python 包和找到的 Blender，缺什么就提示下一步。然后在图片所在目录对 agent 说：“把 input/booth.jpg 生成三维模型和干净的渲染图。”
+结果写到该目录的 `output/<任务>/`。
 
-在 Booth2CAD 项目中，完整回归通过后运行 `python tools/package_skill.py --test-run output/_validation/release-check`，核对当前代码、实际测试日志、原生环境和零跳过结果，再更新证据和文件清单。独立安装本包时可手动做相同核对和归档，无需项目维护工具。
+## 环境变量
 
-审计记录见 [audit_report.json](validation/audit_report.json)。测试与独立 AI 审查验证的是可执行行为和维护流程；当前机器 doctor 和每次实际原生渲染仍需执行，不能用它们替某张图片的视觉复原结论。
-旧 `examples/legacy-case/candidate_spec.json` 保留相机和结构疑点，用于回归，不是新展台模板。
-支持真实圆角、连续 Bezier 条带、带边缘缺口的轮廓挤出、弧形板、米制格网材质、sRGB 转换、按包围盒投影调整第二视角/灯光、中性客户图和透明匹配图；角点拟合相机与比例、像素反投影定位、构件宏、共面重叠检查、Workbench 快速预览和同进程高清出图。没有内置自动分割、自动找对应点、对象级增量更新、自动模型调用或账户切换。
-本目录就是 skill 源码；更新代码后保留旧快照并重新验证。仓库提交与安装副本分别记录版本，源码升级不会自动更新已有客户模型。
+| 变量 | 用途 |
+|---|---|
+| `BLENDER_EXE` | Blender 可执行文件路径（或 macOS 的 `Blender.app`） |
+| `BOOTH_SKILL` | 本目录路径，供从 `templates/` 复制出去的 spec 脚本查找 skill |
+
+## 目录内容
+
+| 路径 | 内容 |
+|---|---|
+| `SKILL.md` | agent 执行的说明 |
+| `scripts/` | 引擎：`boothctl.py`（doctor、compile、preview、build、verify、glb、overlay、design-check）、`box_fit.py`、`camera_math.py`、`components.py`、`validate_spec.py`、Blender 脚本 |
+| `schemas/` | JSON schema：spec（`booth-spec-v2`）、场景描述、设计先验 |
+| `references/` | 详细规则和格式：观察协议、数据契约、场景描述、构件 recipes、设计先验、重建 QA |
+| `templates/` | spec 脚本模板 |
+| `tests/`、`examples/`、`validation/`、`FILE_MANIFEST.json`、`release_status.json` | 测试、合成示例和发布证据（运行时不需要；运行时 zip 不含它们，只保留 `release_status.json` 和 `examples/regression/annotations.template.json`） |
+
+版本记录见 [CHANGELOG.md](CHANGELOG.md)。许可证：[Apache-2.0](LICENSE)。

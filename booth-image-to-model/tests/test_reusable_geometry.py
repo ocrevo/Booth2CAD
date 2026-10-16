@@ -81,7 +81,7 @@ class ReusableGeometryTests(unittest.TestCase):
         with self.assertRaises(ValueError):solid('swept_strip',params)
 
     def test_new_geometry_matches_schema_and_validator(self):
-        spec=read_json(ROOT/'examples/legacy-case/candidate_spec.json')
+        spec=read_json(ROOT/'examples/regression/candidate_spec.json')
         c=copy.deepcopy(spec['components'][0]);c.update(id='generic_rib',kind='swept_strip',role='decorative_rib',params=copy.deepcopy(STRIP))
         spec['components'].append(c)
         spec['components'][0]['params']['bevel_radius']=.005
@@ -133,8 +133,8 @@ class ReusableGeometryTests(unittest.TestCase):
 @unittest.skipUnless(os.environ.get('BLENDER_EXE'),'Set BLENDER_EXE for the native material/geometry/render regression')
 class NativeReusableGeometryTests(unittest.TestCase):
     def test_native_bevel_strip_material_and_client_render(self):
-        spec=read_json(ROOT/'examples/legacy-case/candidate_spec.json')
-        spec['source']['image']=str(ROOT/'examples/legacy-case/reference.png')
+        spec=read_json(ROOT/'examples/regression/candidate_spec.json')
+        spec['source']['image']=str(ROOT/'examples/regression/reference.png')
         spec['components'][0]['params']['bevel_radius']=.005
         c=copy.deepcopy(spec['components'][0]);c.update(id='generic_rib',kind='swept_strip',role='decorative_rib',
                 critical=False,params=copy.deepcopy(STRIP),location=[0,0,2.1])

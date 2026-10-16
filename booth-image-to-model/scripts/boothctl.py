@@ -12,22 +12,34 @@ import sys
 import time
 import os
 from pathlib import Path
-from common import read_json,write_json,digest,file_sha,code_hash,fingerprints,cache_valid
+from common import read_json,write_json,digest,file_sha,code_hash,fingerprints,cache_valid,find_blender as locate_blender
 from validate_spec import validate
 
 
+MIN_BLENDER=(4,0)        # tested with 5.2.2
+
+
 def doctor(blender=None):
-    candidate=blender or shutil.which('blender')
-    result={'python':sys.version.split()[0],'blender_path':candidate,'blender_available':False,
-            'dependencies':{k:importlib.util.find_spec(k) is not None for k in ('numpy','PIL','scipy')},
+    """What this machine can do: Python packages and Blender (found as find_blender does). Prints the next step when something is missing."""
+    candidate=locate_blender(blender)
+    deps={k:importlib.util.find_spec(k) is not None for k in ('numpy','PIL','scipy','jsonschema','trimesh')}
+    result={'python':sys.version.split()[0],'blender_path':candidate,'blender_available':False,'dependencies':deps,
             'hosted_skill_updated':False}
     if candidate:
         try:
-            p=subprocess.run([candidate,'--version'],capture_output=True,text=True,timeout=20,check=False)
+            p=subprocess.run([candidate,'--version'],capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=60,check=False)
             result['blender_available']=p.returncode==0
-            result['blender_version']=p.stdout.splitlines()[0] if p.stdout else p.stderr[:200]
+            result['blender_version']=(p.stdout or '').splitlines()[0] if p.stdout else (p.stderr or '')[:200]
+            import re
+            m=re.search(r'Blender (\d+)\.(\d+)',result['blender_version'] or '')
+            if m and (int(m.group(1)),int(m.group(2)))<MIN_BLENDER:result['blender_warning']='Blender %s.%s is older than 4.0; 5.2 is tested'%m.groups()
         except (OSError,subprocess.SubprocessError) as ex:result['blender_error']=str(ex)
     result['status']='ready_for_build' if result['blender_available'] else 'blocked_native_blender'
+    steps=[]
+    missing=[k if k!='PIL' else 'Pillow' for k,ok in deps.items() if not ok]
+    if missing:steps.append('python -m pip install -r <SKILL_DIR>/requirements.txt   (missing: '+', '.join(missing)+')')
+    if not result['blender_available']:steps.append('install Blender 4.x or newer and pass --blender <path> or set BLENDER_EXE (only renders and .blend need it)')
+    result['next_steps']=steps
     return result
 
 
@@ -109,10 +121,20 @@ def delivery_gate(spec, evidence, root):
 
 
 def find_blender(blender=None):
-    candidate=blender or os.environ.get('BLENDER_EXE') or shutil.which('blender')
-    if not candidate or not Path(candidate).exists() and not shutil.which(candidate):
-        raise ValueError('Blender not found: pass --blender, set BLENDER_EXE or put blender on PATH')
+    candidate=locate_blender(blender)
+    if not candidate:
+        raise ValueError('Blender not found: pass --blender, set BLENDER_EXE, put blender on PATH or install it in the usual place')
     return candidate
+
+
+BLENDER_FLAGS=['--background','--factory-startup','--disable-autoexec','--python-exit-code','1']
+
+
+def run_blender_script(script,script_args,blender=None,timeout=7200):
+    """Run one of this skill's Blender scripts in a fresh background Blender. Returns (returncode, log tail)."""
+    cmd=[find_blender(blender)]+BLENDER_FLAGS+['--python',str(Path(__file__).resolve().parent/script),'--']+list(script_args)
+    proc=subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout,check=False)
+    return proc.returncode,((proc.stdout or '')+(proc.stderr or ''))[-3000:]
 
 
 def resolve_preview_engine(out_root,engine):
@@ -140,18 +162,18 @@ def preview(spec_path,out_root,blender=None,engine='workbench',samples=8,timeout
          '--python',str(Path(__file__).resolve().parent/'blender_build.py'),'--','--spec',str(spec_path),'--out',str(run),
          '--preview','--preview-engine',engine,'--samples',str(samples)]+(['--preview-client-look'] if client_look else [])+(['--client-exposure',str(client_exposure)] if client_exposure is not None else [])
     started=time.time()
-    proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
+    proc=subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout,check=False)
     fallback=None
     if proc.returncode!=0 and engine=='workbench':
         # Integrated-GPU OpenGL drivers can crash headless Workbench; Cycles CPU needs no GPU.
-        fallback={'engine':'cycles','failed_run':str(run),'reason':(proc.stdout+proc.stderr)[-400:]}
+        fallback={'engine':'cycles','failed_run':str(run),'reason':((proc.stdout or '')+(proc.stderr or ''))[-400:]}
         run=out_root/f'preview_{n:03d}b';cmd[cmd.index('--out')+1]=str(run);cmd[cmd.index('--preview-engine')+1]='cycles'
-        proc=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout,check=False)
+        proc=subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout,check=False)
         if proc.returncode==0:
             write_json(out_root/'.preview_engine.json',{'engine':'cycles','reason':'Workbench failed headless on this machine','first_failed_run':fallback['failed_run']})
     seconds=round(time.time()-started,1)
     if proc.returncode!=0:
-        return {'status':'build_failed','run':str(run),'seconds':seconds,'fallback':fallback,'log_tail':(proc.stdout+proc.stderr)[-2000:]}
+        return {'status':'build_failed','run':str(run),'seconds':seconds,'fallback':fallback,'log_tail':((proc.stdout or '')+(proc.stderr or ''))[-2000:]}
     from preview_compare import sheet  # numpy/Pillow only for this optional step
     summary=sheet(run)
     report=read_json(run/'build_report.json')
@@ -186,6 +208,11 @@ def main():
     s=sp.add_parser('compile',help='Compile a scene description (pixels + building blocks) into a spec; no model call')
     s.add_argument('--scene',required=True);s.add_argument('--image',required=True);s.add_argument('--out',required=True)
     s.add_argument('--fit',help='Existing box_fit.json to reuse');s.add_argument('--seeds',type=int,default=40)
+    s=sp.add_parser('build',help='Final build in a fresh background Blender: booth.blend and, with --render, the renders. Options after -- go to blender_build.py')
+    s.add_argument('--spec',required=True);s.add_argument('--out',required=True);s.add_argument('--blender');s.add_argument('--timeout',type=int,default=7200)
+    s.add_argument('build_args',nargs=argparse.REMAINDER,help='e.g. -- --render --samples 32 --hd-scale 3')
+    s=sp.add_parser('verify',help='Reopen a built .blend in a separate Blender and check it against the spec')
+    s.add_argument('--spec',required=True);s.add_argument('--blend',required=True);s.add_argument('--report',required=True);s.add_argument('--blender')
     s=sp.add_parser('preview',help='Fast iteration render + comparison sheet in a fresh numbered folder')
     s.add_argument('--spec',required=True);s.add_argument('--out-root',required=True);s.add_argument('--blender')
     s.add_argument('--engine',choices=('workbench','cycles'),default='workbench');s.add_argument('--samples',type=int,default=8)
@@ -208,6 +235,17 @@ def main():
         if a.command=='overlay':
             from overlay import draw_overlay  # Pillow only for this optional step
             result=draw_overlay(read_json(a.fit),a.image,a.out);print(json.dumps(result,ensure_ascii=False,indent=2));return 0
+        if a.command in ('build','verify'):
+            if a.command=='build':
+                extra=[x for x in a.build_args if x!='--']
+                code,log=run_blender_script('blender_build.py',['--spec',a.spec,'--out',a.out]+extra,a.blender,a.timeout)
+                report=Path(a.out)/'build_report.json'
+            else:
+                code,log=run_blender_script('blender_verify.py',['--spec',a.spec,'--blend',a.blend,'--report',a.report],a.blender)
+                report=Path(a.report)
+            result={'status':'ok' if code==0 else 'failed','returncode':code,'report':str(report) if report.is_file() else None}
+            if code!=0:result['log_tail']=log
+            print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if code==0 else 2
         if a.command=='preview':
             result=preview(a.spec,a.out_root,a.blender,a.engine,a.samples,context=a.context,client_look=a.client_look,client_exposure=a.client_exposure)
             print(json.dumps(result,ensure_ascii=False,indent=2));return 0 if result['status']=='preview_ready' else 2

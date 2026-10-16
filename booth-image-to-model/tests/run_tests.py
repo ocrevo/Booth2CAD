@@ -12,7 +12,6 @@ import json
 import os
 from pathlib import Path
 import platform
-import shutil
 import subprocess
 import sys
 import unittest
@@ -68,16 +67,18 @@ class RecordingResult(unittest.TextTestResult):
 
 
 def probe_blender(requested=None):
-    candidate = requested or os.environ.get('BLENDER_EXE') or shutil.which('blender')
-    result = {'requested': candidate, 'available': False, 'path': None}
-    if not candidate:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    from common import find_blender
+    chosen = requested or os.environ.get('BLENDER_EXE')
+    found = find_blender(chosen)     # the one lookup everywhere: PATH, install places, a macOS .app folder; a wrong value gives None
+    result = {'requested': chosen or found, 'available': False, 'path': None}
+    if not chosen and not found:
         result['reason'] = 'No --blender, BLENDER_EXE or blender on PATH'
         return result
-    resolved = shutil.which(candidate)
-    if not resolved:
-        result['reason'] = 'Blender executable does not exist or is not executable: ' + candidate
+    if not found:
+        result['reason'] = 'Blender executable does not exist or is not executable: ' + chosen
         return result
-    result['path'] = str(Path(resolved).resolve())
+    result['path'] = found          # absolute but not .resolve(): a snap or Homebrew launcher is a symlink that must stay as it is
     try:
         checked = subprocess.run([result['path'], '--version'], capture_output=True,
                                  text=True, encoding='utf-8', errors='replace', timeout=20)
@@ -87,9 +88,31 @@ def probe_blender(requested=None):
         result['available'] = checked.returncode == 0
         if not result['available']:
             result['reason'] = 'Blender --version returned ' + str(checked.returncode)
+    except subprocess.TimeoutExpired:
+        result['reason'] = 'Blender --version timed out after 20 s'      # str() of the exception would repeat the full path
     except (OSError, subprocess.SubprocessError) as ex:
-        result['reason'] = str(ex)
+        result['reason'] = type(ex).__name__ + ': ' + str(getattr(ex, 'strerror', None) or ex)
     return result
+
+
+def redacted_native(native, repository=REPOSITORY):
+    """The preflight as the evidence records it: a Blender inside the repository relative to it, any other only by its file
+    name, never a machine's absolute path. The unredacted record is what runs Blender."""
+    def shown(value):
+        if os.path.basename(value) == value:                  # a bare command name such as 'blender' is not a location
+            return value
+        try:
+            return Path(os.path.abspath(value)).relative_to(Path(repository).resolve()).as_posix()
+        except ValueError:
+            return '<blender>/' + Path(value).name
+    record = dict(native)
+    for key in ('requested', 'path'):
+        if record.get(key):
+            record[key] = shown(str(record[key]))
+    for key in sorted(('requested', 'path'), key=lambda k: -len(str(native.get(k) or ''))):   # longest first: an .app prefixes its file
+        if record.get('reason') and native.get(key):
+            record['reason'] = record['reason'].replace(str(native[key]), record[key])
+    return record
 
 
 @contextlib.contextmanager
@@ -132,12 +155,19 @@ def main(argv=None, *, tests_dir=None, repository=None):
         parser.error('Use a fresh result directory; existing outputs are not overwritten: ' + str(output))
     output.mkdir(parents=True, exist_ok=True)
     transcript_path = output / 'test_transcript.txt'
+
+    def shown(path):
+        """A path as the evidence records it: relative to the repository, never a machine's absolute path."""
+        try:
+            return Path(path).resolve().relative_to(Path(repository).resolve()).as_posix()
+        except ValueError:
+            return '<outside-repository>/' + Path(path).name
     summary = {'tests_run': 0, 'passed': 0, 'failures': [], 'errors': [], 'skipped': [],
                'expected_failures': [], 'unexpected_successes': [],
                'all_executed_tests_passed': False, 'python': platform.python_version(),
                'started_at_utc': started.isoformat(), 'require_native': args.require_native,
-               'discovery_pattern': args.pattern, 'output_directory': str(output),
-               'artifact_root': str(output / 'artifacts'),
+               'discovery_pattern': args.pattern, 'output_directory': shown(output),
+               'artifact_root': shown(output / 'artifacts'),
                'scope': 'Regression evidence only; does not certify source-image fidelity.',
                'transcript_scope': 'Complete runner stdout/stderr; separately captured native logs remain test artifacts.',
                'builder_sha256': code_hash(),
@@ -145,14 +175,14 @@ def main(argv=None, *, tests_dir=None, repository=None):
     code = 1
     with transcript_path.open('w', encoding='utf-8') as transcript:
         with contextlib.redirect_stdout(Tee(sys.stdout, transcript)), contextlib.redirect_stderr(Tee(sys.stderr, transcript)):
-            print('Test results directory: ' + str(output))
+            print('Test results directory: ' + shown(output))
             native = probe_blender(args.blender)
-            summary['native_blender'] = native
-            print('Native preflight: ' + json.dumps(native, ensure_ascii=False))
+            summary['native_blender'] = recorded = redacted_native(native, repository)
+            print('Native preflight: ' + json.dumps(recorded, ensure_ascii=False))
             configured_invalid = bool(args.blender or os.environ.get('BLENDER_EXE')) and not native['available']
             if (args.require_native and not native['available']) or configured_invalid:
                 summary['status'] = 'blocked_native_blender'
-                print('BLOCKED: ' + native.get('reason', 'Native Blender is unavailable'))
+                print('BLOCKED: ' + recorded.get('reason', 'Native Blender is unavailable'))
                 code = 2
             else:
                 try:

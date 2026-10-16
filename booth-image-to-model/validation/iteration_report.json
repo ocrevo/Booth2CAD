@@ -1,10 +1,10 @@
 {
-  "date": "2026-10-15",
-  "version": "2.7.0-rc1",
+  "date": "2026-10-16",
+  "version": "2.8.0-rc1",
   "blender": "5.2.2 LTS",
   "tests": {
-    "tests_run": 266,
-    "passed": 266,
+    "tests_run": 274,
+    "passed": 274,
     "failures": [],
     "errors": [],
     "skipped": [],
@@ -12,35 +12,35 @@
     "unexpected_successes": [],
     "all_executed_tests_passed": true,
     "python": "3.12.3",
-    "started_at_utc": "2026-10-15T07:45:02.640724+00:00",
+    "started_at_utc": "2026-10-16T15:15:43.056352+00:00",
     "require_native": true,
     "discovery_pattern": "test_*.py",
-    "output_directory": "<repo>\\output\\_validation\\release-check-2.7.0-rc1a",
-    "artifact_root": "<repo>\\output\\_validation\\release-check-2.7.0-rc1a\\artifacts",
+    "output_directory": "output/_validation/release-check-2.8.0-rc1-b",
+    "artifact_root": "output/_validation/release-check-2.8.0-rc1-b/artifacts",
     "scope": "Regression evidence only; does not certify source-image fidelity.",
     "transcript_scope": "Complete runner stdout/stderr; separately captured native logs remain test artifacts.",
-    "builder_sha256": "a4b5fa6b047db6e99120ce2242fa489ea51224679189ffa5020f0df8afa943ec",
-    "regression_inputs_sha256": "9fed462a48f84c904fbd019e09b8b21516d2205b13bcc500a1f44e6eb9e59f40",
+    "builder_sha256": "2ccf9bcdc78ce962ac83845547972ee70008389042fb1c60e883f96ccd654db1",
+    "regression_inputs_sha256": "8fa348799334df7d92dcefe555f0dd3c43795a01e1f49cf7f68a4436369187eb",
     "native_blender": {
-      "requested": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+      "requested": "<blender>/blender.exe",
       "available": true,
-      "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+      "path": "<blender>/blender.exe",
       "probe_stdout": "Blender 5.2.2 LTS\n\tbuild date: 2026-09-15\n\tbuild time: 01:37:04\n\tbuild commit date: 2026-09-14\n\tbuild commit time: 15:14\n\tbuild hash: d13f752e3b9c\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake\n",
       "probe_stderr": "",
       "returncode": 0
     },
     "native_skipped": [],
     "status": "passed",
-    "executed_at_utc": "2026-10-15T07:47:52.961930+00:00",
-    "builder_sha256_after": "a4b5fa6b047db6e99120ce2242fa489ea51224679189ffa5020f0df8afa943ec",
-    "regression_inputs_sha256_after": "9fed462a48f84c904fbd019e09b8b21516d2205b13bcc500a1f44e6eb9e59f40",
+    "executed_at_utc": "2026-10-16T15:19:24.411478+00:00",
+    "builder_sha256_after": "2ccf9bcdc78ce962ac83845547972ee70008389042fb1c60e883f96ccd654db1",
+    "regression_inputs_sha256_after": "8fa348799334df7d92dcefe555f0dd3c43795a01e1f49cf7f68a4436369187eb",
     "exit_code": 0,
     "transcript": {
       "path": "test_transcript.txt",
-      "sha256": "2d864f6f492730c10781a1477614a75292f45ed0932cf040f986ac1357fe851a"
+      "sha256": "3620e8934252bc96d4612da0a4e91118ab1658af0343fe941c94a9ae9df9a5c4"
     }
   },
-  "builder_sha256": "a4b5fa6b047db6e99120ce2242fa489ea51224679189ffa5020f0df8afa943ec",
+  "builder_sha256": "2ccf9bcdc78ce962ac83845547972ee70008389042fb1c60e883f96ccd654db1",
   "improvements": [
     "simple concave XZ profile extrusion with real edge notches",
     "vertical circular arc panels and matching segment boundaries",
@@ -64,14 +64,13 @@
     "surface pattern is not physical perforation"
   ],
   "previous_record": "history/2.2.0-rc1/evidence_9f9c04030cb07371/iteration_report.json",
-  "artifact_location": "Local ignored output/; raw inputs in input/ and historical test/ access retained.",
-  "regression_inputs_sha256": "9fed462a48f84c904fbd019e09b8b21516d2205b13bcc500a1f44e6eb9e59f40",
+  "artifact_location": "Local git-ignored output/; original pictures in input/.",
+  "regression_inputs_sha256": "8fa348799334df7d92dcefe555f0dd3c43795a01e1f49cf7f68a4436369187eb",
   "test_run_evidence": {
-    "source_test_run": "<repo>\\output\\_validation\\release-check-2.7.0-rc1a",
+    "source_test_run": "output/_validation/release-check-2.8.0-rc1-b",
     "summary": "validation/test_results.json",
-    "summary_sha256": "04db161009c2de45f5f9d6ec51a0deaa67be721223f0fcff30d4088e29b54769",
+    "summary_sha256": "566d591f6994b76a2c0ea0f5c7c14f91836a22a7ea93291045a1672eef3b581b",
     "transcript": "validation/test_transcript.txt",
-    "transcript_sha256": "2d864f6f492730c10781a1477614a75292f45ed0932cf040f986ac1357fe851a"
-  },
-  "audit_evidence": "audit_report.json"
+    "transcript_sha256": "3620e8934252bc96d4612da0a4e91118ab1658af0343fe941c94a9ae9df9a5c4"
+  }
 }

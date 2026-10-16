@@ -1,0 +1,542 @@
+{
+  "schema_version": "2.0",
+  "project": {
+    "id": "synthetic-regression-candidate",
+    "status": "draft_not_image_matched"
+  },
+  "source": {
+    "image": "reference.png",
+    "sha256": "a3dc079fb19d839f660c9b9d07197dd63e2ed393da5f0cd536295bb1587f0b21",
+    "width": 640,
+    "height": 480
+  },
+  "scale": {
+    "units": "m",
+    "basis": "user_assumption",
+    "footprint_m": [
+      8,
+      5
+    ],
+    "notes": "Synthetic: 8 x 5 m is an invented candidate scale, not measured."
+  },
+  "scope": {
+    "decisions": [
+      {
+        "id": "booth_carpet",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "top_ring",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "main_portal",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "rear_wall",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "round_display",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "round_display_top",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "reception",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "storage",
+        "owner": "booth",
+        "decision": "include",
+        "evidence": "Synthetic regression part."
+      },
+      {
+        "id": "venue_ceiling",
+        "owner": "venue",
+        "decision": "exclude",
+        "evidence": "Hall ceiling seen through the open ring; not part of the booth."
+      },
+      {
+        "id": "neighbor_signs",
+        "owner": "neighbor",
+        "decision": "exclude",
+        "evidence": "Other stands in the distance."
+      },
+      {
+        "id": "aisle_ground",
+        "owner": "venue",
+        "decision": "exclude",
+        "evidence": "Ground outside the booth carpet."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "booth_carpet",
+      "scope_id": "booth_carpet",
+      "owner": "booth",
+      "kind": "box",
+      "role": "floor",
+      "critical": false,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.135,
+          0.602,
+          0.817,
+          0.784
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        0,
+        0,
+        0.01
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "size": [
+          8,
+          5,
+          0.02
+        ]
+      },
+      "material": {
+        "color": [
+          0.3,
+          0.35,
+          0.4,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "top_ring",
+      "scope_id": "top_ring",
+      "owner": "booth",
+      "kind": "rounded_ring",
+      "role": "fascia",
+      "critical": true,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.186,
+          0.205,
+          0.77,
+          0.394
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        0,
+        0,
+        3.3
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "outer_size": [
+          7.0,
+          4.0
+        ],
+        "inner_size": [
+          5.6,
+          2.8
+        ],
+        "outer_radius": 1.0,
+        "inner_radius": 0.5,
+        "height": 0.6,
+        "segments_per_corner": 16
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "main_portal",
+      "scope_id": "main_portal",
+      "owner": "booth",
+      "kind": "rounded_portal",
+      "role": "portal",
+      "critical": true,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.473,
+          0.381,
+          0.612,
+          0.653
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        1.2,
+        0.3,
+        1.42
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "width": 2.6,
+        "height": 2.8,
+        "depth": 0.3,
+        "side_width": 0.35,
+        "beam_height": 0.35,
+        "outer_radius": 0.5,
+        "inner_radius": 0.2,
+        "segments_per_corner": 16
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "rear_wall",
+      "scope_id": "rear_wall",
+      "owner": "booth",
+      "kind": "box",
+      "role": "wall",
+      "critical": true,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.317,
+          0.424,
+          0.48,
+          0.643
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        0,
+        2.3,
+        1.22
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "size": [
+          3.0,
+          0.15,
+          2.4
+        ]
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "round_display",
+      "scope_id": "round_display",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "counter",
+      "critical": true,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.385,
+          0.579,
+          0.513,
+          0.715
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        -1.8,
+        -1.2,
+        0.47
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "radius": 0.5,
+        "height": 0.9,
+        "segments": 64
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "round_display_top",
+      "scope_id": "round_display_top",
+      "owner": "booth",
+      "kind": "cylinder",
+      "role": "counter",
+      "critical": false,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.379,
+          0.573,
+          0.519,
+          0.598
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        -1.8,
+        -1.2,
+        0.945
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "radius": 0.55,
+        "height": 0.05,
+        "segments": 64
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "reception",
+      "scope_id": "reception",
+      "owner": "booth",
+      "kind": "box",
+      "role": "counter",
+      "critical": false,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.694,
+          0.532,
+          0.788,
+          0.66
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        2.8,
+        -2.0,
+        0.62
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "size": [
+          1.6,
+          0.5,
+          1.2
+        ]
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    },
+    {
+      "id": "storage",
+      "scope_id": "storage",
+      "owner": "booth",
+      "kind": "box",
+      "role": "cabinet",
+      "critical": false,
+      "evidence": {
+        "status": "observed",
+        "roi_xyxy_norm": [
+          0.167,
+          0.456,
+          0.26,
+          0.676
+        ],
+        "note": "Synthetic regression part; invented size."
+      },
+      "location": [
+        -3.2,
+        1.9,
+        1.02
+      ],
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "params": {
+        "size": [
+          1.0,
+          0.5,
+          2.0
+        ]
+      },
+      "material": {
+        "color": [
+          0.8,
+          0.8,
+          0.8,
+          1
+        ],
+        "roughness": 0.5,
+        "metallic": 0,
+        "emission": 0
+      }
+    }
+  ],
+  "camera": {
+    "projection": "perspective",
+    "position": [
+      -7.0,
+      -8.0,
+      1.8
+    ],
+    "target": [
+      0,
+      0,
+      1.6
+    ],
+    "lens_mm": 28,
+    "sensor_width_mm": 36,
+    "principal_point": [
+      0.5,
+      0.5
+    ],
+    "pixel_aspect": [
+      1,
+      1
+    ],
+    "fit_status": "unfitted",
+    "roll_deg": 0
+  },
+  "requirements": [
+    {
+      "id": "ring_is_continuous",
+      "component_id": "top_ring",
+      "kind": "rounded_ring",
+      "must_be_critical": true
+    },
+    {
+      "id": "portal_round_transition",
+      "component_id": "main_portal",
+      "kind": "rounded_portal",
+      "must_be_critical": true
+    },
+    {
+      "id": "round_counter_exists",
+      "component_id": "round_display",
+      "kind": "cylinder",
+      "must_be_critical": true
+    }
+  ],
+  "landmarks": [],
+  "uncertainties": [
+    {
+      "id": "portal_topology",
+      "critical": true,
+      "status": "open",
+      "description": "How the portal joins the ring is not settled; the candidate must not be reported as finished."
+    },
+    {
+      "id": "scale",
+      "critical": false,
+      "status": "open",
+      "description": "Dimensions are invented."
+    },
+    {
+      "id": "graphics_and_products",
+      "critical": true,
+      "status": "open",
+      "description": "Screens, graphics and products are left out until the structure is accepted."
+    }
+  ],
+  "quality": {
+    "silhouette_iou_min": 0.9,
+    "part_iou_min": 0.85,
+    "landmark_median_max": 0.025,
+    "landmark_p90_max": 0.05,
+    "boundary_distance_max": 0.012,
+    "threshold_basis": "Initial project heuristics, not industry standards or a calibrated fidelity percentage. Tune against reviewed masks and multiple held-out examples."
+  }
+}

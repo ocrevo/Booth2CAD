@@ -6,7 +6,7 @@
 
 1. 看图：读出图上标注的尺寸、6–10 个外角、每个构件落地（或贴墙）的像素。
 2. 写 `scene.json`，格式见 [`schemas/scene-description.v1.json`](../schemas/scene-description.v1.json)。所有键都必填，不适用的写 `null`；schema 只用各家结构化输出都支持的关键字。
-3. `python booth-image-to-model/scripts/boothctl.py compile --scene scene.json --image <原图> --out <目录> [--fit box_fit.json]`。不给 `--fit` 就用 `corner_points` 现场拟合（同时运行 `scale_checks`）。
+3. `python "<SKILL_DIR>/scripts/boothctl.py" compile --scene scene.json --image <原图> --out <目录> [--fit box_fit.json]`。不给 `--fit` 就用 `corner_points` 现场拟合（同时运行 `scale_checks`）。
 4. 看 `<目录>/compile_report.json` 和命令输出的摘要：
    - `status`：ok / partial（有构件被丢弃）/ invalid（spec 没通过校验，退出码 2）。
    - `fit`：拟合状态和残差。`high_residual` 不阻止编译，但 `fit_warnings` 要看；SKILL.md 第 3 步要求 `fitted`。

@@ -10,8 +10,9 @@ Every number below is a placeholder. Pixel positions are given as fractions of t
 canvas (fx, fy) so the template stays resolution independent: replace them with
 what this image shows. Fall back to references/design-priors.md only for what the
 image cannot tell, and record that in uncertainties. Delete macros the booth does
-not have. Set BOOTH_SKILL to the skill folder if the job does not live under the
-same project root as booth-image-to-model.
+not have. Set BOOTH_SKILL to the skill folder (the one with SKILL.md) when the job does
+not live under a folder that contains booth-image-to-model, e.g. when the skill is installed
+in an agent's skills directory.
 """
 import json
 import os
@@ -20,7 +21,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SKILL = (Path(os.environ['BOOTH_SKILL']) if os.environ.get('BOOTH_SKILL')
-         else next(p / 'booth-image-to-model' for p in HERE.parents if (p / 'booth-image-to-model').is_dir()))
+         else next((p / 'booth-image-to-model' for p in HERE.parents if (p / 'booth-image-to-model' / 'scripts').is_dir()), None))
+if SKILL is None or not (SKILL / 'scripts' / 'components.py').is_file():
+    raise SystemExit('Cannot find the skill: set BOOTH_SKILL to the booth-image-to-model folder (the one with SKILL.md)')
 sys.path.insert(0, str(SKILL / 'scripts'))
 import camera_math as cmath  # noqa: E402
 import components as cm      # noqa: E402

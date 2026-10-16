@@ -39,7 +39,7 @@ material.color 默认 linear；color_space=srgb 将颜色转为 linear 后写入
 ## QA 输入
 
 annotations.json 的 source_sha256 必须对应原图。它引用 booth silhouette、各关键件可见 mask 和有效区域 mask。
-模板在 `examples/legacy-case/annotations.template.json`。该模板中的 mask 路径不存在，必须实际制作与审阅后才能评估。
+模板在 `examples/regression/annotations.template.json`（合成示例）。该模板中的 mask 路径不存在，必须实际制作与审阅后才能评估。
 所有 mask 必须和原图具有完全相同的像素宽高。脚本不自动缩放或重对齐。RGBA 的 alpha 被当作 mask；灰度/黑白 PNG 使用像素值。
 `part_masks/<component_id>.png` 是匹配相机下、保留其他展台物件遮挡的可见构件图。不是移除所有遮挡之后的孤立模型投影。
 

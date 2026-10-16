@@ -5,6 +5,9 @@
 /output/*
 !/output/.gitkeep
 
+# Earlier release evidence of the skill: kept locally by tools/package_skill.py, attached to releases, not tracked
+/booth-image-to-model/validation/history/
+
 # Private local notes (a studio's own rules, projects, venue manuals, licensed assets) and local agent notes
 /knowledge/studio/
 /knowledge/projects/
