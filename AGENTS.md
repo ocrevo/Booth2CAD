@@ -80,6 +80,5 @@ reviewed masks.
 ## Roadmap
 
 Done: the standalone editor and the one-window studio. Next: corner-point correction in the studio, drawings (plan and elevations,
-SVG and DXF) from the same spec, a furniture library as prefab JSON built from existing primitives. Waiting: representative,
-free-to-use sample pictures for the READMEs and the demo; until then no showcase or demo picture is committed
-([docs/sample-images.md](docs/sample-images.md)).
+SVG and DXF) from the same spec, a furniture library as prefab JSON built from existing primitives. The showcase and demo
+pictures are synthetic placeholders, to be replaced by representative, free-to-use ones ([docs/sample-images.md](docs/sample-images.md)).

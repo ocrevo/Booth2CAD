@@ -8,9 +8,6 @@
 # Earlier release evidence of the skill: archived locally by tools/package_skill.py; not tracked and not published
 /booth-image-to-model/validation/history/
 
-# The demo picture is made locally until free-to-use sample pictures are chosen (docs/sample-images.md)
-/web/app/demo/demo_source.png
-
 # Private local notes (a studio's own rules, projects, venue manuals, licensed assets) and local agent notes
 /knowledge/studio/
 /knowledge/projects/

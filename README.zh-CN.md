@@ -9,7 +9,10 @@ skill 使用，也可以在本机网页工作台里使用。**
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![Blender 4.0+](https://img.shields.io/badge/blender-4.0%2B-orange.svg)
 
-<!-- 截图等选好有代表性、可自由使用的示例图片后再加：docs/sample-images.md -->
+![网页工作台的示例展台：左边是由示例模型渲染出的合成图片，右边是同一机位下的同一个可编辑三维模型](docs/images/studio-demo.png)
+
+*工作台的示例展台：分界线左边的合成图是用示例模型在它自己的机位渲染出来的，所以和右边的可编辑模型完全重合。真实图片得到的相机和尺寸是估计的拟合结果。（占位图片，之后替换，见
+[docs/sample-images.md](docs/sample-images.md)。）*
 
 ## 能做什么
 
