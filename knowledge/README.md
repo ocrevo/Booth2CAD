@@ -1,28 +1,26 @@
-# 展台知识库
+# Knowledge notes / 展台知识库
 
-供 `booth-image-to-model` 快速假设参数、选原型和挑资产时查阅。这里放资料和整理稿，不放客户原图（客户原图放 `input/`，结果放 `output/`）。
+Reference material for choosing parameters, booth types and assets. No client pictures here (they belong in git-ignored `input/`;
+results in `output/`).
 
-## 目录
-
-| 目录 | 内容 | 状态 |
+| Folder | Content | Status |
 |---|---|---|
-| `studio/` | 工作室自己的规则：设计规范、owner 规则、搭建工艺/节点手册、色板 | 由工作室维护，最高优先级 |
-| `research/` | 代理从公开权威来源整理的资料，每条带来源链接和访问日期 | 未经设计师审核，使用前抽查来源 |
-| `projects/` | 历史项目对照包：效果图 + 施工图/平立面或 3D 源文件 + 尺寸表 | 待补充 |
-| `venues/` | 常去展馆或展会的参展商手册、特装搭建规范（PDF 原件） | 待补充 |
-| `assets/` | 家具、展具模型与材质的清单和许可证记录；大文件本体放仓库外或用 Git LFS | 待补充 |
+| [`research/`](research/) | Notes collected from public sources, each row with a link and an access date | **Not reviewed by a designer.** Not defaults; check the source before use |
 
-## research/ 现有整理稿
+Values only become defaults of the tool (`booth-image-to-model/references/design-priors.md`, `schemas/design-priors.v1.json`) after
+a person has reviewed them.
 
-- `venue-regulations.md`：场馆限高、吊挂、防火等级、墙背、审图等规则，按场馆列出。
-- `dimensions-reference.md`：系统展具、板材、电视/LED、常见家具、人体工学尺寸，以及适合定尺度的标准件。
-- `reconstruction-tooling.md`：单图重建可用的直线/消失点、单目深度、分割工具，以及 CPU 渲染提速设置。
-- `asset-sources.md`：模型与材质来源的许可证对比、起步清单、命名规范。
+| Note | Covers |
+|---|---|
+| [`venue-regulations.md`](research/venue-regulations.md) | Height limits, rigging, fire classes, back walls, plan approval, per venue or show |
+| [`dimensions-reference.md`](research/dimensions-reference.md) | System stands, boards, TVs and LED panels, furniture, ergonomics; standard parts that anchor scale |
+| [`gap-fill-2026-10-14.md`](research/gap-fill-2026-10-14.md) | Follow-up sources for gaps in the dimension reference |
+| [`reconstruction-tooling.md`](research/reconstruction-tooling.md) | Line and vanishing-point, monocular depth and segmentation tools for single-image reconstruction; faster CPU rendering |
+| [`asset-sources.md`](research/asset-sources.md) | Licences of model and material sources, a starter list, naming |
 
-规则：research 里的数值是参考值，不是客户事实；与 `studio/` 或具体项目的场馆手册冲突时，以后者为准。确认可用的条目，再由人整理进 `booth-image-to-model/references/design-priors.md`。
+Local, private material (a studio's own rules, past projects, venue manuals, licensed assets) can be kept next to this folder in
+`studio/`, `projects/`, `venues/` and `assets/`; these folders are git-ignored so they are never published by accident.
 
-## 补充材料的格式
+---
 
-- **历史项目**：每个项目一个子目录 `projects/<年份>_<展会>_<展位号或代号>/`，至少包含效果图（原分辨率）、平面图或立面图（PDF/DWG），以及 `facts.json`（展位尺寸 W×D、限高、开口、墙厚、楣高、地台高、主要家具尺寸）。有 3D 源文件（.max/.skp/.blend）一并放入。
-- **场馆手册**：`venues/<场馆>_<展会>_<年份>.pdf`，原文件不改名之外不做修改。
-- **资产**：`.blend` 优先，其次 `.glb/.fbx`。单位为米，原点在底面中心，正面朝 −Y。文件名带尺寸，例如 `chair_shell_W460_D530_H810.blend`。每个文件在 `assets/LICENSES.md` 记一行：来源、许可证、是否可用于商业渲染。
+中文：这里是查参数、选展位类型和挑资产时用的参考资料，不放客户原图。`research/` 的数值来自公开来源，**未经设计师审核**，不是工具默认值；经人审核后才会进入 `design-priors`。工作室自己的规则、历史项目、展馆手册和资产请放在 `studio/`、`projects/`、`venues/`、`assets/`，这些目录已被 git 忽略，不会被误发布。

@@ -1,0 +1,7 @@
+booth-image-to-model
+Copyright 2026 ocrevo and the booth-image-to-model contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes third-party software, listed with their licenses in THIRD_PARTY_NOTICES.md:
+- three.js 0.186.1 (MIT License), vendored unmodified in web/app/vendor/three/

@@ -1,0 +1,42 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you post
+      options:
+        - label: I am not attaching client pictures, brand material, project names, API keys or job folders (use a synthetic picture or describe the problem in words).
+          required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options:
+        - Skill (booth-image-to-model, used by an agent or from the command line)
+        - Web studio (python web/server/run.py)
+        - Standalone editor (web/app/index.html)
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Commands you ran, buttons you clicked, and the exact error text.
+      render: text
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Python version, Blender version (if used), browser, commit or release
+      placeholder: Ubuntu 24.04, Python 3.12, Blender 4.5, Chrome 140, commit abc1234
+    validations:
+      required: true

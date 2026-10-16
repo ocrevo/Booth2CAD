@@ -1,6 +1,8 @@
 # 3D asset and PBR material sources for booth renders (Blender)
 
-- Purpose: choose model and material sources for an exhibition-stand studio whose Blender renders are **sold to clients**.
+> **Unreviewed reference notes.** Collected from public sources on the access date given below and not reviewed by a booth designer. They are not defaults of the tool, not facts about any client project and not legal advice; check the linked source before relying on a value.
+
+- Purpose: choose model and material sources for exhibition-stand renders made in Blender that are **delivered to paying clients**.
 - Access date for every URL below: **2026-10-14**, unless a row says otherwise.
 - Method: official licence and terms pages first, then official docs and API listings. Third-party or forum sources are marked as such. Nothing was downloaded.
 - Not legal advice. Before relying on any row for a large job, re-read the linked licence. Get written confirmation wherever a row says "unclear".

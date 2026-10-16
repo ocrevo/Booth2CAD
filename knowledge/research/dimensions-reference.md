@@ -1,5 +1,7 @@
 # Dimension reference for booth reconstruction (scale anchors and defaults)
 
+> **Unreviewed reference notes.** Collected from public sources on the access date given below and not reviewed by a booth designer. They are not defaults of the tool, not facts about any client project and not legal advice; check the linked source before relying on a value.
+
 - Purpose: give the team cited sizes for reconstructing exhibition stands from single photos or renders. The sizes are for anchoring image scale and for defaults when a brief gives none.
 - Access date for every URL: **2026-10-14**, unless a row says otherwise.
 - Units: mm, unless a row says otherwise. Inch values were converted at 25.4 mm/in and rounded to 1 mm. Conversions and derived numbers are marked *(derived)*.

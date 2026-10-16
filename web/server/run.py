@@ -1,7 +1,7 @@
 """Start the studio: the flow page, the editor and the local API on http://127.0.0.1:8800/
 
     python web/server/run.py                       # opens the browser
-    python web/server/run.py --port 8801 --no-browser --jobs-dir D:/somewhere
+    python web/server/run.py --port 8801 --no-browser --jobs-dir /path/to/jobs
 
 Large-model reading (optional, only for the automatic reading step): set OPENAI_API_KEY (the key of whichever OpenAI-compatible
 service you use; or paste it on the page, where it is kept in memory only). Pick the service with --provider openai (default) or

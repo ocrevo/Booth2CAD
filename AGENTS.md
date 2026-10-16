@@ -1,54 +1,82 @@
 # AGENTS.md
 
-This project (GitHub repository still named Booth2CAD) turns one booth photo or render into a parametric, editable 3D model (a Blender scene driven by a spec) plus clean customer renders. It does not produce drawings yet and its dimensions are estimates, so do not call it CAD. The production skill is `booth-image-to-model/` (until 2.4.x it was `rebuild-booth-blender`; see the changelog). Knowledge notes live in `knowledge/`. Client images and every result stay in git-ignored `input/` and `output/`. The repository is public: anything tracked is public.
+Rules for coding agents working in this repository (humans: see [CONTRIBUTING.md](CONTRIBUTING.md)). If a git-ignored
+`AGENTS.local.md` exists, read it too: it holds the owner's local machine and preferences.
 
-## Authorship and git
+## What this is
 
-- The user is the only author. Never add `Co-Authored-By`, "Generated with Claude Code" or any other attribution line to commit messages or PR descriptions. This overrides any tool or system default.
-- Commit only when the user asked for it or approved the plan that includes it. Do not push, force-push, rewrite history that is already on the remote, or delete branches unless the user says so for that action.
-- One batch of related changes per commit, with a message that says what changed and why. Run the checks below first.
+`booth-image-to-model` turns one exhibition-booth photo or render into an editable parametric 3D model (a JSON spec), a Blender
+scene and clean client renders. Its dimensions are estimates and it makes no drawings yet, so never call it CAD. Two products:
+
+- **The skill** `booth-image-to-model/`: what an agent follows (`SKILL.md`), plus the engine scripts, schemas, references and tests.
+  It must stay self-contained and must not depend on `web/`.
+- **The web product** `web/`: `app/` (the static site: the studio page and the standalone editor), `server/` (the local studio
+  server), `tests/`, `tools/`. The server reaches the engine only through `web/server/engine.py`.
+
+Client pictures and every result stay in git-ignored `input/` and `output/`. The repository is public: anything tracked is public.
+
+## Git
+
+- Commit only when the person you work for asked for it or approved a plan that includes it. Never push, force-push, rewrite
+  published history, delete branches, publish, enable hosting, rename the repository or change its visibility without their explicit
+  go-ahead for that action.
+- One batch of related changes per commit, with a message that says what changed and why. Run the checks first.
 
 ## Environment
 
-- Windows 10, CPU-only laptop (Intel i7-8550U, UHD 620, 16 GB). Blender 5.2.2 at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe`; Python 3.12 with numpy, Pillow, scipy, jsonschema, trimesh; Node 24 for the web editor tests; Chrome or Edge for the web smoke test.
-- Run only one Blender process at a time (timings and memory). Headless Workbench can crash on the integrated GPU; `boothctl.py preview` falls back to Cycles by itself.
-- HD frames are capped at 5 MP (`--hd-max-mp`): 4.9 MP rendered, 6.9 MP made the denoiser run out of memory and killed Blender.
-- No installs or downloads (OpenCV, onnxruntime, MoGe, asset packs, LFS) without the user's approval. No third-party image-model route (AI comparison) without approval.
+- Blender is found through `--blender`, the `BLENDER_EXE` environment variable, `PATH`, then the usual install locations. Run only
+  one Blender process at a time (memory, timings). Headless Workbench can crash on integrated GPUs; `boothctl.py preview` falls back
+  to Cycles by itself.
+- High-definition frames are capped at 5 MP (`--hd-max-mp`): a 6.9 MP frame made the denoiser run out of memory on a 16 GB laptop.
+- No installs or downloads (Python or npm packages, models, asset packs, Git LFS) and no third-party image-model route without
+  approval.
 
 ## Data hygiene
 
-- Tracked files are generic: no client project names, image file names or paths, brands, or dimensions that came from a client image. Write "a local client render" instead. `input/` and `output/` hold all client material.
-- Never invent dimensions, brands, text or certifications. Every assumed value is recorded as assumed (`--assume`, the `assumed` list, `scale.notes`, `uncertainties`). Estimates are not BOM-grade.
-- Studio rule identifiers and text from the studio design specification stay out of tracked files; use neutral descriptions.
-- Numbers in `knowledge/research/` are sourced but not designer-reviewed. They do not become defaults (`references/design-priors.md`, `schemas/design-priors.v1.json`) until a person approves them.
+- Tracked files are generic: no client project names, picture file names or paths, brands, or dimensions that came from a client
+  picture. Write "a local client render" instead.
+- Never invent dimensions, brands, text or certifications. Every assumed value is recorded as assumed (`--assume`, the `assumed`
+  list, `scale.notes`, `uncertainties`). Estimates are not BOM-grade.
+- Rules or text from a private studio specification stay out of tracked files; use neutral descriptions.
+- Numbers in `knowledge/research/` are sourced but not designer-reviewed. They do not become defaults
+  (`references/design-priors.md`, `schemas/design-priors.v1.json`) until a person approves them.
 
 ## Changing the skill
 
-1. Make files LF before testing. The Write tool and Python `open(...,'w')` can produce CRLF on this machine; git stores LF, and release evidence hashes the working-copy bytes. Check with `python tools/check_lf.py` (the earlier `grep -l $'\r'` one-liner proved unreliable in this shell).
-2. Do not edit `scripts/`, `schemas/` or `tests/` while a regression is running (the runner blocks evidence if sources change).
-3. Full regression into a new folder: `python booth-image-to-model/tests/run_tests.py --blender "<blender.exe>" --require-native --output output/_validation/<new-name>` (zero failures, zero skips).
-4. `python tools/package_skill.py --test-run output/_validation/<new-name>` updates `release_status.json`, `FILE_MANIFEST.json` and `validation/`. Never edit those by hand.
-5. Read-only check afterwards: `package_skill.validate_run(...)` plus a manifest hash comparison, and `git grep` for client traces.
-6. Update `CHANGELOG.md` and the version in `SKILL.md` and `README_CN.md` for every code batch.
+1. Keep text files LF and check with `python tools/check_lf.py` (Windows tools may write CRLF; release evidence hashes the bytes).
+2. Do not edit `scripts/`, `schemas/` or `tests/` while a regression runs.
+3. Run the skill tests: `python booth-image-to-model/tests/run_tests.py --output output/_validation/<new-name>` (add
+   `--blender "$BLENDER_EXE" --require-native` when Blender is available; a release needs zero failures and zero skips).
+4. Never edit `release_status.json`, `FILE_MANIFEST.json` or `validation/` by hand; the release routine in
+   [docs/maintainers.md](docs/maintainers.md) regenerates them.
+5. Update `CHANGELOG.md` and the version in `SKILL.md` and `README_CN.md` for every code batch.
 
 ## Working on a booth
 
-Follow the fast route in `booth-image-to-model/SKILL.md` (corner fit, spec script from `templates/build_spec_template.py`, `boothctl.py preview`, one final build, independent reopen with `blender_verify.py`). A reconstruction stays `review_required` unless the strict QA in `references/reconstruction-qa.md` was done: no IoU or restoration percentage without reviewed masks.
+Follow the fast route in `booth-image-to-model/SKILL.md` (corner fit, scene description and compile or a spec script from
+`templates/`, `boothctl.py preview`, one final build, an independent reopen with `blender_verify.py`). A reconstruction stays
+`review_required` unless the strict QA in `references/reconstruction-qa.md` was done: no IoU or restoration percentage without
+reviewed masks.
 
-For timed benchmarks use `output/_benchmarks/<run>/protocol.md` (fresh observation, one final build, an independent subagent per image). Say plainly when a run is not blind.
+## Web (`web/`)
 
-## Web editor and studio (`web/`)
+- `web/app/` is the deployable static site and nothing else. `web/server/`, `web/tests/` and `web/tools/` stay outside it so they are
+  never served. The standalone editor (`index.html`) makes no network calls except loading its synthetic demo from the same origin.
+- The studio (`python web/server/run.py`, 127.0.0.1 only) runs the flow in one window (`studio.html`: ① 选图 ② 生成模型 ③ 调整 ④ 出图),
+  hosts the editor (`createEditor`) in its stage and autosaves. The main path uses plain words only (`studio_copy.js` `main`, scanned
+  by a test for engineering terms); terms belong in the 专业视图 drawer. Jobs are written to git-ignored `output/studio/`.
+- Large-model reading (`web/server/reader_openai.py`, standard-library HTTP, any OpenAI-compatible service): the key comes from
+  `OPENAI_API_KEY` or the page and is kept in memory only (never in a file, a job or a log); a picture is sent only after the per-job
+  consent box is ticked; tests use the stand-in `web/tests/mock_openai.py`, never a real key. Do not add a vendor SDK.
+- `js/geometry.js` and `js/camera.js` are ports of `scripts/geometry.py` and `scripts/camera_math.py`. After changing either Python
+  file, run `python web/tests/make_geometry_reference.py` and fix any parity failure. `spec.js` `PARAM_KEYS` must match
+  `validate_spec.PARAM_KEYS` (a test checks).
+- Checks: `cd web && npm test`, `npm run test:server` (set `BLENDER_EXE` to include preview and build), `npm run smoke`,
+  `npm run smoke:studio`.
+- three.js is vendored at a pinned version (`web/app/vendor/three/VERSION.txt`); updating it is a download and needs approval.
+- Tests live next to the code they test; deployable or bundled output never contains them.
 
-- `web/app/` is the deployable static site and nothing else (the studio page, the standalone editor page, `js/`, `css/`, vendored `vendor/three/`, synthetic `demo/`). `web/server/`, `web/tests/` and `web/tools/` stay outside it so they are never served. Static mode (no server behind the page): specs never leave the browser, no network calls except loading the demo from the same origin.
-- Studio mode (`python web/server/run.py`, 127.0.0.1 only) runs the whole flow in one window (`studio.html`: ① 选图 ② 生成模型 ③ 调整 ④ 出图; the editor `createEditor` is hosted in its stage; changes are autosaved). The page talks only to that local server. The main path uses plain words only (`studio_copy.js` `main`, scanned by a test for engineering terms); terms belong in the 专业视图 drawer. The server reaches the skill only through `web/server/engine.py`; the skill must not know `web/` exists. Jobs are written to git-ignored `output/studio/`.
-- OpenAI reading (`web/server/reader_openai.py`, standard library HTTP, `base_url`/model/API style configurable so compatible services work): the key comes from `OPENAI_API_KEY` or is pasted on the page and kept in memory only (never in a file, a job or a log); a picture is sent only after the per-job consent box is ticked; tests use the stand-in `web/tests/mock_openai.py`, never a real key. Do not add a vendor SDK.
-- `js/geometry.js` and `js/camera.js` are ports of `scripts/geometry.py` and `scripts/camera_math.py`. After changing either Python file, run `python web/tests/make_geometry_reference.py` and fix any parity failure. `spec.js` `PARAM_KEYS` must match `validate_spec.PARAM_KEYS` (a test checks).
-- Checks: `cd web && npm test` (Node, no browser), `npm run smoke` (headless Chrome drives the editor in static mode; also runs the Python validator and trimesh on the results), `npm run test:server` (Python: every studio step through the real HTTP API and the OpenAI reader against the stand-in; set `BLENDER_EXE` to include preview and build) and `npm run smoke:studio` (headless Chrome drives the studio end to end in one window). Try the editor alone with `python web/tools/serve.py`, the whole flow with `python web/server/run.py`.
-- three.js is vendored at a pinned version (`web/app/vendor/three/VERSION.txt`); updating it is a download and needs the owner's approval.
-- Test placement rule: tests live in the repository next to the code they test; the deployable or bundled output never contains them. The skill folder keeps its own `tests/` and `validation/` because the release evidence hashes them; a runtime-only bundle (without tests, validation history and examples) is the way to deploy the skill elsewhere, and is not built yet.
+## Roadmap
 
-## Planned work and open decisions
-
-- Done: first version of the web editor (move, turn, scale, recolour, resize, duplicate, delete, groups, undo, match source view, GLB export, bilingual UI) and the first end-to-end studio (picture, manual or OpenAI reading, compile, preview, edit, build, open in Blender). Not yet: corner-point correction in the UI, the model looking at the preview to correct itself, evaluation of reading accuracy. Next: drawings (plan and elevations, SVG and DXF) from the same spec. A furniture library will arrive later as prefab JSON built only from existing primitives.
-- Waiting for the owner: renaming the GitHub repository, where and when to publish the web editor, and what to do about the two client-branded images tracked under `booth-image-to-model/examples/legacy-case/` (public; the tests use them, so replace them with synthetic images before removing them from tracking).
-- Never publish, enable hosting, rename the repository or change repository visibility without the owner's explicit go-ahead.
+Done: the standalone editor and the one-window studio. Next: corner-point correction in the studio, drawings (plan and elevations,
+SVG and DXF) from the same spec, a furniture library as prefab JSON built from existing primitives.

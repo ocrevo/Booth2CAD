@@ -1,11 +1,13 @@
 # Reconstruction tooling for single-image booth rebuilds (CPU-only laptop)
 
+> **Unreviewed reference notes.** Collected from public sources on the access date given below and not reviewed by a booth designer. They are not defaults of the tool, not facts about any client project and not legal advice; check the linked source before relying on a value.
+
 - **Purpose:** pick tools that speed up the slow steps of the single-image workflow (`booth-image-to-model`):
   1. reading corner pixels by eye
   2. deciding which surfaces are walls or floor
   3. finding the depth of interior objects
   4. render time
-- **Target machine:** Windows 10, i7-8550U (4 cores / 8 threads), 16 GB RAM, Intel UHD 620 (driver 31.0.101.2135), no CUDA. Python 3.12.3 and Blender 5.2.2 LTS.
+- **Target machine:** a Windows 10 laptop with a 4-core / 8-thread Intel 8th-generation mobile CPU, 16 GB RAM, Intel UHD 620 integrated graphics and no CUDA; Python 3.12 and Blender 5.2.2 LTS. Timings below are from that machine.
 - **Access date** for every URL: **2026-10-14**.
 - **Method:**
   - Official repos, papers, model cards and docs first. GitHub and Hugging Face metadata (licence, dates, file sizes) were read through their APIs.

@@ -1,9 +1,39 @@
+# Client material and every result stay local
 /test/
 /input/*
 !/input/.gitkeep
 /output/*
 !/output/.gitkeep
 
-# Local Python caches
+# Private local notes (a studio's own rules, projects, venue manuals, licensed assets) and local agent notes
+/knowledge/studio/
+/knowledge/projects/
+/knowledge/venues/
+/knowledge/assets/
+AGENTS.local.md
+
+# Secrets
+.env
+.env.*
+
+# Python
 __pycache__/
 *.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Blender backups, logs, build output
+*.blend1
+*.log
+/dist/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.claude/settings.local.json
+.DS_Store
+Thumbs.db

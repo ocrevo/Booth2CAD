@@ -1,5 +1,7 @@
 # Venue and organiser rules for custom-built (space-only) stands
 
+> **Unreviewed reference notes.** Collected from public sources on the access date given below and not reviewed by a booth designer. They are not defaults of the tool, not facts about any client project and not legal advice; check the linked source before relying on a value.
+
 - **Purpose:** collect the hard constraints that venues and organisers publish for custom-built stands, so `booth-image-to-model` can pick defensible defaults when the client gives no data.
 - **Access date for every URL below: 2026-10-14.**
 - **Method:** official PDFs were downloaded and read as full text, and web pages were fetched. Where a venue's own regulations were not online, an organiser's exhibitor manual for an event at that venue is used. Those rows are labelled with the event, because they are **event rules, not venue rules**. Quotes are kept under 25 words; everything else is paraphrased. Values are converted to mm, with the original unit in brackets where it was not metric.
