@@ -27,6 +27,7 @@ Run what touches your change. A pull request should leave all of them green.
 
 ```bash
 python tools/check_lf.py                                         # every text file uses LF line endings
+python tools/check_docs.py                                       # links, alt text, private traces, versions agree
 python booth-image-to-model/tests/run_tests.py --output output/_validation/my-check   # skill tests (Blender tests skip without Blender)
 cd web
 npm test                 # editor geometry/camera parity, edit operations, studio decisions and wording (needs Python too)

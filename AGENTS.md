@@ -44,6 +44,7 @@ Client pictures and every result stay in git-ignored `input/` and `output/`. The
 ## Changing the skill
 
 1. Keep text files LF and check with `python tools/check_lf.py` (Windows tools may write CRLF; release evidence hashes the bytes).
+   `python tools/check_docs.py` checks links, alt text, private traces and that versions agree.
 2. Do not edit `scripts/`, `schemas/` or `tests/` while a regression runs.
 3. Run the skill tests: `python booth-image-to-model/tests/run_tests.py --output output/_validation/<new-name>` (add
    `--blender "$BLENDER_EXE" --require-native` when Blender is available; a release needs zero failures and zero skips).

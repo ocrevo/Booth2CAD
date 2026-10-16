@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "booth-image-to-model"
+abstract: >-
+  booth-image-to-model turns one exhibition-booth photo or render into an editable parametric 3D model
+  (a JSON spec), a Blender scene and clean client renders, as an AI-agent skill or a local web studio.
+type: software
+authors:
+  - alias: ocrevo
+version: 2.8.0-rc1
+date-released: 2026-10-16
+license: Apache-2.0
+repository-code: "https://github.com/ocrevo/Booth2CAD"
+keywords:
+  - exhibition booth
+  - trade show stand
+  - image to 3D
+  - parametric modeling
+  - Blender
+  - agent skill
+  - three.js
+  - 3D reconstruction
