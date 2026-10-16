@@ -1,6 +1,6 @@
 """Local studio server (standard library only, 127.0.0.1 only): the static site, plus /api for jobs.
 
-    GET  /api/health                      what the machine can do (Blender, OpenAI key) - no secrets
+    GET  /api/health                      what the machine can do (Blender, Python packages, OpenAI key) - no secrets
     POST /api/config                      {"openai_api_key": "..."}  kept in memory only
     GET  /api/jobs                        recent jobs
     POST /api/jobs?name=photo.jpg         body = the image bytes -> a new job
@@ -206,7 +206,8 @@ def make_handler():
             studio = self.studio
             jobs, config = studio.jobs, studio.config
             if path == '/api/health' and method == 'GET':
-                return self.json(HTTPStatus.OK, {'studio': True, 'blender': engine.blender_path(), 'openai': config.public()})
+                return self.json(HTTPStatus.OK, {'studio': True, 'blender': engine.blender_path(), 'python_missing': engine.missing_packages(),
+                                                 'openai': config.public()})
             if path == '/api/config' and method == 'POST':
                 try:
                     config.set_key(str(self.body_object().get('openai_api_key') or ''))

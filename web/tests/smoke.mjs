@@ -11,6 +11,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
 import assert from 'node:assert/strict';
+import { findChrome } from './browser.mjs';
+import { PYTHON } from './python.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const webDir = resolve(here, '..');
@@ -19,12 +21,8 @@ const arg = (name, fallback) => { const i = process.argv.indexOf(name); return i
 const shots = resolve(arg('--shots', join(repo, 'output', '_web_smoke')));
 mkdirSync(shots, { recursive: true });
 
-const CHROMES = [arg('--chrome'), process.env.CHROME,
-  'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].filter(Boolean);
-const chrome = CHROMES.find((p) => existsSync(p));
-if (!chrome) { console.error('No Chrome/Edge found; pass --chrome <path>'); process.exit(2); }
+const chrome = findChrome(arg('--chrome'));
+if (!chrome) { console.error('No Chrome, Chromium or Edge found; pass --chrome <path> or set CHROME'); process.exit(2); }
 
 const freePort = () => new Promise((res, rej) => {
   const srv = net.createServer();
@@ -87,7 +85,7 @@ async function step(name, fn) {
 }
 
 async function main() {
-  children.push(spawn('python', [join(webDir, 'tools', 'serve.py'), '--port', String(APP_PORT), '--no-browser'], { stdio: 'ignore' }));
+  children.push(spawn(PYTHON, [join(webDir, 'tools', 'serve.py'), '--port', String(APP_PORT), '--no-browser'], { stdio: 'ignore' }));
   await waitFor(async () => (await fetch(`http://127.0.0.1:${APP_PORT}/`)).ok, 'the local server');
   children.push(spawn(chrome, ['--headless=new', `--remote-debugging-port=${DEBUG_PORT}`, '--remote-allow-origins=*', `--user-data-dir=${profile}`,
     '--no-first-run', '--no-default-browser-check', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist',
@@ -250,7 +248,7 @@ async function main() {
     const b64 = await ev(`${E}.viewport.exportGlb(${E}.state.spec).then((buf) => { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 8192) s += String.fromCharCode(...a.subarray(i, i + 8192)); return btoa(s); })`);
     const file = join(work, 'web.glb');
     writeFileSync(file, Buffer.from(b64, 'base64'));
-    const py = spawnSync('python', ['-c', `
+    const py = spawnSync(PYTHON, ['-c', `
 import sys, json, trimesh
 s = trimesh.load(sys.argv[1], force='scene')
 nodes = set(s.graph.nodes)
@@ -272,7 +270,7 @@ print(json.dumps({'meshes': len(s.geometry), 'groups': sorted(n for n in nodes i
     mkdirSync(dir);
     copyFileSync(join(webDir, 'app', 'demo', 'demo_source.png'), join(dir, 'demo_source.png'));
     writeFileSync(join(dir, 'edited.spec.json'), json);
-    const run = spawnSync('python', [join(repo, 'booth-image-to-model', 'scripts', 'validate_spec.py'), '--spec', join(dir, 'edited.spec.json'), '--check-source'], { encoding: 'utf8' });
+    const run = spawnSync(PYTHON, [join(repo, 'booth-image-to-model', 'scripts', 'validate_spec.py'), '--spec', join(dir, 'edited.spec.json'), '--check-source'], { encoding: 'utf8' });
     assert.equal(run.status, 0, run.stdout + run.stderr);
     assert.equal(JSON.parse(run.stdout).valid, true);
     await shot('04_after_edits.png');

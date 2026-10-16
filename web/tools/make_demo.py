@@ -1,12 +1,19 @@
-"""Build the synthetic demo booth for the web editor: web/app/demo/demo-booth.spec.json (+ demo_source.png).
+"""Build the synthetic demo booth: web/app/demo/demo-booth.spec.json and its "source picture" demo_source.png.
 
-Everything here is invented for testing the editor (a generic 6 x 5 m open-front stand made from the skill's macros);
-no client image, brand, or measured dimension is involved. Re-run after changing the macros:
+Everything here is invented (a generic 6 x 5 m open-front stand made from the skill's macros); no client image, brand, or
+measured dimension is involved. The demo picture is a Blender render of this same synthetic booth from the spec's camera, so the
+studio's before/after lines up exactly; it is marked "synthetic demo". Re-run after changing the macros:
 
-    python web/tools/make_demo.py
+    python web/tools/make_demo.py                  # spec only; keeps the existing demo_source.png
+    python web/tools/make_demo.py --render         # also re-renders demo_source.png with Blender (BLENDER_EXE or --blender)
 """
 from __future__ import annotations
+import argparse
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -20,13 +27,13 @@ ZF = 0.1                     # platform top
 W, H = 960, 600              # placeholder "source" frame; only its aspect matters to the editor
 
 
-def main():
-    OUT.mkdir(parents=True, exist_ok=True)
-    src = OUT / 'demo_source.png'
+def placeholder(src):
     img = Image.new('RGB', (W, H), (214, 218, 222))
     ImageDraw.Draw(img).text((24, 24), 'synthetic demo - not a real booth photo', fill=(90, 96, 104))
     img.save(src)
 
+
+def build_spec(src):
     b = cm.SpecBuilder(str(src), W, H, 'web_editor_demo')
     b.source['image'] = src.name            # relative to the spec, so the folder can move
     for sid, why in (('shell', 'Synthetic platform, back wall, header and screens.'),
@@ -62,7 +69,39 @@ def main():
     b.write(OUT / 'demo-booth.spec.json')
     path = OUT / 'demo-booth.spec.json'
     path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n'))      # the repository stores LF
-    print('wrote', OUT / 'demo-booth.spec.json')
+    print('wrote', path)
+    return path
+
+
+def render_picture(spec_path, src, blender):
+    """Render the demo booth from its own camera and use that render (marked synthetic) as the demo picture."""
+    skill = HERE.parents[1] / 'booth-image-to-model' / 'scripts'
+    with tempfile.TemporaryDirectory() as tmp:
+        cmd = [blender, '--background', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1',
+               '--python', str(skill / 'blender_build.py'), '--', '--spec', str(spec_path), '--out', tmp, '--render', '--samples', '32']
+        subprocess.run(cmd, check=True, capture_output=True)
+        with Image.open(Path(tmp) / 'client_render.png') as im:
+            img = im.convert('RGB')
+    ImageDraw.Draw(img).text((16, H - 24), 'synthetic demo - rendered from the demo spec, not a real booth', fill=(70, 74, 80))
+    img.save(src)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
+    p.add_argument('--render', action='store_true', help='re-render demo_source.png with Blender')
+    p.add_argument('--blender', default=os.environ.get('BLENDER_EXE') or shutil.which('blender'))
+    a = p.parse_args()
+    OUT.mkdir(parents=True, exist_ok=True)
+    src = OUT / 'demo_source.png'
+    if a.render or not src.is_file():
+        placeholder(src)
+    spec = build_spec(src)
+    if a.render:
+        if not a.blender:
+            raise SystemExit('--render needs Blender: pass --blender or set BLENDER_EXE')
+        render_picture(spec, src, a.blender)
+        build_spec(src)                     # the spec records the new picture's checksum
+        print('rendered', src)
 
 
 if __name__ == '__main__':

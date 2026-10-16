@@ -416,6 +416,16 @@ class Launcher(unittest.TestCase):
             self.assertEqual(run.main(['--no-browser', '--port', '0', '--jobs-dir', t]), 2)
         self.assertIn('chat-json', err.getvalue())
 
+    def test_an_unknown_provider_in_the_environment_is_refused_and_case_does_not_matter(self):
+        err = io.StringIO()
+        with tempfile.TemporaryDirectory() as t, mock.patch.dict(os.environ, {'LLM_PROVIDER': 'acme'}), contextlib.redirect_stderr(err):
+            self.assertEqual(run.main(['--no-browser', '--port', '0', '--jobs-dir', t]), 2)
+        self.assertIn('LLM_PROVIDER must be one of deepseek, openai', err.getvalue())
+        self.assertNotIn('Traceback', err.getvalue())
+        with tempfile.TemporaryDirectory() as t, mock.patch.dict(os.environ, {'LLM_PROVIDER': ' DeepSeek '}),                 mock.patch.object(run, 'create_server', side_effect=OSError('stop')), contextlib.redirect_stderr(io.StringIO()) as quiet:
+            self.assertEqual(run.main(['--no-browser', '--port', '0', '--jobs-dir', t]), 2)     # got past the provider check
+        self.assertIn('cannot listen', quiet.getvalue())
+
     def test_a_broken_environment_key_stops_the_start_without_printing_it(self):
         err = io.StringIO()
         with tempfile.TemporaryDirectory() as t, mock.patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-bad\nkey'}), contextlib.redirect_stderr(err):
@@ -424,6 +434,27 @@ class Launcher(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn('OPENAI_API_KEY', err.getvalue())
         self.assertNotIn('sk-bad', err.getvalue())
+
+    def test_missing_python_packages_are_named_with_the_install_command(self):
+        err = io.StringIO()
+        with tempfile.TemporaryDirectory() as t, mock.patch.object(engine, 'missing_packages', return_value=['scipy', 'trimesh']), \
+                contextlib.redirect_stderr(err):
+            self.assertEqual(run.main(['--no-browser', '--port', '0', '--jobs-dir', t]), 2)
+        self.assertIn('scipy, trimesh', err.getvalue())
+        self.assertIn('pip install -r booth-image-to-model/requirements.txt', err.getvalue())
+        self.assertIn(os.path.basename(sys.executable), engine.INSTALL_HINT)                    # this interpreter, not a bare 'python'
+        self.assertEqual(engine.missing_packages(), [])
+
+    def test_the_detached_blender_survives_the_server_on_every_os(self):
+        with tempfile.TemporaryDirectory() as t, mock.patch.object(engine, 'blender_path', return_value='blender'), \
+                mock.patch.object(engine.subprocess, 'Popen') as popen:
+            engine.open_in_blender(Path(t) / 'booth.blend')
+        kwargs = popen.call_args.kwargs
+        if os.name == 'nt':
+            self.assertTrue(kwargs['creationflags'] & engine.subprocess.DETACHED_PROCESS)
+        else:
+            self.assertIs(kwargs['start_new_session'], True)
+        self.assertNotIn('OPENAI_API_KEY', kwargs['env'])
 
     def test_a_busy_port_is_explained(self):
         err = io.StringIO()

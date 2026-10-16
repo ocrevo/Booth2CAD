@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+import { PYTHON } from './python.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
@@ -173,7 +175,7 @@ test('an edited spec still validates in Python and exports to GLB', () => {
     const file = join(dir, 'edited.spec.json');
     writeFileSync(file, `${JSON.stringify(spec, null, 2)}\n`);
     const scripts = new URL('../../booth-image-to-model/scripts/', import.meta.url);
-    const run = (script, ...args) => spawnSync('python', [new URL(script, scripts).pathname.replace(/^\/([A-Za-z]:)/, '$1'), ...args], { encoding: 'utf8' });
+    const run = (script, ...args) => spawnSync(PYTHON, [fileURLToPath(new URL(script, scripts)), ...args], { encoding: 'utf8' });
     const valid = run('validate_spec.py', '--spec', file, '--check-source');
     assert.equal(valid.status, 0, valid.stdout + valid.stderr);
     assert.equal(JSON.parse(valid.stdout).valid, true);

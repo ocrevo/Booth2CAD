@@ -105,6 +105,7 @@ class FlowSteps(StudioCase):
         self.assertEqual(h['openai'], {'configured': False, 'key_source': 'none', 'model': 'test-model',
                                        'base_url': 'http://127.0.0.1:9/v1', 'style': 'responses'})
         self.assertNotIn('api_key', json.dumps(h))
+        self.assertEqual(h['python_missing'], [])                     # every package the engine needs is importable here
 
     def test_upload_checks_the_image(self):
         for raw, why in ((b'', 'empty'), (b'not an image', 'text'), (png_bytes((32, 32)), 'tiny')):

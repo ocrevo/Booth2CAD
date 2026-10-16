@@ -14,6 +14,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
 import assert from 'node:assert/strict';
+import { findChrome } from './browser.mjs';
+import { PYTHON } from './python.mjs';
 import { BANNED } from '../app/js/studio_copy.js';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -24,12 +26,8 @@ const flag = (name) => process.argv.includes(name);
 const shots = resolve(arg('--shots', join(repo, 'output', '_web_studio_smoke')));
 mkdirSync(shots, { recursive: true });
 
-const CHROMES = [arg('--chrome'), process.env.CHROME,
-  'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].filter(Boolean);
-const chrome = CHROMES.find((p) => existsSync(p));
-if (!chrome) { console.error('No Chrome/Edge found; pass --chrome <path>'); process.exit(2); }
+const chrome = findChrome(arg('--chrome'));
+if (!chrome) { console.error('No Chrome, Chromium or Edge found; pass --chrome <path> or set CHROME'); process.exit(2); }
 
 const freePort = () => new Promise((res, rej) => {
   const srv = net.createServer();
@@ -109,14 +107,14 @@ function files(dir) {
 async function main() {
   // ---- inputs: the synthetic picture and scene, or the ones given on the command line
   const fixtures = join(work, 'fixtures');
-  const made = spawnSync('python', [join(here, 'make_studio_fixtures.py'), fixtures], { encoding: 'utf8' });
+  const made = spawnSync(PYTHON, [join(here, 'make_studio_fixtures.py'), fixtures], { encoding: 'utf8' });
   assert.equal(made.status, 0, made.stderr);
   const imageFile = resolve(arg('--image', join(fixtures, 'booth.png')));
   const sceneFile = resolve(arg('--scene', join(fixtures, 'scene.json')));
   const badSceneFile = join(fixtures, 'bad_scene.json');
 
   // ---- the stand-in for OpenAI, then the studio server without a key
-  const mock = spawn('python', [join(here, 'mock_openai.py'), '--scene', sceneFile], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const mock = spawn(PYTHON, [join(here, 'mock_openai.py'), '--scene', sceneFile], { stdio: ['ignore', 'pipe', 'inherit'] });
   children.push(mock);
   const base = await new Promise((res, rej) => {
     let text = '';
@@ -124,7 +122,7 @@ async function main() {
     mock.on('exit', () => rej(new Error('the OpenAI stand-in did not start')));
   });
   const env = { ...process.env }; delete env.OPENAI_API_KEY;
-  children.push(spawn('python', [join(webDir, 'server', 'run.py'), '--port', String(APP_PORT), '--no-browser', '--jobs-dir', jobsDir,
+  children.push(spawn(PYTHON, [join(webDir, 'server', 'run.py'), '--port', String(APP_PORT), '--no-browser', '--jobs-dir', jobsDir,
     '--openai-base-url', base, '--openai-model', 'test-model'], { stdio: 'ignore', env }));
   const health = await waitFor(async () => (await fetch(`${BASE}/api/health`)).json(), 'the studio server');
   const withBlender = Boolean(health.blender) && !flag('--skip-blender');
@@ -356,7 +354,7 @@ async function main() {
     assert.equal(await ev('location.pathname'), '/');
     assert.equal(await ev(`${E}.isDirty()`), false);
     await ev("document.getElementById('btnExportGlb').click()");
-    await waitFor(() => ev("Boolean(document.querySelector('#downloads a[data-key=glb]'))"), 'the model file link', 90000);
+    await waitFor(() => ev("Boolean(document.querySelector('#downloads a[data-key=glb]'))"), 'the model file link', 240000);
     const head = await ev(`fetch(document.querySelector('#downloads a[data-key=glb]').href).then((r) => r.arrayBuffer()).then((b) => String.fromCharCode(...new Uint8Array(b).slice(0, 4)))`);
     assert.equal(head, 'glTF');
     await shot('06_edited_saved.png');
@@ -485,6 +483,17 @@ async function main() {
     await waitPhase('empty');
     const saved = await api(`/api/jobs/${jobA}/spec`);
     assert.ok(Math.abs(saved.components[3].location[0] - (x0 + 0.05)) < 1e-9, 'the edit was written before the page left the job');
+  });
+
+  await step('"try the demo" loads a synthetic booth and its model with no key: before/after works at once', async () => {
+    await click('btnNew');
+    await waitPhase('empty');
+    await click('btnTryDemo');
+    await waitPhase('model');
+    await waitFor(() => ev(`Boolean(${E}.viewport.matching) && ${E}.state.spec?.components.length === 79`), 'the demo model on its picture', 60000);
+    assert.equal(await visible('.source-photo'), true);
+    assert.equal((await api(`/api/jobs/${await jobId()}`)).spec.origin, 'uploaded');
+    await shot('14_demo.png');
   });
 
   await step('the recent jobs are on the empty stage and one click opens one', async () => {

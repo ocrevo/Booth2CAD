@@ -1,123 +1,141 @@
-# Booth spec editor
+# Web studio and spec editor
 
-A static, client-side editor for a `booth-image-to-model` spec (`spec.json`). Designers can move, turn, recolour, resize
-and duplicate parts; the edited spec is saved as a normal `spec.json` and is checked by the same Python validator.
-In this static mode everything runs in the browser: no server, no login, nothing is uploaded. The same page also works as the
-editor step of the studio (below), where it talks only to the local studio server.
+The web side of [booth-image-to-model](../README.md). Two pages, one folder:
 
-## Try it (test page)
+- **The studio** (`studio.html`, needs the local server): one window from a booth picture to an editable model and a clean
+  render. ① 选图 (choose a picture) → ② 生成模型 (make the model) → ③ 调整 (adjust) → ④ 出图 (render). The UI is in Chinese.
+- **The standalone editor** (`index.html`, no server): opens a `spec.json`, lets you move, turn, recolour, resize and
+  duplicate parts, and exports GLB. Everything stays in your browser; nothing is uploaded. Chinese and English UI.
 
+![The studio comparing a synthetic booth picture (left) with the live 3D model at the same camera (right)](../docs/images/studio-demo.png)
+
+## Run the studio
+
+Requirements: Python 3.10+, the engine's Python packages, a current browser. Optional: Blender 4.x+ (5.2.2 tested) for renders and
+`.blend` files; a key for an OpenAI-compatible service for automatic reading.
+
+```bash
+# from the repository folder
+python3 -m venv .venv && . .venv/bin/activate        # Windows: py -3 -m venv .venv ; .venv\Scripts\activate
+python -m pip install -r booth-image-to-model/requirements.txt
+python web/server/run.py                             # opens http://127.0.0.1:8800/
 ```
-python web/tools/serve.py          # serves web/app on http://127.0.0.1:8000/ and opens the browser
-```
 
-Opening `index.html` by double-click does not work (browsers refuse ES modules from `file://`).
-The page loads a synthetic demo booth (invented for testing, no client data). The "测试指引 / Test guide" button lists
-what to try. Use "Open spec" or drop a `spec.json` on the page to edit your own.
+`run.py` names any missing package and stops. It prints where it found Blender (or that it did not), and whether a key is set.
 
-## Studio: from picture to render in one window
+**Try it without a key:** on the empty stage click **试用示例展台** ("try the demo booth"). It loads a synthetic booth picture and its
+model, so you can adjust, compare and render at once.
 
-```
-python web/server/run.py           # http://127.0.0.1:8800/  (opens the browser)
-```
+**With your own picture:** drop it on the stage (PNG or JPEG, ≤ 25 MB, ≤ 5 MP, no EXIF rotation). Then either:
+- tick the consent box and click **生成模型** (needs a key, see below), or
+- open **更多方式** ("more ways") and upload a scene description you wrote (`scene.json`, format in
+  [`references/scene-description.md`](../booth-image-to-model/references/scene-description.md)), or a `spec.json` made for this picture.
 
-One page, four steps in a bar at the top: **① 选图 → ② 生成模型 → ③ 调整 → ④ 出图**. The stage in the middle is always the same
-place: the empty drop zone, then the picture, then the model drawn over the picture at the picture's own camera. The right-hand card
-always says the one thing to do next (and what is running, how long it has taken and usually takes, or what failed and the one
-button to try again). Nothing opens in another window.
+What each step does underneath:
 
-| Step | What the person does | What happens underneath |
+| Step | You | Underneath |
 |---|---|---|
-| ① 选图 | drops or chooses a PNG or JPEG | the picture is stored in the job (`output/studio/<id>/`, git-ignored) |
-| ② 生成模型 | ticks the consent, clicks "生成模型" (or "生成并直接出图"); "更多方式" holds the uploads and the key | a large model reads the picture, the engine fits the camera and builds the model (steps `scene`, `compile`) |
-| ③ 调整 | clicks, drags, recolours on the stage; compares with the photo (wipe / overlay / photo alone / model; hold Space to peek) | every change is saved by itself 0.8 s later ("已保存 ✓") |
-| ④ 出图 | "出图（1–3 分钟）"; optionally "先快速校对（约 15 秒）" first | Blender renders the client picture and the server writes the `.glb` (steps `build`, `glb`); downloads and "在 Blender 中打开" appear |
+| ① 选图 | drop or choose a picture | stored in `output/studio/<job>/` (git-ignored) |
+| ② 生成模型 | consent + "生成模型", or upload a file | a large model reads the picture into a scene description; the engine fits the camera from corner points and builds the parametric spec |
+| ③ 调整 | click, drag, recolour on the stage; compare with the picture (wipe, overlay, picture alone, model; hold Space to peek) | every change is saved 0.8 s later |
+| ④ 出图 | "出图", optionally a 15-second quick check first | Blender renders the client picture and a second view; the `.glb` is exported; downloads and "open in Blender" appear |
 
-The conclusion on the card is in plain words (model ready / may not line up with the photo, by how many pixels / sizes estimated).
-The engineering view is behind **专业视图** (a drawer): the fit overlay, the corner-error table, the Blender check sheet, what was
-dropped or assumed, the design-check hints, every step's record and log. The editor itself (`js/app.js`, `createEditor`) is hosted in
-the stage; the standalone `index.html` still works without a server and uploads nothing.
+The card on the right always names the one next action. Engineering details are in **专业视图** ("professional view"): the fit
+overlay, corner errors, Blender's four-pane check sheet, dropped and assumed parts, design hints and every step's log.
 
-Before/after never needs another Blender run: the live model is drawn by three.js at the matched camera (labelled as schematic),
-a quick check shows `preview_render.png`, a finished render shows `client_render.png` (wipe) or `reference_render.png` (transparent,
-overlay). A render goes stale when the model changes afterwards and is then said to be stale, never silently shown as current.
-Jobs need only the Python standard library besides the skill's own requirements; Blender is found through `BLENDER_EXE`, `PATH` or the
-default install path (without it the journey stops before the render and the `.glb` can still be exported).
+## Automatic reading with a large model
 
-**Reading with a large model (optional).** Any OpenAI-compatible service works; there is no vendor SDK, the call is plain HTTP in
-`server/reader_openai.py`. The key goes in the environment variable `OPENAI_API_KEY` (whichever service it belongs to) before starting,
-or is pasted on the page (step ②), where it is kept in the server's memory and never written to disk or
-to a job. The picture is sent only after the consent box is ticked for that job.
+Any OpenAI-compatible service that accepts images works. The call is plain HTTP in `server/reader_openai.py`; there is no SDK.
+The reply is checked with the same validator the compiler uses and sent back for at most two repairs.
 
-```
-python web/server/run.py                          # OpenAI: Responses API, model gpt-5.5, strict JSON schema
-python web/server/run.py --provider deepseek      # DeepSeek: https://api.deepseek.com, model deepseek-flash, JSON mode
+```bash
+export OPENAI_API_KEY=...                      # or paste the key on the page; it stays in the server's memory only
+python web/server/run.py                       # OpenAI: Responses API, model gpt-5.5, strict JSON schema
+python web/server/run.py --provider deepseek   # DeepSeek: https://api.deepseek.com, model deepseek-flash, JSON mode
 ```
 
-A provider preset sets base URL, model and request style; `--openai-base-url`, `--openai-model`, `--openai-style` (or `OPENAI_BASE_URL`,
-`OPENAI_MODEL`, `OPENAI_API_STYLE`) override it. Styles: `responses` (OpenAI Responses API), `chat` (Chat Completions with a strict
-schema), `chat-json` (Chat Completions for services that only have JSON mode, as DeepSeek: the schema is written into the instructions
-and the local validator plus up to two repair turns enforce it). `OPENAI_REASONING_EFFORT` (e.g. `none` to switch thinking off where the
-service supports it) and `OPENAI_MAX_OUTPUT_TOKENS` tune the request. The reply is checked with the same validator the compiler uses.
-Every request and reply of a reading is kept in the job's `reader/` folder (pictures and the key are not). Without a key every other
-step works.
+| Setting | Flag | Environment variable | Default |
+|---|---|---|---|
+| Provider preset | `--provider openai\|deepseek` | `LLM_PROVIDER` | `openai` |
+| API key | (page) | `OPENAI_API_KEY` | none: reading is off |
+| Base URL | `--openai-base-url` | `OPENAI_BASE_URL` | from the preset |
+| Model | `--openai-model` | `OPENAI_MODEL` | from the preset |
+| Request style | `--openai-style responses\|chat\|chat-json` | `OPENAI_API_STYLE` | from the preset |
+| Reasoning effort | `--openai-effort` | `OPENAI_REASONING_EFFORT` | not sent |
+| Output token limit | `--openai-max-output-tokens` | `OPENAI_MAX_OUTPUT_TOKENS` | 32000 |
+| Blender | | `BLENDER_EXE` | found on `PATH` or the usual install folders |
+| Port, jobs folder | `--port`, `--jobs-dir` | | 8800, `output/studio` |
 
-**Limits and safeguards.** Pictures are PNG or JPEG up to 25 MB and 5 MP: Blender renders at the picture's size and a larger frame
-ran the denoiser out of memory. A picture with an EXIF rotation tag (common for phone photos) is refused, because the browser shows
-it upright while the pixels are sideways; save it again without the tag. `OPENAI_MAX_OUTPUT_TOKENS` (default 32000) must not exceed
-what the model or service accepts. A job refuses edits and uploads while one of its steps runs. "Run everything" continues from the
-current state: it never rebuilds the model over one you edited or uploaded, and an edit made while a step runs is saved as soon as it ends.
-After a server restart, steps that were running show as errors and queued ones return to their earlier state. A second copy cannot
-start on the same port, and requests from other web pages (wrong Host or Origin) are refused.
+Styles: `responses` is the OpenAI Responses API. `chat` is Chat Completions with a strict JSON schema. `chat-json` is Chat
+Completions for services that only offer JSON mode (DeepSeek and many local servers): the schema goes into the instructions, and
+the validator plus the repairs enforce it.
 
-Local only: the server listens on `127.0.0.1`, the page talks to nothing else, and the static site (`app/`) never receives a key
-or a picture. Reading quality is the weak point of this first version; the compile step shows the fit residuals and the overlay so a
-bad reading is visible before anything is built.
+The presets follow each provider's published API. In this repository they are tested against a local stand-in
+(`tests/mock_openai.py`), not against the live services. If a service refuses the output limit, lower `OPENAI_MAX_OUTPUT_TOKENS`.
+
+## Privacy and safety
+
+- The server listens on `127.0.0.1` only, refuses other web pages (Host and Origin checks), and has **no login**: it is a
+  single-user tool. To use it from another computer of yours, tunnel it: `ssh -L 8800:127.0.0.1:8800 you@that-machine`.
+- A picture goes to the large-model service only after you tick the consent box for that picture, and only to the service you
+  configured. The key is never written to disk. Details: [SECURITY.md](../SECURITY.md).
+
+## Limits and safeguards
+
+- Pictures over 5 MP are refused, because Blender renders at the picture's size and a larger frame ran the denoiser out of memory.
+- Pictures with an EXIF rotation tag (common for phone photos) are refused: the browser shows them upright while the pixels are
+  sideways. Save the picture again without the tag.
+- A job refuses edits and uploads while one of its steps runs; an edit made meanwhile is saved when the step ends.
+- After a server restart, steps that were running show as errors.
+- The live model in the browser is schematic (no reflections, simplified text and patterns). The rendered pictures show the real
+  light and materials.
+- Reading quality depends on the model you use. The professional view shows how well the camera fit, so a bad reading is visible
+  before anything is built.
+
+## The standalone editor
+
+```bash
+python web/tools/serve.py          # http://127.0.0.1:8000/ ; opening index.html from disk does not work (ES modules)
+```
+
+![The standalone editor with the synthetic demo booth: part list, 3D view, move and rotate tools](../docs/images/editor-demo.png)
+
+It loads the synthetic demo booth; "打开 spec / Open spec" opens your own. Edited parts are marked `inferred` with the note "Edited in
+the web editor", and the camera is marked `unfitted`. Check the result with `validate_spec.py --check-source` before rebuilding.
+
+**Static hosting:** `app/index.html` with `app/js`, `app/css`, `app/vendor` and `app/demo` works on any static host (for example
+GitHub Pages) and makes no network calls except loading the demo from the same site. `studio.html` needs the local server and does
+not work on a static host.
 
 ## Layout
 
 | Folder | What | Served? |
 |---|---|---|
-| `app/` | the site: `studio.html` (the studio), `index.html` (the standalone editor), `js/`, `css/`, `vendor/three/`, `demo/` | yes, this is the deploy root |
+| `app/` | `studio.html`, `index.html`, `js/`, `css/`, vendored `vendor/three/`, synthetic `demo/` | yes, the deploy root |
 | `server/` | the local studio server: `run.py`, `server.py` (HTTP), `jobs.py`, `steps.py`, `engine.py` (the only file that touches the skill), `reader_openai.py`, `grid.py`, `prompts/` | no |
-| `tests/` | `node --test` suites, Python server/reader tests, a stand-in for the OpenAI API, end-to-end smoke tests | no |
-| `tools/` | `serve.py` (static preview server), `make_demo.py` (rebuilds the demo spec from the skill's macros) | no |
+| `tests/` | `node --test` suites, Python server and reader tests, a stand-in for the OpenAI API, headless-browser smoke tests | no |
+| `tools/` | `serve.py` (static preview), `make_demo.py` (rebuilds the synthetic demo), `py.mjs` (runs Python the same way on every OS) | no |
 
-Deploy only `app/` for the static editor. Tests, tools and the server stay out of whatever gets published. The server depends on the
-skill (`booth-image-to-model/`) and the skill does not know the web folder exists.
-
-## How it works
-
-- The spec is the single source of truth. `js/spec.js` holds pure edit operations (move, yaw about the vertical axis,
-  uniform scale, duplicate, delete, group, material) with rollback when a part no longer builds, plus a light validation
-  that mirrors `validate_spec.py` (the Python validator stays authoritative).
-- `js/geometry.js` is a line-for-line port of `booth-image-to-model/scripts/geometry.py`; parity tests compare vertex
-  and face counts, bounding boxes, areas, volumes and refusals against the Python builders.
-- `js/camera.js` reproduces `camera_math.py` ("Match source view"); tests compare projected pixels with Python.
-- Z is up everywhere (the spec's axes). Euler angles use Blender's order, which is three.js `ZYX`.
-- Edited parts are marked `inferred` with the note "Edited in the web editor"; the fitted camera is marked `unfitted`.
-  Parts that share a `group` are selected, moved, turned, scaled and duplicated together.
-- Floor size edits keep `scale.footprint_m` equal to the floor, as the validator requires.
-- GLB export: one node per part named by component id, `group:<name>` parents, spec metadata as extras, Y-up.
+How the editor works: the spec is the single source of truth. `js/geometry.js` and `js/camera.js` are line-for-line ports of the
+skill's `geometry.py` and `camera_math.py`, and parity tests compare them with Python. Z is up, and Euler angles use Blender's order
+(three.js `ZYX`). Parts that share a `group` move together. GLB export makes one node per part with `group:<name>` parents and is Y-up.
 
 ## Checks
 
-```
+Node.js 22.15+ is needed for the tests only. The Python tests use `$PYTHON` (default `python3`, or `python` on Windows). The smoke
+tests use Chrome, Chromium or Edge (`--chrome <path>` or `$CHROME`).
+
+```bash
 cd web
-npm test            # node --test: geometry/camera parity with Python, edit operations, Python round trip
-npm run smoke       # headless Chrome/Edge drives the editor in static mode (needs Chrome or Edge and Python)
-npm run test:server # Python: every studio step through the real HTTP API, the OpenAI reader against a stand-in server
-                    # (set BLENDER_EXE to include the preview/build steps)
-npm run smoke:studio # headless Chrome drives the studio end to end in one window, with the stand-in for OpenAI (Blender steps if found)
-python tests/make_geometry_reference.py   # regenerate the Python reference data after changing geometry.py
-python tools/make_demo.py                 # rebuild app/demo after changing the macros
+npm test              # geometry and camera parity with Python, edit operations, the studio's decisions and wording
+npm run test:server   # every studio step through the real HTTP API; the reader against a stand-in (set BLENDER_EXE for renders)
+npm run smoke         # headless browser drives the standalone editor
+npm run smoke:studio  # headless browser drives the studio end to end (Blender steps when Blender is found)
+python tests/make_geometry_reference.py   # after changing geometry.py
+python tools/make_demo.py [--render]      # after changing the macros; --render re-renders the demo picture with Blender
 ```
-
-## Limits (first version)
-
-Grid patterns and text are drawn schematically; orthographic cameras are not supported; there is no furniture library yet
-(duplicate existing pieces); principal-point shifts are applied but lens distortion is not modelled.
 
 ## Third-party
 
-three.js 0.186.1 (MIT) is vendored unmodified under `app/vendor/three/` (see `VERSION.txt` and `LICENSE` there).
+three.js 0.186.1 (MIT) is vendored unmodified under `app/vendor/three/` (see `VERSION.txt` and `LICENSE` there, and
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).

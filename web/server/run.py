@@ -46,7 +46,7 @@ def main(argv=None):
     p.add_argument('--jobs-dir', default=str(DEFAULT_JOBS))
     p.add_argument('--no-browser', action='store_true')
     p.add_argument('--verbose', action='store_true')
-    p.add_argument('--provider', choices=sorted(PRESETS), default=os.environ.get('LLM_PROVIDER') or 'openai', help='preset for base URL, model and request style')
+    p.add_argument('--provider', choices=sorted(PRESETS), default=(os.environ.get('LLM_PROVIDER') or 'openai').strip().lower(), help='preset for base URL, model and request style')
     p.add_argument('--openai-base-url', default=None)
     p.add_argument('--openai-model', default=None)
     p.add_argument('--openai-style', choices=STYLES, default=None,
@@ -55,6 +55,13 @@ def main(argv=None):
     p.add_argument('--openai-max-output-tokens', type=int, default=int(os.environ.get('OPENAI_MAX_OUTPUT_TOKENS') or 32000),
                    help='output token limit sent with each reading request (lower it when the model or service refuses 32000)')
     a = p.parse_args(argv)
+    if a.provider not in PRESETS:                          # argparse checks a typed --provider, not a default from LLM_PROVIDER
+        print(f"LLM_PROVIDER must be one of {', '.join(sorted(PRESETS))}", file=sys.stderr)
+        return 2
+    missing = engine.missing_packages()
+    if missing:
+        print(f"missing Python packages: {', '.join(missing)}. From the repository folder run:\n    {engine.INSTALL_HINT}", file=sys.stderr)
+        return 2
     llm = llm_settings(a, os.environ)
     if llm['style'] not in STYLES:
         print(f"OPENAI_API_STYLE must be one of {', '.join(STYLES)}", file=sys.stderr)

@@ -1,13 +1,18 @@
 {
-  "name": "booth-spec-editor",
+  "name": "booth-image-to-model-web",
+  "version": "2.8.0-rc1",
   "private": true,
   "type": "module",
-  "description": "Static, client-side editor for a booth-image-to-model spec. The deployable site is app/; tests/ and tools/ are not served.",
+  "description": "Web studio (local server, one window from picture to render) and standalone spec editor for booth-image-to-model. The deployable static site is app/; server/, tests/ and tools/ are not served.",
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "https://github.com/ocrevo/Booth2CAD.git", "directory": "web" },
+  "engines": { "node": ">=22.15" },
   "scripts": {
+    "start": "node tools/py.mjs server/run.py",
+    "serve": "node tools/py.mjs tools/serve.py",
     "test": "node --import ./tests/register-three.mjs --test",
-    "serve": "python tools/serve.py",
+    "test:server": "node tools/py.mjs -m unittest discover -s tests -p \"test_*.py\"",
     "smoke": "node tests/smoke.mjs",
-    "test:server": "python -m unittest discover -s tests -p \"test_*.py\"",
     "smoke:studio": "node tests/studio_smoke.mjs"
   }
 }

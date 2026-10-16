@@ -189,6 +189,23 @@ async function uploadImage(file) {
   go(res.data.id);
 }
 
+/** The synthetic demo booth (web/app/demo): its picture and its model, so the whole studio can be tried without a key. */
+async function tryDemo() {
+  ui.notes.card = null;
+  try {
+    const picture = await fetch('demo/demo_source.png');
+    const spec = await (await fetch('demo/demo-booth.spec.json')).json();
+    const job = await call('POST', '/api/jobs?name=demo_source.png', { raw: await picture.arrayBuffer(), type: 'image/png' });
+    if (!job.ok) throw new Error(job.data?.error || `HTTP ${job.status}`);
+    const put = await call('PUT', `/api/jobs/${job.data.id}/spec?origin=uploaded`, { json: spec });
+    if (!put.ok) throw new Error(put.data?.error || `HTTP ${put.status}`);
+    await go(job.data.id);
+  } catch (e) {
+    ui.notes.card = { error: String(e.message || e) };
+    render();
+  }
+}
+
 async function uploadJson(kind, file) {
   ui.notes.more = null;
   ui.done.more = null;
@@ -491,7 +508,8 @@ function renderCard(view) {
   const root = $('stepCard');
   const kids = [];
   if (card.kind === 'empty') {
-    kids.push(h('h2', {}, M.emptyTitle), h('p', { class: 'muted' }, M.emptyBody));
+    kids.push(h('h2', {}, M.emptyTitle), h('p', { class: 'muted' }, M.emptyBody),
+      h('button', { id: 'btnTryDemo', onClick: tryDemo }, M.tryDemo), h('p', { class: 'muted' }, M.tryDemoHint));
   } else if (card.kind === 'generate') {
     kids.push(...generateCard(view));
   } else if (card.kind === 'working') {

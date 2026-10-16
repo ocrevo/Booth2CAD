@@ -4,8 +4,9 @@ Everything the server needs from the engine goes through the small functions bel
 or turning the engine into an installable package, means changing this one file.
 """
 from __future__ import annotations
+import importlib.util
 import os
-import shutil
+import shlex
 import subprocess
 import sys
 import time
@@ -16,8 +17,19 @@ SCRIPTS = SKILL / 'scripts'
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-DEFAULT_BLENDER = 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe'
 SECRET_ENV = ('OPENAI_API_KEY',)
+
+
+# Python packages the engine needs (import name -> pip name); see booth-image-to-model/requirements.txt.
+REQUIRED_PACKAGES = {'PIL': 'Pillow', 'numpy': 'numpy', 'scipy': 'scipy', 'jsonschema': 'jsonschema', 'trimesh': 'trimesh'}
+_PYTHON = sys.executable or 'python'          # the interpreter running the studio: python3 or a venv on Linux and macOS
+INSTALL_HINT = ((subprocess.list2cmdline([_PYTHON]) if os.name == 'nt' else shlex.quote(_PYTHON))
+                + ' -m pip install -r booth-image-to-model/requirements.txt')
+
+
+def missing_packages():
+    """pip names of the required packages that cannot be imported here."""
+    return [pip for module, pip in REQUIRED_PACKAGES.items() if importlib.util.find_spec(module) is None]
 
 
 def child_env():
@@ -26,11 +38,9 @@ def child_env():
 
 
 def blender_path(explicit=None):
-    """BLENDER_EXE, then PATH, then the install location this project was developed with; None when nothing is found."""
-    for candidate in (explicit, os.environ.get('BLENDER_EXE'), shutil.which('blender'), DEFAULT_BLENDER):
-        if candidate and (Path(candidate).exists() or shutil.which(candidate)):
-            return str(candidate)
-    return None
+    """The skill's own lookup: an explicit path or BLENDER_EXE, then PATH, then the usual install places; None when not found."""
+    from common import find_blender
+    return find_blender(explicit)
 
 
 # ------------------------------------------------------------------ scene description and compile
@@ -101,9 +111,7 @@ def open_in_blender(blend_path):
     blender = blender_path()
     if not blender:
         raise RuntimeError('Blender was not found: set BLENDER_EXE or put blender on PATH')
-    flags = 0
-    if os.name == 'nt':
-        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-    subprocess.Popen([blender, str(blend_path)], creationflags=flags, close_fds=True, stdin=subprocess.DEVNULL,
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=child_env())
+    detach = {'creationflags': subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt' else {'start_new_session': True}
+    subprocess.Popen([blender, str(blend_path)], close_fds=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, env=child_env(), **detach)                 # stopping the server must not close the user's Blender
     return {'launched': str(blend_path)}
